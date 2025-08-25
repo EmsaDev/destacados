@@ -56,9 +56,9 @@ app.post("/login", async (req, res) => {
   console.log("Body recibido:", req.body);
 
   try {
-    console.log(username);
+    //console.log(username);
     const user = await User.findOne({ username });
-    console.log(user);
+    //console.log(user);
     if (!user) return res.status(400).json({ msg: "Usuario no encontrado" });
     
 
@@ -69,7 +69,7 @@ app.post("/login", async (req, res) => {
     // Generar token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
 
-    res.json({ token, username: user.username, name: user.name, usercc: user.cc });
+    res.json({ token, username: user.username, name: user.name, cc: user.cc });
   } catch (err) {
     res.status(500).json({ msg: "Error en el servidor" });
   }
