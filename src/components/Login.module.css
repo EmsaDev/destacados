@@ -1,14 +1,21 @@
 .loginContainer {
   display: flex;
-  min-height: 100vh;
+  min-height: 60vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  max-width: 900px;
+  width: 80%;
+  margin: 0 auto;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 .loginCard {
   flex: 1;
-  max-width: 450px;
-  padding: 40px;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -16,25 +23,27 @@
 }
 
 .loginHeader {
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
   text-align: center;
 }
 
 .loginHeader h2 {
   color: #333;
-  margin-bottom: 10px;
-  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  font-size: 1.8rem;
 }
 
 .loginHeader p {
   color: #666;
-  font-size: 16px;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .loginForm {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.2rem;
 }
 
 .inputGroup {
@@ -43,42 +52,96 @@
 }
 
 .inputGroup label {
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
 }
 
 .inputGroup input {
-  padding: 15px;
-  border: 1px solid #ddd;
+  padding: 0.9rem;
+  border: 2px solid #e1e5e9;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   transition: all 0.3s ease;
+  background: #f8f9fa;
 }
 
 .inputGroup input:focus {
   outline: none;
   border-color: #333ff0;
-  box-shadow: 0 0 0 3px rgba(51, 63, 240, 0.2);
+  box-shadow: 0 0 0 3px rgba(51, 63, 240, 0.15);
+  background: white;
 }
 
+.inputGroup input::placeholder {
+  color: #999;
+}
+
+/* Contenedor para input de contraseña con botón */
+.passwordInputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  padding-right: 3rem; /* Espacio para el botón */
+  width: 100%;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 1.2rem;
+  color: #666;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+}
+
+.passwordToggle:hover {
+  color: #333ff0;
+  background-color: #f0f3ff;
+}
+
+.passwordToggle:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.passwordToggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(51, 63, 240, 0.3);
+}
+
+
+
 .loginButton {
-  background-color: #333ff0;
+  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
   color: white;
   border: none;
-  padding: 15px;
+  padding: 1rem;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 10px;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(51, 63, 240, 0.25);
 }
 
 .loginButton:hover {
-  background-color: #2938d6;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(51, 63, 240, 0.3);
+  box-shadow: 0 6px 20px rgba(51, 63, 240, 0.35);
 }
 
 .loginButton:active {
@@ -86,7 +149,7 @@
 }
 
 .loginButton:disabled {
-  background-color: #a0a0a0;
+  background: #a0a0a0;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -99,89 +162,191 @@
 .errorMessage {
   background-color: #ffebee;
   color: #d32f2f;
-  padding: 12px;
+  padding: 0.8rem;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   text-align: center;
+  border-left: 4px solid #d32f2f;
+  font-weight: 500;
 }
-
 
 .illustration {
   flex: 1;
   background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
   display: flex;
-  border-radius: 0 8px 8px 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   color: white;
-  padding: 40px;
+  padding: 2rem;
   position: relative;
   overflow: hidden;
 }
 
-.illustration h3 {
-  font-size: 28px;
-  margin-bottom: 15px;
+.illustrationContent {
+  text-align: center;
   z-index: 2;
+  max-width: 400px;
+}
+
+.illustration h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
 }
 
 .illustration p {
-  font-size: 18px;
-  text-align: center;
-  max-width: 400px;
-  z-index: 2;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.9;
 }
 
+.logo {
+  max-width: 180px;
+  width: 100%;
+  height: auto;
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Elementos decorativos */
 .circle1 {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: 250px;
+  height: 250px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  top: -100px;
-  right: -100px;
+  top: -60px;
+  right: -60px;
 }
 
 .circle2 {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  bottom: -50px;
-  left: -50px;
+  background: rgba(255, 255, 255, 0.08);
+  bottom: -40px;
+  left: -40px;
 }
 
 .formShape {
   position: absolute;
-  width: 150px;
-  height: 150px;
-  border: 20px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  width: 120px;
+  height: 120px;
+  border: 15px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
   transform: rotate(45deg);
-  top: 40%;
-  left: 20%;
+  top: 45%;
+  left: 25%;
+}
+.passwordIcon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.passwordToggle:hover .passwordIcon {
+  stroke: #333ff0;
+}
+
+.passwordToggle:disabled .passwordIcon {
+  stroke: #ccc;
 }
 
 /* Responsive */
 @media (max-width: 900px) {
   .loginContainer {
     flex-direction: column;
+    min-height: auto;
+    margin: 1rem;
   }
   
   .loginCard {
-    max-width: 100%;
-    padding: 30px 20px;
+    padding: 2rem 1.5rem;
+    order: 2;
   }
   
   .illustration {
-    display: none;
+    order: 1;
+    padding: 2rem 1.5rem;
+    border-radius: 12px 12px 0 0;
   }
-
+  
+  .illustration h3 {
+    font-size: 1.5rem;
+  }
+  
+  .illustration p {
+    font-size: 1rem;
+  }
+  
+  .logo {
+    max-width: 150px;
+    margin-bottom: 1.5rem;
+  }
 }
-.logo {
-    max-width: 200px;
-  width: 100%;
-  height: auto;
+
+@media (max-width: 480px) {
+  .loginContainer {
+    margin: 0.5rem;
+    border-radius: 8px;
   }
+  
+  .loginCard {
+    padding: 1.5rem 1rem;
+  }
+  
+  .loginHeader h2 {
+    font-size: 1.5rem;
+  }
+  
+  .illustration {
+    padding: 1.5rem 1rem;
+  }
+  
+  .illustration h3 {
+    font-size: 1.3rem;
+  }
+  
+  .loginButton {
+    padding: 0.9rem;
+    font-size: 1rem;
+  }
+}
+
+/* Animaciones suaves */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loginCard {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.inputGroup input {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estados de carga */
+.loginButton:disabled .loadingText::after {
+  content: '...';
+  animation: loadingDots 1.5s infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}

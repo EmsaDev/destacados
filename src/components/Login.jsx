@@ -7,9 +7,15 @@ export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError("");
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -19,10 +25,18 @@ export default function Login({ onLogin }) {
     
     try {
       const res = await axios.post("http://172.18.27.53:5000/login", form);
+      console.log("Respuesta completa del servidor:", res.data); // ← DEBUG
+      console.log("Campos recibidos:", {
+      token: !!res.data.token,
+      username: !!res.data.username, 
+      name: !!res.data.name,
+      cc: !!res.data.cc
+    });
+    
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
       localStorage.setItem("name", res.data.name);
-      localStorage.setItem("usercc", res.data.cc);
+      localStorage.setItem("userCC", res.data.cc);
       onLogin(res.data.username, res.data.name, res.data.cc);
     } catch (err) {
       setError(err.response?.data?.msg || "Error de login");
@@ -57,15 +71,40 @@ export default function Login({ onLogin }) {
           
           <div className={styles.inputGroup}>
             <label htmlFor="password">Contraseña</label>
+            <div className={styles.passwordInputContainer}>
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Ingresa tu contraseña"
               value={form.password}
               onChange={handleChange}
+              disabled={isLoading}
               required
+              className={styles.passwordInput}
             />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className={styles.passwordToggle}
+              disabled={isLoading}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? (
+                <svg className={styles.passwordIcon} viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M1 1l22 22" strokeWidth="2"></path>
+                </svg>
+              ) : (
+                <svg className={styles.passwordIcon} viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              )}
+            </button>
+            </div>
+            
           </div>
           
           <button 

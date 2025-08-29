@@ -110,6 +110,7 @@ app.post("/api/consultar-cliente", async (req, res) => {
         success: true,
         direccion: cliente.direccion,
         ciudad: cliente.ciudad || '', 
+        nombre: cliente.nombre || '',
         cliente: {
           codigo: cliente.codigo,
           nombre: cliente.nombre || '',
@@ -150,6 +151,37 @@ app.get("/api/user-data", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error obteniendo datos del usuario:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno del servidor' 
+    });
+  }
+});
+
+// 🔍 Ruta para obtener el próximo número de acta
+app.get("/api/next-review-number", authenticateToken, async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const reviewsCollection = db.collection('reviews');
+    
+    // Buscar el último documento por el campo "No."
+    const lastReview = await reviewsCollection
+      .find({})
+      .sort({ "No": -1 }) // ← Usar "No." con punto y entre comillas
+      .limit(1)
+      .toArray();
+    let nextNumber = 1000; // Valor por defecto si no hay actas
+    
+    if (lastReview.length > 0 && lastReview[0]["No"]) { // ← Acceder con ["No."]
+      nextNumber = lastReview[0]["No"] + 1; // ← Incrementar el último número
+    }
+    
+    res.json({ 
+      success: true,
+      next_review_number: nextNumber
+    });
+  } catch (error) {
+    console.error('Error al obtener número de acta:', error);
     res.status(500).json({ 
       success: false,
       error: 'Error interno del servidor' 

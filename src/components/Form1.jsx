@@ -7,7 +7,46 @@ function Form1({ data, handleChange, nextStep }) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchField, setSearchField] = useState('');
   const [userData, setUserData] = useState({ name: '', cc: '' });
+  const [reviewNumber, setReviewNumber] = useState('1000'); // Estado para el número de acta
   
+// Efecto para obtener el número de acta al cargar el componente
+  useEffect(() => {
+    const getNextReviewNumber = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('⚠️ No hay token, usando número por defecto');
+          setReviewNumber('1000');
+          return;
+        }
+        
+        console.log('🔄 Solicitando próximo número de acta...');
+        const response = await axios.get('http://172.18.27.53:5000/api/next-review-number', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          timeout: 10000 // 10 segundos de timeout
+        });
+        
+        console.log('✅ Respuesta del servidor:', response.data);
+        
+        if (response.data.success) {
+          setReviewNumber(response.data.next_review_number.toString());
+          handleChange({ target: { name: 'numero_acta', value: response.data.next_review_number } });
+          console.log('🎉 Número de acta asignado:', response.data.next_review_number);
+        } else {
+          console.warn('⚠️ Servidor respondió con success: false');
+          setReviewNumber('1000');
+        }
+      } catch (error) {
+        console.error('❌ Error obteniendo número de acta:', error);
+        setReviewNumber('1000'); // Valor por defecto
+      }
+    };
+    
+    getNextReviewNumber();
+  }, []);
+
   // Efecto para consultar la base de datos cuando cambia el código o ASIC
   useEffect(() => {
     const consultarCliente = async () => {
@@ -15,7 +54,7 @@ function Form1({ data, handleChange, nextStep }) {
       const valorBusqueda = data.codigo || data.asic;
       
       // Solo consultar si hay un valor de búsqueda pero no dirección
-      if (valorBusqueda && !(data.direccion && !data.ciudad)) {
+      if (valorBusqueda && !(data.direccion && !data.ciudad && !data.nombre)) {
         setIsLoading(true);
         try {
           console.log('Enviando consulta con:', { codigo: data.codigo, asic: data.asic });
@@ -37,6 +76,11 @@ function Form1({ data, handleChange, nextStep }) {
             if (response.data.ciudad && !data.ciudad) {
               handleChange({ target: { name: 'ciudad', value: response.data.ciudad } });
             }
+            
+            // Actualizar nombre si viene en la respuesta y no tenemos
+            if (response.data.nombre && !data.nombre) {
+              handleChange({ target: { name: 'nombre', value: response.data.nombre } });
+            }
         }
 
           }catch (error) {
@@ -52,7 +96,7 @@ function Form1({ data, handleChange, nextStep }) {
 
     const timeoutId = setTimeout(consultarCliente, 800);
     return () => clearTimeout(timeoutId);
-  }, [data.codigo, data.asic, data.direccion, data.ciudad, handleChange]);
+  }, [data.codigo, data.asic, data.direccion, data.ciudad, data.nombre, handleChange]);
 
     // Obtener datos del usuario al cargar el componente
   useEffect(() => {
@@ -105,15 +149,32 @@ function Form1({ data, handleChange, nextStep }) {
       newErrors.suscriptorOrCodigo = 'Debe ingresar código suscriptor o código ASIC';
     }
 
-    // Validar representante
+    // Validar otro representante
     if (!data.otroRepresentante) {
-      newErrors.otroRepresentante = 'Representante es obligatorio';
+      newErrors.otroRepresentante = 'Otro representante es obligatorio';
+    }
+    // Validar documento del otro representante
+     if(!data.ccOtroRepresentante) {
+      newErrors.ccOtroRepresentante = 'Documento del otro representante es obligatorio';
+    }
+    // Validar usuario quien atiende la visita
+    if(!data.usuarioVisita) {
+      newErrors.usuarioVisita = 'Usuario de visita es obligatorio';
+    }
+    // Validar documento quien atiende la visita
+    if (!data.documentoVisitante) {
+      newErrors.documentoVisitante = 'Documento quien atiende la visita es obligatorio';
     }
 
-    // Validar empresa
-    if (!data.empresa1) {
-      newErrors.empresa1 = 'Empresa es obligatoria';
-    }
+   // validar tipoUsuario
+  if (!data.tipoUsuario) {
+    newErrors.tipoUsuario = 'Tipo de usuario es obligatorio';
+  }
+
+  // validar derecho
+  if (!data.derecho) {
+    newErrors.derecho = 'Debe seleccionar SI o NO';
+  }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -138,16 +199,13 @@ function Form1({ data, handleChange, nextStep }) {
     handleChange(e);
   };
 
+  
+
   return (
     <div className={styles.container}>
-      <h2 className={styles.mainTitle}>Acta de revisión <span className={styles.redText}>N°52976</span></h2>
-      
-      {/* Mostrar información del usuario */}
-      {userData.name && (
-        <div className={styles.userInfo}>
-          <p><strong>Usuario:</strong> {userData.name} - CC: {userData.cc}</p>
-        </div>
-      )}
+      <h2 className={styles.mainTitle}>
+        Acta de revisión <span className={styles.redText}>N°{reviewNumber}</span>
+      </h2>
       
       <form onSubmit={handleSubmit} className={styles.form}>
         {/* Primera fila de inputs */}
@@ -261,7 +319,8 @@ function Form1({ data, handleChange, nextStep }) {
         {/* Dirección obtenida de la base de datos */}
         {data.direccion && (
           <div className={styles.infoMessage}>
-            <strong>Dirección encontrada:</strong> {data.direccion}
+            <strong>Cliente:</strong> {data.nombre} <br/>
+            <strong> Dirección:</strong> {data.direccion}
           </div>
         )}
         
@@ -283,7 +342,7 @@ function Form1({ data, handleChange, nextStep }) {
           
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Documento otro representante
+              Documento otro representante <span className={styles.required}>*</span>
             </label>
             <input
               type="text"
@@ -291,26 +350,30 @@ function Form1({ data, handleChange, nextStep }) {
               placeholder="Documento del representante"
               value={data.ccOtroRepresentante || ''}
               onChange={handleChange}
-              className={styles.input}
+              className={`${styles.input} ${errors.ccOtroRepresentante ? styles.errorInput : ''}`}
             />
           </div>
           
           <div className={styles.formGroup}>
-            <label className={styles.label}>Frontera Comercial</label>
-            <input
-              type="text"
-              name="fronteraComercial"
-              placeholder="Frontera comercial"
-              value={data.fronteraComercial || ''}
-              onChange={handleChange}
-              className={styles.input}
-            />
-          </div>
+          <label className={styles.label}>
+            Usuario que recibe la visita <span className={styles.required}>*</span>
+          </label>
+          <input
+            type="text"
+            name="usuarioVisita"
+            placeholder="Ingrese el nombre de la persona que recibe la visita"
+            value={data.usuarioVisita || ''}
+            onChange={handleChange}
+            className={`${styles.input} ${errors.usuarioVisita ? styles.errorInput : ''}`}
+          />
+        </div>
         </div>
         
-        {errors.otroRepresentante && (
+        {(errors.otroRepresentante || errors.ccOtroRepresentante || errors.usuarioVisita) && (
           <div className={styles.errorMessage}>
-            {errors.otroRepresentante}
+            {errors.otroRepresentante && <p>{errors.otroRepresentante}</p>}
+            {errors.ccOtroRepresentante && <p>{errors.ccOtroRepresentante}</p>}
+            {errors.usuarioVisita && <p>{errors.usuarioVisita}</p>}
           </div>
         )}
         
@@ -318,34 +381,42 @@ function Form1({ data, handleChange, nextStep }) {
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Empresa 1 <span className={styles.required}>*</span>
+              Documento de quien atiende la visita<span className={styles.required}>*</span>
             </label>
             <input
               type="text"
-              name="empresa1"
-              placeholder="Nombre de la empresa"
-              value={data.empresa1 || ''}
+              name="documentoVisitante"
+              placeholder="Documento de quien atiende la visita"
+              value={data.documentoVisitante || ''}
               onChange={handleChange}
-              className={`${styles.input} ${errors.empresa1 ? styles.errorInput : ''}`}
+              className={`${styles.input} ${errors.documentoVisitante ? styles.errorInput : ''}`}
             />
           </div>
           
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Empresa 2
+              Tipo de usuario <span className={styles.required}>*</span>
             </label>
-            <input
-              type="text"
-              name="empresa2"
-              placeholder="Nombre de la empresa"
-              value={data.empresa2 || ''}
-              onChange={handleChange}
-              className={styles.input}
-            />
+            <div className={styles.selectContainer}>
+              <select
+                name="tipoUsuario"
+                value={data.tipoUsuario || ''}
+                onChange={handleChange}
+                className={`${styles.select} ${errors.tipoUsuario ? styles.errorSelect : ''}`}
+              >
+                <option value="">👤 Seleccione una opción</option>
+                <option value="usuario">👥 Usuario</option>
+                <option value="cliente">💼 Cliente</option>
+                <option value="tecnico">🔧 Técnico</option>
+                <option value="administrador">⚙️ Administrador</option>
+              </select>
+            </div>
           </div>
           
           <div className={styles.formGroup}>
-            <label className={styles.label}>El suscriptor hace uso de su derecho</label>
+            <label className={styles.label}>
+              El suscriptor hace uso de su derecho <span className={styles.required}>*</span>
+            </label>
             <div className={styles.radioGroup}>
               <button
                 type="button"
@@ -364,10 +435,13 @@ function Form1({ data, handleChange, nextStep }) {
             </div>
           </div>
         </div>
-        
-        {errors.empresa1 && (
+
+        {/* Errores */}
+        {(errors.documentoVisitante || errors.tipoUsuario || errors.derecho) && (
           <div className={styles.errorMessage}>
-            {errors.empresa1}
+            {errors.documentoVisitante && <p>{errors.documentoVisitante}</p>}
+            {errors.tipoUsuario && <p>{errors.tipoUsuario}</p>}
+            {errors.derecho && <p>{errors.derecho}</p>}
           </div>
         )}
         
@@ -376,11 +450,14 @@ function Form1({ data, handleChange, nextStep }) {
           <h3 className={styles.sectionTitle}>Texto generado:</h3>
           <div className={styles.generatedText}>
             <p>
-              A los {new Date().getDate()} días del mes de {new Date().toLocaleString('es-ES', { month: 'long' })} del {new Date().getFullYear()}, a las {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} se hacen presentes en el inmueble de la dirección {data.direccion || '______'} los representantes de EMSA ESP {userData.name || '______'} con C.C: {userData.cc || '______'} y {data.otroRepresentante || '______'} con C.C: {data.ccOtroRepresentante || '______'} en representación de las empresas {data.empresa1 || '______'} y {data.empresa2 || '______'} respectivamente, con el fin de realizar una revisión al equipo de sistema de medida del inmueble. Se informa al suscriptor y/o usuario su derecho de solicitar la asesoría o participación de un técnico particular conforme a lo establecido en las Condiciones Uniformes del Contrato de Servicio Público suscrito con el Representante de la frontera. Cumplido este tiempo se procede a efectuar la revisión. El suscriptor hace uso de su derecho SÍ({data.derecho === 'SI' ? 'X' : ' '}) NO ({data.derecho === 'NO' ? 'X' : ' '}).
+              A los <span className="resaltado">{new Date().getDate()}</span> días del mes de <span className="resaltado">{new Date().toLocaleString('es-ES', { month: 'long' })}</span> del <span className="resaltado">{new Date().getFullYear()}</span>, siendo las <span className="resaltado">{new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span> se hacen presentes 
+              en el inmueble de la dirección <span className="resaltado">{data.direccion || '______'}</span> los representantes de EMSA ESP <span className="resaltado">{userData.name || '______'}</span> con C.C: <span className="resaltado">{userData.cc || '______'}</span> y <span className="resaltado">{data.otroRepresentante || '______'}</span> con C.C: <span className="resaltado">{data.ccOtroRepresentante || '______'}</span> en presencia 
+              del señor(a) <span className="resaltado">{data.usuarioVisita || '______'}</span> con <span className="resaltado">{data.documentoVisitante || '______'}</span> calidad de <span className="resaltado">{data.tipoUsuario || '______'}</span> con el fin de efectuar una revisión de los equipos de medida e instalaciones del inmueble con el código indicado.
+              Habiéndose identificado los empleados y/o contratistas informan al usuario que de acuerdo al Contrato de Servicios Públicos con Condiciones Uniformes vigente su derecho a solicitar asesoría y/o participación de un técnico particular,
+              o de cualquier persona para que sirva de testigo en el proceso de revisión. Sin embargo, si transcurre un plazo máximo de 15 minutos sin hacerse presente se hará la revisión sin su presencia. El cliente/usuario hace uso de su derecho:
+              SÍ (<span className="resaltado">{data.derecho === 'SI' ? 'X' : ' '}</span>) NO (<span className="resaltado">{data.derecho === 'NO' ? 'X' : ' '}</span>). Transcurrido ese tiempo, se procede a hacer la revisión.
             </p>
-            <p>
-              En las mediciones correspondientes a fronteras comerciales representadas por {data.fronteraComercial || '"    "'}, se procede a conformidad con las Resoluciones emitidas por la CREG, en particular lo establecido en el reglamento de comercialización y código de medida.
-            </p>
+
           </div>
         </div>
         
