@@ -576,6 +576,22 @@ function Summary({ data, prevStep }) {
   printWindow.document.close();
 };
 
+const handleCloseModal = () => {
+  const modal = document.querySelector('.modal');
+  const overlay = document.querySelector('.modalOverlay');
+  
+  if (modal && overlay) {
+    modal.classList.add('closing');
+    overlay.style.opacity = '0';
+    
+    setTimeout(() => {
+      setShowPreview(false);
+    }, 200); // Debe coincidir con la duración de la animación
+  } else {
+    setShowPreview(false);
+  }
+};
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -821,15 +837,16 @@ function Summary({ data, prevStep }) {
       {showPreview && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2>Vista Previa del PDF</h2>
+            <div>
+              <h2 className={styles.modalTitle}>Vista Previa del Acta</h2>
               <button 
                 className={styles.closeButton}
-                onClick={() => setShowPreview(false)}
+                onClick={handleCloseModal}
               >
                 ×
               </button>
             </div>
+
             <div className={styles.modalContent}>
               <iframe
                 title="Vista previa del PDF"

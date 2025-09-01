@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import "./SignaturePad.css";
+import toast from "react-hot-toast";
 
 export default function SignaturePadStep({ data, handleSignature, nextStep, prevStep }) {
   const [currentSigner, setCurrentSigner] = useState(0);
@@ -57,7 +58,7 @@ export default function SignaturePadStep({ data, handleSignature, nextStep, prev
         nextStep();
       }
     } else {
-      alert("Por favor, firme antes de continuar.");
+      toast.error("Por favor, firme antes de continuar.");
     }
   };
 

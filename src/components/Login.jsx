@@ -2,12 +2,15 @@ import { useState } from "react";
 import axios from "axios";
 import styles from './Login.module.css';
 import logoImage from '../assets/images/logo-6@3x.png';
+import toast from "react-hot-toast";
 
 export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,31 +22,70 @@ export default function Login({ onLogin }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    
-    try {
-      const res = await axios.post("http://172.18.27.53:5000/login", form);
-      console.log("Respuesta completa del servidor:", res.data); // ← DEBUG
-      console.log("Campos recibidos:", {
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
+  
+  try {
+    const res = await axios.post("http://172.18.27.53:5000/login", form);
+    console.log("Respuesta completa del servidor:", res.data);
+    console.log("Campos recibidos:", {
       token: !!res.data.token,
       username: !!res.data.username, 
       name: !!res.data.name,
-      cc: !!res.data.cc
+      cc: !!res.data.cc,
     });
     
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("username", res.data.username);
-      localStorage.setItem("name", res.data.name);
-      localStorage.setItem("userCC", res.data.cc);
-      onLogin(res.data.username, res.data.name, res.data.cc);
-    } catch (err) {
-      setError(err.response?.data?.msg || "Error de login");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("username", res.data.username);
+    localStorage.setItem("name", res.data.name);
+    localStorage.setItem("userCC", res.data.cc);
+
+    toast.success("Inicio de sesión exitoso");
+    onLogin(res.data.username, res.data.name, res.data.cc);
+
+    // ⏳ Logout automático después de 1 minuto con toast promise
+    setTimeout(() => {
+      // Crear una promesa para el cierre de sesión
+      const logoutPromise = new Promise((resolve, reject) => {
+        try {
+          // Simular un pequeño delay para la animación
+          setTimeout(() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            localStorage.removeItem("name");
+            localStorage.removeItem("userCC");
+            resolve(); // Resolvemos la promesa exitosamente
+          }, 1500); // Pequeño delay para mejor UX
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      // Mostrar el toast promise
+      toast.promise(
+        logoutPromise,
+        {
+          loading: 'Cerrando sesión...',
+          success: <b>Sesión cerrada por inactividad</b>,
+          error: <b>Error al cerrar sesión</b>,
+        }
+      ).then(() => {
+        // Recargar la página después de que se complete el toast
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      });
+
+    }, 3600000); // 1 hora en ms
+
+  } catch (err) {
+    toast.error("Credenciales inválidas");
+    setError(err.response?.data?.msg || "Error de login");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className={styles.loginContainer}>
@@ -53,7 +95,7 @@ export default function Login({ onLogin }) {
           <p>Ingresa tus credenciales para continuar</p>
         </div>
         
-        {error && <div className={styles.errorMessage}>{error}</div>}
+        {/*{error && <div className={styles.errorMessage}>{error}</div>}*/}
         
         <form onSubmit={handleSubmit} className={styles.loginForm}>
           <div className={styles.inputGroup}>

@@ -3,10 +3,12 @@ import Login from './components/Login'
 import Form1 from './components/Form1'
 import Form2 from './components/Form2'
 import Form3 from './components/Form3'
+import DiagramSelectionStep from './components/DiagramSelectionStep';
 import SignaturePadStep from './components/SignaturePadStep'
 import Summary from './components/Summary'
 import HelpPanel from './components/HelpPanel'
 import './App.css'
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const [step, setStep] = useState(0) // 0 = login
@@ -16,14 +18,9 @@ function App() {
   const [showHelp, setShowHelp] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    age: '',
-    country: '',
-    city: '',
-    phone: '',
-    job: '',
-    company: '',
-    experience: ''
+    diagramaUnifilar: '',
+    diagramaFasorial: '',
+    diagramaConexiones: ''
   })
 
   // token guardado en localStorage
@@ -88,14 +85,9 @@ function App() {
     setShowHelp(false)
     setFormData({
       name: '',
-      email: '',
-      age: '',
-      country: '',
-      city: '',
-      phone: '',
-      job: '',
-      company: '',
-      experience: ''
+      diagramaUnifilar: '',
+      diagramaFasorial: '',
+      diagramaConexiones: ''
     })
   }
 
@@ -108,6 +100,10 @@ function App() {
     setIsMenuOpen(!isMenuOpen)
     if (showHelp) setShowHelp(false)
   }
+
+  const handleFormData = (newData) => {
+  setFormData(prev => ({ ...prev, ...newData }));
+};
 
   return (
     <div className="app-wrapper">
@@ -260,6 +256,14 @@ function App() {
                 />
               )}
               {step === 4 && (
+                <DiagramSelectionStep 
+                  data={formData} 
+                  updateData={handleFormData} // Necesitarás esta función
+                  nextStep={nextStep} 
+                  prevStep={prevStep} 
+                />
+              )}
+              {step === 5 && (
                 <SignaturePadStep 
                   data={formData} 
                   handleSignature={handleSignature} 
@@ -267,7 +271,7 @@ function App() {
                   prevStep={prevStep} 
                 />
               )}
-              {step === 5 && (
+              {step === 6 && (
                 <Summary 
                   data={formData} 
                   prevStep={prevStep} 
@@ -281,6 +285,8 @@ function App() {
       <footer className="app-footer">
         <p>⚡ emsa 2025 | Todos los derechos reservados &copy; </p> 
       </footer>
+      {/* Contenedor global de los toasts */}
+      <Toaster position="top-center" reverseOrder={false} />
     </div>
   )
 }

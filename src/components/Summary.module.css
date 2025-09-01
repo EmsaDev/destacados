@@ -306,62 +306,81 @@
   transform: translateY(-2px);
 }
 
-/* Estilos para el modal de vista previa */
+/* Estilos para el modal de vista previa - Versión Sin Header */
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal {
   background: white;
-  border-radius: 10px;
+  border-radius: 16px;
   width: 90%;
   height: 90%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  transform: scale(0.95);
+  animation: modalSlideIn 0.3s ease-out forwards;
+  position: relative;
 }
 
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background: #2c3e50;
-  color: white;
+@keyframes modalSlideIn {
+  from { 
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+  to { 
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
-.modalHeader h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
+/* Botón de cerrar flotante */
 .closeButton {
-  background: none;
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  color: white;
-  font-size: 24px;
+  color: #2c3e50;
+  font-size: 22px;
   cursor: pointer;
   padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  transform: rotate(90deg) scale(1.1);
 }
 
 .modalContent {
@@ -369,20 +388,148 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #f8f9fa;
 }
 
 .previewIframe {
   width: 100%;
   flex: 1;
   border: none;
+  background: white;
 }
 
 .modalButtons {
   display: flex;
   justify-content: center;
-  padding: 15px;
-  gap: 15px;
-  background: #f5f5f5;
+  padding: 20px;
+  gap: 16px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Botones modernizados */
+.printButton, .pdfButton {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.printButton {
+  background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+  color: white;
+}
+
+.printButton:hover {
+  background: linear-gradient(135deg, #138a72 0%, #16a085 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(22, 160, 133, 0.3);
+}
+
+.printButton:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 160, 133, 0.3);
+}
+
+.pdfButton {
+  background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+  color: white;
+}
+
+.pdfButton:hover {
+  background: linear-gradient(135deg, #2471a3 0%, #2980b9 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+}
+
+.pdfButton:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Efecto de ripple en botones */
+.printButton::after, .pdfButton::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.printButton:hover::after, .pdfButton:hover::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    height: 92%;
+    border-radius: 14px;
+  }
+  
+  .closeButton {
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  
+  .modalButtons {
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .printButton, .pdfButton {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+}
+
+/* Efecto de cierre del modal */
+.modal.closing {
+  animation: modalSlideOut 0.2s ease-in forwards;
+}
+
+@keyframes modalSlideOut {
+  from { 
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to { 
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+}
+
+/* Título integrado en el contenido opcional */
+.modalTitle {
+  text-align: center;
+  padding: 20px 20px 10px;
+  margin: 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .printButton {
