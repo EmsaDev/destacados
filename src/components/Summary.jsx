@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import html2pdf from 'html2pdf.js';
 import styles from './Summary.module.css';
 import logo from '../assets/images/logo-4@3x.png';
+// Importar todas las imágenes
+import unifilar1 from '../assets/images/unifilar/unifilar.png';
+import unifilar2 from '../assets/images/unifilar/unifilar2.png';
+import unifilar3 from '../assets/images/unifilar/unifilar3.png';
+import fasorial1 from '../assets/images/fasorial/fasorial.png';
+import fasorial2 from '../assets/images/fasorial/fasorial2.png';
+import fasorial3 from '../assets/images/fasorial/fasorial3.png';
+import conexiones1 from '../assets/images/conexiones/conexiones.png';
+import conexiones2 from '../assets/images/conexiones/conexiones2.png';
+import conexiones3 from '../assets/images/conexiones/conexiones3.png';
+import { FiEye, FiDownload, FiPrinter, FiSend, FiX, FiArrowLeft  } from 'react-icons/fi';
 
 function Summary({ data, prevStep }) {
   const [showPreview, setShowPreview] = useState(false);
@@ -11,6 +22,11 @@ function Summary({ data, prevStep }) {
   firmaFuncionario: localStorage.getItem('firmaFuncionario') || '',
   firmaSuscriptor: localStorage.getItem('firmaSuscriptor') || '',
   firmaSupervisor: localStorage.getItem('firmaSupervisor') || ''
+});
+const [diagramImages, setDiagramImages] = useState({
+  diagramaUnifilar: localStorage.getItem('diagrama_unifilar') || '',
+  diagramaFasorial: localStorage.getItem('diagrama_fasorial') || '',
+  diagramaConexiones: localStorage.getItem('diagrama_conexiones') || ''
 });
 
   // Datos del usuario desde localStorage
@@ -65,247 +81,396 @@ function Summary({ data, prevStep }) {
     loadLogo();
   }, []);
 
+  const {
+    diagramaUnifilar,
+    diagramaFasorial,
+    diagramaConexiones,
+    lineaDedicada,
+    tipoFrontera,
+    tpData,
+    tcData,
+    factorData,
+    observaciones,
+    adecuaciones,
+    informe,
+    // ... otros datos de formularios anteriores
+  } = data;
+
+  // Función para obtener el nombre del diagrama
+  const getDiagramName = (diagramId) => {
+    const diagramMap = {
+      'unifilar1': 'Diagrama Unifilar 1',
+      'unifilar2': 'Diagrama Unifilar 2',
+      'unifilar3': 'Diagrama Unifilar 3',
+      'fasorial1': 'Diagrama Fasorial 1',
+      'fasorial2': 'Diagrama Fasorial 2',
+      'fasorial3': 'Diagrama Fasorial 3',
+      'conexiones1': 'Diagrama Conexiones 1',
+      'conexiones2': 'Diagrama Conexiones 2',
+      'conexiones3': 'Diagrama Conexiones 3',
+    };
+    return diagramMap[diagramId] || diagramId;
+  };
+
+  // Función para obtener la imagen del diagrama
+  const getDiagramImage = (diagramId) => {
+    const imageMap = {
+      unifilar1, unifilar2, unifilar3,
+      fasorial1, fasorial2, fasorial3,
+      conexiones1, conexiones2, conexiones3
+    };
+    return imageMap[diagramId] || null;
+  };
+
+  // Función para mostrar adecuaciones seleccionadas
+  const getAdecuacionesSeleccionadas = () => {
+    return Object.entries(adecuaciones)
+      .filter(([key, value]) => value && key !== 'otrosTexto')
+      .map(([key]) => {
+        const labels = {
+          'cambiaroInstalarMedidor': 'Cambiar o Instalar medidor',
+          'cambiaroInstalarCaja': 'Cambiar o Instalar caja para el medidor',
+          'cambiaroInstalarPuestaTierra': 'Cambiar o Instalar sistema de puesta de tierra',
+          'cambiaroInstalarBloquePruebas': 'Cambiar o Instalar bloque de prueba',
+          'cambiaroInstalarProteccionesElectricas': 'Cambiar o Instalar protecciones electricas',
+          'cambiaroInstalarCableSenal': 'Cambiar o Instalar cable de señal (según norma)',
+          'adecuaroInstalaraSeguridadCeldas': 'Adecuar o Instalar seguridad en las celdas de medida',
+          'cambiaroInstalarCelda': 'Cambiar o Instalar celda para medida (TP´S y TC´S) norma',
+          'cambiaroInstalarSistemaComunicacion': 'Cambiar o Instalar sistema de comunicación',
+          'cambiaroInstalarModem': 'Cambiar o Instalar MODEM',
+          'cambiaroInstalarProteccionesCommunicacion': 'Cambiar o Instalar protecciones en comunicaciones',
+          'cambiaroInstalarDuctosCableSeñal': 'Cambiar o Instalar ductos para cable de señal',
+          'otros': 'Otros'
+        };
+        return labels[key] || key;
+      });
+  };
+
   // Generar HTML para el PDF
   const generatePDFHtml = () => {
     
     return `
       <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8" />
-        <style>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    /* Estilos generales (igual para ambas páginas) */
     body {
-        font-family: sans-serif;
-        font-size: 10px;
-        margin: 20px;
-        border: 2px solid #2c3e50;
-        border-radius: 12px;
-        padding: 10px;
-        background-color: #ffffff;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      font-family: sans-serif;
+      font-size: 10px;
+      margin: 0;
+      padding: 15px;
+      background-color: #ffffff;
+    }
+    
+    .page {
+      page-break-after: always;
+      margin-bottom: 20px;
+    }
+    
+    .page:last-child {
+      page-break-after: auto;
     }
     
     table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
     }
     
     td, th {
-        border: 1px solid #34495e;
-        padding: 5px;
-        text-align: left;
-        vertical-align: top;
+      border: 1px solid #34495e;
+      padding: 5px;
+      text-align: left;
+      vertical-align: top;
     }
     
     .header-table {
-        margin: 0 auto; 
-        width: 100%;
+      margin: 0 auto; 
+      width: 100%;
     }
     
     .header-table td {
-        border: none;
-        padding: 3px;
+      border: none;
+      padding: 3px;
     }
     
     .header-table-content {
-        border-radius: 10px 10px 0 0; 
-        overflow: hidden;
-        background-color: #f8f9fa;
-        padding: 8px;
-        border: 1px solid #ddd;
+      border-radius: 10px 10px 0 0; 
+      overflow: hidden;
+      background-color: #f8f9fa;
+      padding: 8px;
+      border: 1px solid #ddd;
     }
     
     .text-center {
-        text-align: center;
+      text-align: center;
     }
     
     .title {
-        font-size: 16px;
-        font-weight: bold;
-        text-align: center;
-        color: #2c3e50;
-        margin: 10px 0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      color: #2c3e50;
+      margin: 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .subtitle {
-        font-size: 12px;
-        font-weight: bold;
-        text-align: center;
-        color: #7f8c8d;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: #7f8c8d;
     }
     
     .section-title {
-        background-color: #e9ecef; /* Gris claro en lugar de azul */
-        color: #2c3e50; /* Texto oscuro para mejor contraste */
-        font-weight: bold;
-        text-align: center;
-        padding: 8px;
-        font-size: 11px;
-        border: 1px solid #dee2e6;
+      background-color: #e9ecef;
+      color: #2c3e50;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      border: 1px solid #dee2e6;
     }
     
     .firma-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        page-break-inside: avoid;
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      page-break-inside: avoid;
     }
     
     .firma-table td {
-        border: 1px solid #34495e;
-        padding: 10px;
-        text-align: center;
-        vertical-align: middle;
+      border: 1px solid #34495e;
+      padding: 10px;
+      text-align: center;
+      vertical-align: middle;
     }
     
     .firma-table tr:first-child td {
-        background-color: #e9ecef; /* Gris claro en lugar de azul oscuro */
-        color: #2c3e50;
-        font-weight: bold;
-        font-size: 11px;
-        padding: 8px;
-        border-bottom: 1px solid #dee2e6;
+      background-color: #e9ecef;
+      color: #2c3e50;
+      font-weight: bold;
+      font-size: 11px;
+      padding: 8px;
+      border-bottom: 1px solid #dee2e6;
     }
     
     .firma-label {
-        text-align: center;
-        font-weight: bold;
-        padding: 5px 0;
-        font-size: 10px;
-        color: #2c3e50;
+      text-align: center;
+      font-weight: bold;
+      padding: 5px 0;
+      font-size: 10px;
+      color: #2c3e50;
     }
     
     .no-border {
-        border: none !important;
+      border: none !important;
     }
     
     .firma-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px 0;
     }
     
     .firma-text {
-        font-weight: bold;
-        font-size: 10px;
-        white-space: nowrap;
+      font-weight: bold;
+      font-size: 10px;
+      white-space: nowrap;
     }
     
     .firma-imagen {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .firma-imagen img {
-        max-width: 120px;
-        max-height: 50px;
-        padding: 3px;
-        background-color: white;
+      max-width: 120px;
+      max-height: 50px;
+      padding: 3px;
+      background-color: white;
+      border: 1px dashed #adb5bd;
     }
     
     .firma-faltante {
-        color: #6c757d;
-        font-style: italic;
-        padding: 8px;
-        background-color: #f8f9fa;
-        border-radius: 3px;
-        font-size: 10px;
-        border: 1px dashed #dee2e6;
-        display: inline-block;
+      color: #6c757d;
+      font-style: italic;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-radius: 3px;
+      font-size: 10px;
+      border: 1px dashed #dee2e6;
+      display: inline-block;
     }
     
     .text-justify {
-        text-align: justify;
+      text-align: justify;
     }
     
     .field-label {
-        font-weight: bold;
-        background-color: #f8f9fa; /* Gris muy claro */
-        padding: 5px;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      padding: 5px;
     }
     
     .field-value {
-        padding: 5px;
+      padding: 5px;
     }
     
     .acta-number {
-        font-size: 16px;
-        color: #e74c3c;
-        font-weight: bold;
-        text-align: center;
+      font-size: 16px;
+      color: #e74c3c;
+      font-weight: bold;
+      text-align: center;
     }
     
     .legal-text {
-        margin: 15px 0;
-        padding: 12px;
-        background-color: #f8f9fa; /* Gris claro en lugar de amarillo */
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        font-size: 9px;
-        line-height: 1.4;
-        color: #495057;
-        text-align: justify;
+      margin: 15px 0;
+      padding: 12px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      font-size: 9px;
+      line-height: 1.4;
+      color: #495057;
+      text-align: justify;
+    }
+    
+    /* Estilos específicos para la hoja 2 */
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    
+    .test-table th {
+      background: #2c3e50;
+      color: white;
+      padding: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 10px;
+    }
+    
+    .test-table td {
+      padding: 6px;
+      border: 1px solid #e1e8ed;
+      text-align: center;
+    }
+    
+    .test-table input {
+      width: 100%;
+      padding: 4px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      text-align: center;
+      font-size: 10px;
+    }
+    
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .diagram-card {
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    .diagram-card img {
+      max-width: 100%;
+      max-height: 80px;
+      margin-bottom: 5px;
+    }
+    
+    .observaciones-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .observacion-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 9px;
+    }
+    
+    /* Estilos específicos para el formato de diagramas */
+    .diagram-container {
+      display: flex;
+      width: 100%;
+    }
+    
+    .diagram {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+    }
+    
+    .diagram-img {
+      max-width: 100%;
+      max-height: 180px;
+      height: auto;
+    }
+    
+    .logo-img {
+      height: 50px;
+    }
+    
+    .checkbox-list {
+      list-style-type: none;
+      padding-left: 5px;
+      margin: 2px 0;
+      font-size: 9px;
+    }
+    
+    .checkbox-list li {
+      margin-bottom: 3px;
+    }
+    
+    .estado-cell {
+      text-align: center;
+      width: 20px;
     }
     
     @media print {
-        body {
-            border: none;
-            box-shadow: none;
-            margin: 0;
-            padding: 10px;
-            font-size: 9px;
-        }
-        
-        .firma-table tr:first-child td {
-            background-color: #f8f9fa !important;
-            -webkit-print-color-adjust: exact;
-            color: #2c3e50 !important;
-        }
-        
-        .section-title {
-            background-color: #f8f9fa !important;
-            -webkit-print-color-adjust: exact;
-            color: #2c3e50 !important;
-        }
-        
-        .firma-imagen img {
-            max-height: 45px;
-            border: 1px solid #ccc;
-        }
-        
-        .header-table-content {
-            background-color: #f8f9fa !important;
-            -webkit-print-color-adjust: exact;
-        }
-        
-        .legal-text {
-            background-color: #ff3cd !important;
-            border: 1px solid #ffeaaa7 !important;}
-            color:#856404;
-            -webkit-print-color-adjust: exact;
-        }
-        
-        .field-label {
-            background-color: #f8f9fa !important;
-            -webkit-print-color-adjust: exact;
-        }
-        
-        /* Ahorro de tinta - eliminar sombras y degradados */
-        * {
-            box-shadow: none !important;
-            text-shadow: none !important;
-        }
+      body {
+        margin: 0;
+        padding: 10px;
+        font-size: 9px;
+      }
+      
+      .page {
+        page-break-after: always;
+        margin: 0;
+        padding: 15px;
+      }
+      
+      .diagram-img {
+        max-height: 150px;
+      }
     }
-</style>
-      </head>
-      <body>
-    <div class="header-table-content">
+  </style>
+</head>
+<body>
+  <!-- HOJA 1: ACTA DE REVISIÓN ORIGINAL -->
+      <div class="page">
+        <!-- Copia todo el HTML de la hoja 1 aquí -->
+         <div class="header-table-content">
         <table class="header-table">
           <tr>
             <td style="width: 70%; padding: 5px; text-align: center; border: none;">
@@ -452,59 +617,427 @@ function Summary({ data, prevStep }) {
     </div>
 
     <!-- TABLA DE FIRMAS (3 COLUMNAS) -->
-    <table class="firma-table">
+<table class="firma-table">
+    <tr>
+        <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
+        <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
+        <td style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
+    </tr>
+    <tr>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${userData.name || 'No especificado'}</td>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
+        <td class="firma-label" style="text-align: left; width: 33.34%;">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
+    </tr>
+    <tr>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">
+            <div class="firma-container" style="justify-content: flex-start;">
+                <span class="firma-text">FIRMA:</span>
+                ${signatures.firmaFuncionario ? 
+                    `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                    '<span class="firma-faltante">No disponible</span>'
+                }
+            </div>
+        </td>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">
+            <div class="firma-container" style="justify-content: flex-start;">
+                <span class="firma-text">FIRMA:</span>
+                ${signatures.firmaSuscriptor ? 
+                    `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                    '<span class="firma-faltante">No disponible</span>'
+                }
+            </div>
+        </td>
+        <td class="firma-label" style="text-align: left; width: 33.34%;">
+            <div class="firma-container" style="justify-content: flex-start;">
+                <span class="firma-text">FIRMA:</span>
+                ${signatures.firmaSupervisor ? 
+                    `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                    '<span class="firma-faltante">No disponible</span>'
+                }
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
+        <td class="firma-label" style="text-align: left; width: 33.33%;">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
+        <td class="firma-label" style="text-align: left; width: 33.34%;">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
+    </tr>
+</table>
+      </div>
+
+
+  <!-- HOJA 2: FORMATO ACTA DE DIAGRAMAS -->
+  <div class="page">
+    <!-- Encabezado hoja 2 -->
+    <div class="header-table-content">
+      <table class="header-table">
         <tr>
-            <td>FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-            <td>SUSCRIPTOR O USUARIO</td>
-            <td>SUPERVISOR Y/O INTERVENTOR</td>
+          <td style="width: 70%; padding: 5px; text-align: center; border: none;">
+            <img src="${base64Logo}" alt="Logo" class="logo-img"/>
+          </td>
+          <td style="width: 30%; padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
+              <tr>
+                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
+                <td style="border: 1px solid #34495e;">FO-GD-CP-05</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
+                <td style="border: 1px solid #34495e;">1/02/2023</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
+                <td style="border: 1px solid #34495e;">04</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
+                <td style="border: 1px solid #34495e;">2 de 2</td>
+              </tr>
+            </table>
+          </td>
         </tr>
-        <tr>
-            <td class="firma-label">NOMBRE: ${userData.name || 'No especificado'}</td>
-            <td class="firma-label">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
-            <td class="firma-label">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
-        </tr>
-        <tr>
-            <td class="firma-label">
-                <div class="firma-container">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaFuncionario ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" /></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-            <td class="firma-label">
-                <div class="firma-container">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaSuscriptor ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" /></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-            <td class="firma-label">
-                <div class="firma-container">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaSupervisor ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" /></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-        </tr>
-        <tr>
-        <tr>
-            <td class="firma-label">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
-            <td class="firma-label">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
-            <td class="firma-label">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
-        </tr>
+      </table>
+    </div>
+
+    <table>
+      <tr>
+        <td class="section-title" colspan="9">FORMATO ACTA DE DIAGRAMAS</td>
+        <td class="section-title" colspan="7">CONTROL DE PÉRDIDAS</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="font-weight: bold; font-size: 12px;">Acta De Revisión No.</td>
+        <td colspan="3" style="font-weight: bold; font-size: 18px; color: red;">
+          <span id="numero">${data.numero_acta || '52976'}</span>
+        </td>
+        <td colspan="3" style="font-weight: bold; font-size: 11px;">CÓDIGO</td>
+        <td colspan="3">${data.codigo || ''}</td>
+        <td colspan="2">FECHA</td>
+        <td colspan="2">${new Date().toLocaleDateString('es-ES')}</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; font-size: 11px;">REVISIÓN N°</td>
+        <td colspan="3">${data.revision || ''}</td>
+        <td colspan="3" style="font-weight: bold; font-size: 11px;">SOLICITUD N°</td>
+        <td colspan="2">${data.solicitud || ''}</td>
+        <td>CIUDAD</td>
+        <td colspan="3">${data.ciudad || 'Acacias'}</td>
+        <td> ACTA DE REFERENCIA</td>
+        <td>${data.numero_acta || '52976'}</td>
+      </tr>
+      <tr>
+        <td colspan="2">CIRCUITO</td>
+        <td colspan="3">${data.circuito || ''}</td>
+        <td>SUBESTACIONES</td>
+        <td colspan="3">${data.subestacion || ''}</td>
+        <td>CLIENTES - RAZON SOCIAL</td>
+        <td colspan="5">${data.nombre || ''}</td>
+      </tr>
+      <tr>
+        <td>TELEMEDIDA</td>
+        <td>${data.telemedida || ''}</td>
+        <td>LINEA DEDICADA</td>
+        <td>${data.lineaDedicada === 'SI' ? 'X' : ' '} SI</td>
+        <td></td>
+        <td>${data.lineaDedicada === 'NO' ? 'X' : ' '} NO</td>
+        <td></td>
+        <td>TIPO DE FRONTERA</td>
+        <td>${data.tipoFrontera === 'MCM' ? 'X' : ' '} MCM</td>
+        <td>${data.tipoFrontera === 'RGP' ? 'X' : ' '} RGP</td>
+        <td>${data.tipoFrontera === 'NRP' ? 'X' : ' '} NRP</td>
+        <td>${data.tipoFrontera === 'NRO' ? 'X' : ' '} NRO</td>
+        <td>${data.tipoFrontera === 'REGO' ? 'X' : ' '} REGO</td>
+        <td>${data.tipoFrontera === 'SNT' ? 'X' : ' '} SNT</td>
+        <td>${data.tipoFrontera === 'CAMB COM' ? 'X' : ' '} CAMB COM</td>
+      </tr>
     </table>
+
+    <!-- Diagramas -->
+    <table>
+      <tr>
+        <td class="section-title">DIAGRAMA UNIFILAR</td>
+        <td class="section-title">DIAGRAMA FASORIAL</td>
+      </tr>
+      <tr>
+        <td>
+          <div class="diagram-container">
+            <img style="height: 180px;" class="diagram-img" src="${diagramImages.diagramaUnifilar || './unifilar.png'}" alt="Diagrama Unifilar">
+          </div>
+        </td>
+        <td>
+          <div class="diagram-container">
+            <img class="diagram-img" src="${diagramImages.diagramaFasorial || './Fasorial.png'}" alt="Diagrama Fasorial">
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="section-title" colspan="2">DIAGRAMA DE CONEXIONES</td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <div class="diagram-container">
+            <img class="diagram-img" src="${diagramImages.diagramaConexiones || './conexiones.png'}" alt="Diagrama de Conexiones">
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Pruebas de Transformadores -->
+    <table>
+      <tr>
+        <td class="section-title" colspan="6">PRUEBA DE TRANSFORMADORES DE POTENCIAL TP'S</td>
+        <td class="section-title" colspan="6">PRUEBA DE TRANSFORMADORES DE CORRIENTE TC'S</td>
+      </tr>
+      <tr>
+        <td>VOLTAJE</td>
+        <td>PRIMARIO</td>
+        <td>SECUNDARIO</td>
+        <td>RTP (Vp/Vs)</td>
+        <td>% ERROR</td>
+        <td>% PROMEDIO</td>
+        <td>VOLTAJE</td>
+        <td>PRIMARIO</td>
+        <td>SECUNDARIO</td>
+        <td>RTC (Ip/ls)</td>
+        <td>% ERROR</td>
+        <td>% PROMEDIO</td>
+      </tr>
+      <tr>
+        <td>VR</td>
+        <td>${data.tpData?.vRPrimario || ''}</td>
+        <td>${data.tpData?.vRSecundario || ''}</td>
+        <td>${data.tpData?.rtp || ''}</td>
+        <td>${data.tpData?.errorVR || ''}</td>
+        <td rowspan="3">${data.tpData?.errorPromedio || ''}</td>
+        <td>IR</td>
+        <td>${data.tcData?.vRPrimario || ''}</td>
+        <td>${data.tcData?.vRSecundario || ''}</td>
+        <td>${data.tcData?.rtc || ''}</td>
+        <td>${data.tcData?.errorVR || ''}</td>
+        <td rowspan="3">${data.tcData?.errorPromedio || ''}</td>
+      </tr>
+      <tr>
+        <td>VS</td>
+        <td>${data.tpData?.vSPrimario || ''}</td>
+        <td>${data.tpData?.vSSecundario || ''}</td>
+        <td>${data.tpData?.rtp || ''}</td>
+        <td>${data.tpData?.errorVS || ''}</td>
+        <td>LS</td>
+        <td>${data.tcData?.vSPrimario || ''}</td>
+        <td>${data.tcData?.vSSecundario || ''}</td>
+        <td>${data.tcData?.rtc || ''}</td>
+        <td>${data.tcData?.errorVS || ''}</td>
+      </tr>
+      <tr>
+        <td>V_T</td>
+        <td>${data.tpData?.vTPrimario || ''}</td>
+        <td>${data.tpData?.vTSecundario || ''}</td>
+        <td>${data.tpData?.rtp || ''}</td>
+        <td>${data.tpData?.errorVT || ''}</td>
+        <td>LT</td>
+        <td>${data.tcData?.vTPrimario || ''}</td>
+        <td>${data.tcData?.vTSecundario || ''}</td>
+        <td>${data.tcData?.rtc || ''}</td>
+        <td>${data.tcData?.errorVT || ''}</td>
+      </tr>
+    </table>
+
+    <!-- Factor SIEC y Observaciones -->
+    <table>
+      <tr>
+        <td class="section-title" colspan="2">FACTOR SIEC</td>
+        <td class="section-title" colspan="8">OBSERVACIONES GENERALES</td>
+        <td rowspan="2" class="section-title" colspan="5">ADECUACIONES Y MEJORAS QUE NECESITA LA INSTALACIÓN ELÉCTRICA</td>
+      </tr>
+      <tr>
+        <td>FACTOR SIEC</td>
+        <td>${data.factorData?.factorSiec || ''}</td>
+        <td>EQUIPOS</td>
+        <td class="estado-cell">B</td>
+        <td class="estado-cell">R</td>
+        <td class="estado-cell">M</td>
+        <td>EQUIPOS</td>
+        <td class="estado-cell">B</td>
+        <td class="estado-cell">R</td>
+        <td class="estado-cell">M</td>
+      </tr>
+      <tr>
+        <td>FACTOR ENCONTRADO</td>
+        <td>${data.factorData?.factorEncontrado || ''}</td>
+        <td>RED</td>
+        <td class="estado-cell">${data.observaciones?.redMT === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.redMT === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.redMT === 'Malo' ? 'X' : ''}</td>
+        <td>TPS</td>
+        <td class="estado-cell">${data.observaciones?.tps === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.tps === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.tps === 'Malo' ? 'X' : ''}</td>
+        <td rowspan="9" colspan="5" style="vertical-align: top; font-size: 9px;">
+          <ul class="checkbox-list">
+            <li><input type="checkbox" ${data.adecuaciones?.cambiarMedidor || data.adecuaciones?.instalarMedidor ? 'checked' : ''}> Cambiar o instalar el medidor</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o instalar TC</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o Instalar TP</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiarCaja || data.adecuaciones?.instalarCaja ? 'checked' : ''}> Cambiar o instalación de caja para el medidor</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiarPuestaTierra || data.adecuaciones?.instalarPuestaTierra ? 'checked' : ''}> Cambiar o instalar sistema de puesta a tierra</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarBloquePruebas ? 'checked' : ''}> Cambiar o instalar Bloque de Pruebas</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesElectricas ? 'checked' : ''}> Cambiar o instalar Protecciones eléctricas</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCableSenal ? 'checked' : ''}> Cambiar o instalar Cable de señal (según norma)</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarSistemaComunicacion ? 'checked' : ''}> Cambiar o instalar sistema de comunicación</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarModem ? 'checked' : ''}> Cambiar o instalar MODEM</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesCommunicacion ? 'checked' : ''}> Cambiar o instalar Protecciones en comunicaciones</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarDuctosCableSeñal ? 'checked' : ''}> Cambiar o instalar ductos para cables de señal</li>
+            <li><input type="checkbox" ${data.adecuaciones?.otros ? 'checked' : ''}> Otros: ${data.adecuaciones?.otrosTexto || ''}</li>
+            <li><input type="checkbox" ${data.adecuaciones?.adecuaroInstalaraSeguridadCeldas ? 'checked' : ''}> Adecuar o instalar seguridad a las celdas de medidor</li>
+            <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCelda ? 'checked' : ''}> Cambiar o instalar Celda para medida(TP'S y TC'S) norma</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td>% ERROR FACTOR</td>
+        <td>${data.factorData?.errorFactor || ''}</td>
+        <td>CRUCETAS</td>
+        <td class="estado-cell">${data.observaciones?.crucetas === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.crucetas === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.crucetas === 'Malo' ? 'X' : ''}</td>
+        <td>TCS</td>
+        <td class="estado-cell">${data.observaciones?.tcs === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.tcs === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.tcs === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td>FACTOR FINAL</td>
+        <td>${data.factorData?.factorFinal || ''}</td>
+        <td>PARARRAYOS</td>
+        <td class="estado-cell">${data.observaciones?.pararrayos === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.pararrayos === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.pararrayos === 'Malo' ? 'X' : ''}</td>
+        <td>BLOQUES DE PRUEBA</td>
+        <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td rowspan="5"></td>
+        <td rowspan="5"></td>
+        <td>CORTACIRCUITOS</td>
+        <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Malo' ? 'X' : ''}</td>
+        <td>CELDA</td>
+        <td class="estado-cell">${data.observaciones?.celda === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.celda === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.celda === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td>FUSIBLES</td>
+        <td class="estado-cell">${data.observaciones?.fusibles === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.fusibles === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.fusibles === 'Malo' ? 'X' : ''}</td>
+        <td>GABINETES</td>
+        <td class="estado-cell">${data.observaciones?.gabinetes === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.gabinetes === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.gabinetes === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td>BAJANTES</td>
+        <td class="estado-cell">${data.observaciones?.bajantes === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.bajantes === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.bajantes === 'Malo' ? 'X' : ''}</td>
+        <td>MODEM</td>
+        <td class="estado-cell">${data.observaciones?.modem === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.modem === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.modem === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td>TRANSFORMADOR PRINCIPAL</td>
+        <td class="estado-cell">${data.observaciones?.transformador === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.transformador === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.transformador === 'Malo' ? 'X' : ''}</td>
+        <td>CABLE DE SEÑAL</td>
+        <td class="estado-cell">${data.observaciones?.cableSenal === 'Bueno' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.cableSenal === 'Regular' ? 'X' : ''}</td>
+        <td class="estado-cell">${data.observaciones?.cableSenal === 'Malo' ? 'X' : ''}</td>
+      </tr>
+      <tr>
+        <td>EQUIPO PATRON</td>
+        <td class="estado-cell"></td>
+        <td class="estado-cell"></td>
+        <td class="estado-cell"></td>
+        <td></td>
+        <td class="estado-cell"></td>
+        <td class="estado-cell"></td>
+        <td class="estado-cell"></td>
+      </tr>
+    </table>
+
+    <!-- Informe -->
+    <table>
+      <tr>
+        <td class="section-title" colspan="12">Nota: En caso de detectarse irregularidad(es), esta acta se constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica:</td>
+      </tr>
+      <tr>
+        <td class="section-title">INFORME</td>
+      </tr>
+      <tr>
+        <td style="text-align: justify; padding: 8px;">
+          ${data.informe || 'LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.'}
+        </td>
+      </tr>
+    </table>
+
+    <!-- Firmas hoja 2 -->
+    <table class="firma-table">
+      <tr>
+        <td>FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
+        <td>SUPERVISOR Y/O INTERVENTOR</td>
+        <td>SUSCRIPTOR O USUARIO</td>
+      </tr>
+      <tr>
+        <td class="firma-label">NOMBRE: ${userData.name || 'No especificado'}</td>
+        <td class="firma-label">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
+        <td class="firma-label">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
+      </tr>
+      <tr>
+        <td class="firma-label">
+          <div class="firma-container">
+            <span class="firma-text">FIRMA:</span>
+            ${signatures.firmaFuncionario ? 
+              `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" /></div>` : 
+              '<span class="firma-faltante">No disponible</span>'
+            }
+          </div>
+        </td>
+        <td class="firma-label">
+          <div class="firma-container">
+            <span class="firma-text">FIRMA:</span>
+            ${signatures.firmaSupervisor ? 
+              `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" /></div>` : 
+              '<span class="firma-faltante">No disponible</span>'
+            }
+          </div>
+        </td>
+        <td class="firma-label">
+          <div class="firma-container">
+            <span class="firma-text">FIRMA:</span>
+            ${signatures.firmaSuscriptor ? 
+              `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" /></div>` : 
+              '<span class="firma-faltante">No disponible</span>'
+            }
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="firma-label">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
+        <td class="firma-label">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
+        <td class="firma-label">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
+      </tr>
+    </table>
+
+    <div style="font-size: 10px; text-align: center; margin-top: 10px;">
+      ORIGINAL: EMPRESA | COPIA VERDE: USUARIO | NO ENTREGAR DINERO AL OPERARIO
+    </div>
+  </div>
 </body>
-      <div class="footer">
-          <p>Documento generado electrónicamente por EMSA ESP</p>
-          <p>${new Date().toLocaleString('es-ES')}</p>
-      </div>      
-      </html>
+</html>
     `;
   };
 
@@ -732,6 +1265,250 @@ const handleCloseModal = () => {
           </div>
         </div>
       </div>
+
+{/* Sección de Diagramas */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>📊 Diagramas Seleccionados</h2>
+  <div className={styles.diagramSummary}>
+    
+    {/* Diagrama Unifilar */}
+    <div className={styles.diagramItem}>
+      <h3 className={styles.diagramTitle}>Diagrama Unifilar</h3>
+      <div className={styles.diagramDetails}>
+        <p><strong>Selección:</strong> {diagramaUnifilar ? getDiagramName(diagramaUnifilar) : 'No seleccionado'}</p>
+      </div>
+      {diagramImages.diagramaUnifilar ? (
+        <div className={styles.diagramImageContainer}>
+          <img 
+            src={diagramImages.diagramaUnifilar} 
+            alt="Diagrama Unifilar" 
+            className={styles.diagramImage}
+          />
+        </div>
+      ) : (
+        <div className={styles.diagramMissing}>
+          <span className={styles.missingText}>Diagrama no disponible</span>
+        </div>
+      )}
+    </div>
+
+    {/* Diagrama Fasorial */}
+    <div className={styles.diagramItem}>
+      <h3 className={styles.diagramTitle}>Diagrama Fasorial</h3>
+      <div className={styles.diagramDetails}>
+        <p><strong>Selección:</strong> {diagramaFasorial ? getDiagramName(diagramaFasorial) : 'No seleccionado'}</p>
+      </div>
+      {diagramImages.diagramaFasorial ? (
+        <div className={styles.diagramImageContainer}>
+          <img 
+            src={diagramImages.diagramaFasorial} 
+            alt="Diagrama Fasorial" 
+            className={styles.diagramImage}
+          />
+        </div>
+      ) : (
+        <div className={styles.diagramMissing}>
+          <span className={styles.missingText}>Diagrama no disponible</span>
+        </div>
+      )}
+    </div>
+
+    {/* Diagrama de Conexiones */}
+    <div className={styles.diagramItem}>
+      <h3 className={styles.diagramTitle}>Diagrama de Conexiones</h3>
+          <div className={styles.diagramDetails}>
+            <p><strong>Selección:</strong> {diagramaConexiones ? getDiagramName(diagramaConexiones) : 'No seleccionado'}</p>
+          </div>
+          {diagramImages.diagramaConexiones ? (
+            <div className={styles.diagramImageContainer}>
+              <img 
+                src={diagramImages.diagramaConexiones} 
+                alt="Diagrama de Conexiones" 
+                className={styles.diagramImage}
+              />
+            </div>
+          ) : (
+            <div className={styles.diagramMissing}>
+              <span className={styles.missingText}>Diagrama no disponible</span>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+      {/* Sección de Configuración de Línea */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>⚡ Configuración de Línea</h2>
+        <div className={styles.sectionContent}>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Línea Dedicada:</span>
+            <span className={styles.value}>{lineaDedicada || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Tipo de Frontera:</span>
+            <span className={styles.value}>{tipoFrontera || 'No especificado'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección de Pruebas TP's */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔌 Prueba de Transformadores de Potencial (TP's)</h2>
+        <div className={styles.testSummary}>
+          <table className={styles.summaryTable}>
+            <thead>
+              <tr>
+                <th>Voltaje</th>
+                <th>Primario (V)</th>
+                <th>Secundario (V)</th>
+                <th>RTP</th>
+                <th>% Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>V_R</td>
+                <td>{tpData.vRPrimario || '-'}</td>
+                <td>{tpData.vRSecundario || '-'}</td>
+                <td>{tpData.rtp || '-'}</td>
+                <td>{tpData.errorVR || '-'}</td>
+              </tr>
+              <tr>
+                <td>V_S</td>
+                <td>{tpData.vSPrimario || '-'}</td>
+                <td>{tpData.vSSecundario || '-'}</td>
+                <td>{tpData.rtp || '-'}</td>
+                <td>{tpData.errorVS || '-'}</td>
+              </tr>
+              <tr>
+                <td>V_T</td>
+                <td>{tpData.vTPrimario || '-'}</td>
+                <td>{tpData.vTSecundario || '-'}</td>
+                <td>{tpData.rtp || '-'}</td>
+                <td>{tpData.errorVT || '-'}</td>
+              </tr>
+              <tr className={styles.highlightRow}>
+                <td colSpan="4" className={styles.label}>% Error Promedio:</td>
+                <td className={styles.value}>{tpData.errorPromedio || '-'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Sección de Pruebas TC's */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>⚡ Prueba de Transformadores de Corriente (TC's)</h2>
+        <div className={styles.testSummary}>
+          <table className={styles.summaryTable}>
+            <thead>
+              <tr>
+                <th>Parámetro</th>
+                <th>Primario (A)</th>
+                <th>Secundario (A)</th>
+                <th>RTC</th>
+                <th>% Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>I_R</td>
+                <td>{tcData.vRPrimario || '-'}</td>
+                <td>{tcData.vRSecundario || '-'}</td>
+                <td>{tcData.rtc || '-'}</td>
+                <td>{tcData.errorVR || '-'}</td>
+              </tr>
+              <tr>
+                <td>I_S</td>
+                <td>{tcData.vSPrimario || '-'}</td>
+                <td>{tcData.vSSecundario || '-'}</td>
+                <td>{tcData.rtc || '-'}</td>
+                <td>{tcData.errorVS || '-'}</td>
+              </tr>
+              <tr>
+                <td>I_T</td>
+                <td>{tcData.vTPrimario || '-'}</td>
+                <td>{tcData.vTSecundario || '-'}</td>
+                <td>{tcData.rtc || '-'}</td>
+                <td>{tcData.errorVT || '-'}</td>
+              </tr>
+              <tr className={styles.highlightRow}>
+                <td colSpan="4" className={styles.label}>% Error Promedio:</td>
+                <td className={styles.value}>{tcData.errorPromedio || '-'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Sección de Factor SIEC */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📈 Factor SIEC</h2>
+        <div className={styles.factorGrid}>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Factor SIEC:</span>
+            <span className={styles.value}>{factorData.factorSiec || '-'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Factor Encontrado:</span>
+            <span className={styles.value}>{factorData.factorEncontrado || '-'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>% Error de Factor:</span>
+            <span className={styles.value}>{factorData.errorFactor || '-'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Factor Final:</span>
+            <span className={styles.value}>{factorData.factorFinal || '-'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección de Observaciones */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>👀 Observaciones Generales</h2>
+        <div className={styles.observacionesGrid}>
+          {Object.entries(observaciones).map(([equipo, estado]) => (
+            estado && (
+              <div key={equipo} className={styles.observacionItem}>
+                <span className={styles.label}>{equipo}:</span>
+                <span className={`${styles.value} ${styles[estado.toLowerCase()]}`}>
+                  {estado}
+                </span>
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+
+      {/* Sección de Adecuaciones */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔧 Adecuaciones y Mejoras</h2>
+        <div className={styles.adecuacionesList}>
+          {getAdecuacionesSeleccionadas().map((adecuacion, index) => (
+            <div key={index} className={styles.adecuacionItem}>
+              • {adecuacion}
+            </div>
+          ))}
+          {adecuaciones.otros && adecuaciones.otrosTexto && (
+            <div className={styles.adecuacionItem}>
+              • Otros: {adecuaciones.otrosTexto}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sección de Informe */}
+      {informe && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>📝 Informe</h2>
+          <div className={styles.informeContent}>
+            <p>{informe}</p>
+          </div>
+        </div>
+      )}
+
+
       {/* Firmas actas*/}
       <div className={styles.section}>
       <h2 className={styles.sectionTitle}>✍️ Firmas del Acta</h2>
@@ -813,7 +1590,7 @@ const handleCloseModal = () => {
           onClick={prevStep}
           className={styles.secondaryButton}
         >
-          ← Volver a Editar
+          <FiArrowLeft /> Volver a Editar
         </button>
         
         <button 
@@ -821,7 +1598,7 @@ const handleCloseModal = () => {
           onClick={handlePreviewPDF}
           className={styles.previewButton}
         >
-          👁️ Vista Previa PDF
+          <FiEye /> Vista Previa PDF
         </button>
         
         <button 
@@ -829,7 +1606,7 @@ const handleCloseModal = () => {
           onClick={() => console.log('Enviando datos:', data)}
           className={styles.primaryButton}
         >
-          ✅ Finalizar y Enviar
+          <FiSend /> Finalizar y Enviar
         </button>
       </div>
 
@@ -843,7 +1620,7 @@ const handleCloseModal = () => {
                 className={styles.closeButton}
                 onClick={handleCloseModal}
               >
-                ×
+                <FiX />
               </button>
             </div>
 
@@ -858,13 +1635,13 @@ const handleCloseModal = () => {
                   onClick={handlePrintPDF}
                   className={styles.printButton}
                 >
-                  🖨️ Imprimir
+                  <FiPrinter /> Imprimir
                 </button>
                 <button 
                   onClick={handleDownloadPDF}
                   className={styles.pdfButton}
                 >
-                  💾 Descargar
+                  <FiDownload /> Descargar
                 </button>
               </div>
             </div>

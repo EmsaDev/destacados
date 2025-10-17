@@ -131,6 +131,9 @@
 }
 
 .primaryButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
   color: white;
   border: none;
@@ -149,6 +152,9 @@
 }
 
 .secondaryButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background: white;
   color: #333ff0;
   border: 2px solid #333ff0;
@@ -297,6 +303,9 @@
 }
 
 .previewButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background-color: #e74c3c;
   color: white;
 }
@@ -667,3 +676,184 @@
   }
 }
 
+/* Estilos para las nuevas secciones */
+.diagramSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.testSummary {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.summaryTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summaryTable th {
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.summaryTable td {
+  padding: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.highlightRow {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.highlightRow .label {
+  text-align: right;
+  padding-right: 15px;
+}
+
+.factorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.observacionesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.observacionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.observacionItem .bueno {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.observacionItem .regular {
+  color: #f39c12;
+  font-weight: 600;
+}
+
+.observacionItem .malo {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.adecuacionesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adecuacionItem {
+  padding: 8px 12px;
+  background: #e8f4fd;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.informeContent {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.informeContent p {
+  margin: 0;
+  line-height: 1.6;
+  color: #2c3e50;
+}
+
+/* Estilos para Diagramas (similares a firmas) */
+.diagramSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.diagramItem {
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+
+.diagramTitle {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+}
+
+.diagramDetails {
+  margin-bottom: 1rem;
+}
+
+.diagramDetails p {
+  margin: 0.5rem 0;
+  color: #34495e;
+}
+
+.diagramImageContainer {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.diagramImage {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.diagramMissing {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border: 1px dashed #ddd;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.missingText {
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .diagramSummary {
+    grid-template-columns: 1fr;
+  }
+  
+  .diagramImage {
+    max-height: 150px;
+  }
+}

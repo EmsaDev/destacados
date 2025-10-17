@@ -3,6 +3,7 @@ import axios from "axios";
 import styles from './Login.module.css';
 import logoImage from '../assets/images/logo-6@3x.png';
 import toast from "react-hot-toast";
+import {FiLogIn } from 'react-icons/fi';
 
 export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -27,7 +28,7 @@ export default function Login({ onLogin }) {
   setError("");
   
   try {
-    const res = await axios.post("http://172.18.27.53:5000/login", form);
+    const res = await axios.post("http://172.18.24.57:5000/login", form);
     console.log("Respuesta completa del servidor:", res.data);
     console.log("Campos recibidos:", {
       token: !!res.data.token,
@@ -157,7 +158,12 @@ export default function Login({ onLogin }) {
             {isLoading ? (
               <span className={styles.loadingText}>Iniciando sesión...</span>
             ) : (
-              <span>Entrar</span>
+              <span className={styles.buttonContent}>  
+                <FiLogIn style={{ 
+                verticalAlign: 'middle', 
+                marginRight: '0.5rem',
+                fontSize: '1.2rem'
+              }}/> Iniciar sesión</span>
             )}
           </button>
         </form>

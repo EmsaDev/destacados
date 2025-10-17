@@ -137,6 +137,10 @@
   transition: all 0.3s ease;
   margin-top: 0.5rem;
   box-shadow: 0 4px 12px rgba(51, 63, 240, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .loginButton:hover {
@@ -349,4 +353,9 @@
   0%, 20% { content: '.'; }
   40% { content: '..'; }
   60%, 100% { content: '...'; }
+}
+.buttonContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

@@ -21,7 +21,7 @@ function Form1({ data, handleChange, nextStep }) {
         }
         
         console.log('🔄 Solicitando próximo número de acta...');
-        const response = await axios.get('http://172.18.27.53:5000/api/next-review-number', {
+        const response = await axios.get('http://172.18.24.57:5000/api/next-review-number', {
           headers: {
             'Authorization': `Bearer ${token}`
           },
@@ -59,7 +59,7 @@ function Form1({ data, handleChange, nextStep }) {
         try {
           console.log('Enviando consulta con:', { codigo: data.codigo, asic: data.asic });
           
-          const response = await axios.post('http://172.18.27.53:5000/api/consultar-cliente', {
+          const response = await axios.post('http://172.18.24.57:5000/api/consultar-cliente', {
             codigo: data.codigo,
             asic: data.asic
           });
@@ -110,7 +110,7 @@ function Form1({ data, handleChange, nextStep }) {
           setUserData({ name, cc });
         } else if (token) {
           // Si no están en localStorage, hacer request al servidor
-          const response = await axios.get('http://172.18.27.53:5000/api/user-data', {
+          const response = await axios.get('http://172.18.24.57:5000/api/user-data', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
