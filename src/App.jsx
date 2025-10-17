@@ -9,6 +9,8 @@ import Summary from './components/Summary'
 import HelpPanel from './components/HelpPanel'
 import './App.css'
 import { Toaster } from "react-hot-toast";
+import { Code,Zap,CodeXml } from "lucide-react";
+import {FiFileText, FiChevronUp, FiChevronDown, FiLayers, FiEdit3, FiFile, FiCheckCircle,FiHelpCircle, FiLogOut, FiClipboard } from 'react-icons/fi';
 
 function App() {
   const [step, setStep] = useState(0) // 0 = login
@@ -22,6 +24,15 @@ function App() {
     diagramaFasorial: '',
     diagramaConexiones: ''
   })
+  const [completedSteps, setCompletedSteps] = useState({
+    step1: false,
+    step2: false,
+    step3: false,
+    step4: false,
+    step5: false
+  })
+
+  const [expandedSections, setExpandedSections] = useState({});
 
   // token guardado en localStorage
   useEffect(() => {
@@ -63,14 +74,22 @@ function App() {
     setIsMenuOpen(true) // Abrir menú después del login
   }
 
-  const nextStep = () => setStep(prev => prev + 1)
+  const nextStep = () => {
+  // Marcar el paso actual como completado antes de avanzar
+  markStepAsCompleted(step);
+  setStep(step + 1);
+};
   const prevStep = () => setStep(prev => prev - 1)
 
-  const goToStep = (stepNumber) => {
-    setStep(stepNumber)
-    setIsMenuOpen(false) // Cerrar menú al navegar
-  }
 
+  const goToStep = (targetStep) => {
+    // Verificar si el paso target está disponible
+    if (isStepAvailable(targetStep)) {
+      setStep(targetStep);
+    } else {
+      toast.error('Complete los pasos anteriores primero');
+    }
+  };
   // Logout
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -104,6 +123,34 @@ function App() {
   const handleFormData = (newData) => {
   setFormData(prev => ({ ...prev, ...newData }));
 };
+
+  const markStepAsCompleted = (stepNumber) => {
+  setCompletedSteps(prev => ({
+    ...prev,
+    [`step${stepNumber}`]: true
+  }));
+};
+
+  const isStepAvailable = (targetStep) => {
+    // El paso 1 siempre está disponible
+    if (targetStep === 1) return true;
+    
+    // Verificar que todos los pasos anteriores estén completados
+    for (let i = 1; i < targetStep; i++) {
+      if (!completedSteps[`step${i}`]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const toggleSection = (sectionName) => {
+  setExpandedSections(prev => ({
+    ...prev,
+    [sectionName]: !prev[sectionName]
+  }));
+};
+
 
   return (
     <div className="app-wrapper">
@@ -143,18 +190,7 @@ function App() {
       {user && (
         <>
           <aside className={`sidebar ${isMenuOpen ? 'sidebar-open' : ''}`}>
-            <div className="sidebar-header">
-              <h3>Menú de Navegación</h3>
-              <button 
-                className="close-menu"
-                onClick={() => setIsMenuOpen(false)}
-                aria-label="Cerrar menú"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <nav className="sidebar-nav">
+            <div className="user-info-container">
               <div className="user-info">
                 <div className="user-avatar">
                   {userData.name ? userData.name.charAt(0).toUpperCase() : user?.charAt(0).toUpperCase()}
@@ -164,48 +200,89 @@ function App() {
                   <span>CC: {userData.cc || 'N/A'}</span>
                 </div>
               </div>
-
-              <div className="nav-section">
-                <h4>Formularios</h4>
+              
+              <button className="close-menu-floating" onClick={toggleMenu}>
+                ×
+              </button>
+            </div>
+                  
+            <nav className="sidebar-nav">
+              <div className={`nav-section ${!expandedSections.formularios && 'collapsed'}`}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <h4>Formularios</h4>
+                  <button 
+                    className="nav-section-toggle"
+                    onClick={() => toggleSection('formularios')}
+                  >
+                    {expandedSections.formularios ? <FiChevronUp/> : <FiChevronDown/>}
+                  </button>
+                  
+                </div>
                 <button 
-                  className={`nav-item ${step === 1 ? 'nav-item-active' : ''}`}
-                  onClick={() => goToStep(1)}
-                >
-                  📋 Formulario 1 - Datos Básicos
-                </button>
-                <button 
-                  className={`nav-item ${step === 2 ? 'nav-item-active' : ''}`}
-                  onClick={() => goToStep(2)}
-                >
-                  📊 Formulario 2 - Información Adicional
-                </button>
-                <button 
-                  className={`nav-item ${step === 3 ? 'nav-item-active' : ''}`}
-                  onClick={() => goToStep(3)}
-                >
-                  📝 Formulario 3 - Detalles Finales
-                </button>
-                <button 
-                  className={`nav-item ${step === 4 ? 'nav-item-active' : ''}`}
-                  onClick={() => goToStep(4)}
-                >
-                  ✍️ Firma Digital
-                </button>
-                <button 
-                  className={`nav-item ${step === 5 ? 'nav-item-active' : ''}`}
-                  onClick={() => goToStep(5)}
-                >
-                  📄 Resumen Final
-                </button>
+                    className={`nav-item ${step === 1 ? 'nav-item-active' : ''}`}
+                    onClick={() => goToStep(1)}
+                  >
+                    <FiFileText className="nav-icon" />
+                    Formulario 1 - Datos Básicos
+                    {completedSteps.step1 && <FiCheckCircle className="nav-completed" />}
+                  </button>
+                  
+                  <button 
+                    className={`nav-item ${step === 2 ? 'nav-item-active' : ''} ${!isStepAvailable(2) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(2)}
+                    disabled={!isStepAvailable(2)}
+                  >
+                    📊 Formulario 2 - Información Adicional
+                    {completedSteps.step2 && <span className="nav-completed">✅</span>}
+                  </button>
+                  
+                  <button 
+                    className={`nav-item ${step === 3 ? 'nav-item-active' : ''} ${!isStepAvailable(3) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(3)}
+                    disabled={!isStepAvailable(3)}
+                  >
+                    📝 Formulario 3 - Detalles Finales
+                    {completedSteps.step3 && <span className="nav-completed">✅</span>}
+                  </button>
+                  
+                  <button 
+                    className={`nav-item ${step === 4 ? 'nav-item-active' : ''} ${!isStepAvailable(4) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(4)}
+                    disabled={!isStepAvailable(4)}
+                  >
+                    <FiLayers className="nav-icon" />
+                    Acta de Diagramas
+                    {completedSteps.step4 && <FiCheckCircle className="nav-completed" />}
+                  </button>
+                  
+                  <button 
+                    className={`nav-item ${step === 5 ? 'nav-item-active' : ''} ${!isStepAvailable(5) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(5)}
+                    disabled={!isStepAvailable(5)}
+                  >
+                    <FiEdit3 className="nav-icon" />
+                    Firma Digital
+                    {completedSteps.step5 && <FiCheckCircle className="nav-completed" />}
+                  </button>
+                  
+                  <button 
+                    className={`nav-item ${step === 6 ? 'nav-item-active' : ''} ${!isStepAvailable(6) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(6)}
+                    disabled={!isStepAvailable(6)}
+                  >
+                    <FiClipboard/> Resumen Final
+                  </button>
               </div>
 
               <div className="nav-section">
                 <h4>Acciones</h4>
                 <button className="nav-item" onClick={toggleHelp}>
-                  ❓ Ayuda y Soporte
+                  <FiHelpCircle className="nav-icon" />
+                  Ayuda y Soporte
                 </button>
                 <button className="nav-item logout-btn" onClick={handleLogout}>
-                  🚪 Cerrar Sesión
+                  <FiLogOut className="nav-icon" />
+                  Cerrar Sesión
                 </button>
               </div>
             </nav>
@@ -283,7 +360,15 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>⚡ emsa 2025 | Todos los derechos reservados &copy; </p> 
+        <p style={{ margin: 0, lineHeight: '1.6' }}>
+          <Zap size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+          emsa 2025 | Todos los derechos reservados &copy; 
+          <br />
+          <span style={{ fontSize: '16px', color: '#cccccc' }}>
+            <Code size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle', color: '#ffa500'}} />
+            Desarrollado por Ing. Nicolás Rodriguez <CodeXml size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle', color: '#ffa500'}} />
+          </span>
+        </p>
       </footer>
       {/* Contenedor global de los toasts */}
       <Toaster position="top-center" reverseOrder={false} />

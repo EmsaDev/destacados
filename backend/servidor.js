@@ -190,6 +190,6 @@ app.get("/api/next-review-number", authenticateToken, async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`Accesible desde la red en: http://172.18.27.53:${PORT}`);
+  console.log(`Servidor corriendo en http://172.18.24.57:${PORT}`);
+  console.log(`Accesible desde la red en: http://172.18.24.57:${PORT}`);
 });
