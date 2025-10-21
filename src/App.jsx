@@ -9,7 +9,7 @@ import Summary from './components/Summary'
 import HelpPanel from './components/HelpPanel'
 import './App.css'
 import { Toaster } from "react-hot-toast";
-import { Code,Zap,CodeXml } from "lucide-react";
+import { Code,Zap,CodeXml,Copyright } from "lucide-react";
 import {FiFileText, FiChevronUp, FiChevronDown, FiLayers, FiEdit3, FiFile, FiCheckCircle,FiHelpCircle, FiLogOut, FiClipboard } from 'react-icons/fi';
 
 function App() {
@@ -179,7 +179,7 @@ function App() {
               onClick={toggleHelp}
               aria-label="Ayuda"
             >
-              ❓
+              <FiHelpCircle />
             </button>
             <span className="user-welcome">Hola, {userData.name || user}</span>
           </div>
@@ -232,8 +232,9 @@ function App() {
                     onClick={() => goToStep(2)}
                     disabled={!isStepAvailable(2)}
                   >
-                    📊 Formulario 2 - Información Adicional
-                    {completedSteps.step2 && <span className="nav-completed">✅</span>}
+                    <FiFileText className="nav-icon" />
+                    Formulario 2 - Información Adicional
+                    {completedSteps.step2 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
                   <button 
@@ -241,8 +242,9 @@ function App() {
                     onClick={() => goToStep(3)}
                     disabled={!isStepAvailable(3)}
                   >
-                    📝 Formulario 3 - Detalles Finales
-                    {completedSteps.step3 && <span className="nav-completed">✅</span>}
+                    <FiFileText className="nav-icon" />
+                    Formulario 3 - Detalles Finales
+                    {completedSteps.step3 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
                   <button 
@@ -328,6 +330,7 @@ function App() {
                 <Form3 
                   data={formData} 
                   handleChange={handleChange} 
+                  updateData={handleFormData} 
                   nextStep={nextStep} 
                   prevStep={prevStep} 
                 />
@@ -361,8 +364,8 @@ function App() {
 
       <footer className="app-footer">
         <p style={{ margin: 0, lineHeight: '1.6' }}>
-          <Zap size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-          emsa 2025 | Todos los derechos reservados &copy; 
+          <Zap size={16} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+          emsa 2025 | Todos los derechos reservados  <Copyright size={14} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} /> 
           <br />
           <span style={{ fontSize: '16px', color: '#cccccc' }}>
             <Code size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle', color: '#ffa500'}} />

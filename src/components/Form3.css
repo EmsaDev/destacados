@@ -1,5 +1,5 @@
 .form3-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -10,54 +10,413 @@
   margin-bottom: 30px;
 }
 
-.section {
-  background: #f9f9f9;
-  padding: 20px;
-  margin-bottom: 25px;
+.table-container {
+  background: white;
   border-radius: 8px;
-  border-left: 4px solid #007bff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 30px;
 }
 
-.section h3 {
-  color: #007bff;
-  margin-bottom: 20px;
+/* ===== ESTILOS GENERALES PARA TODAS LAS TABLAS ===== */
+.medicion-table,
+.calculos-table,
+.pruebas-table,
+.transformadores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.medicion-table th,
+.calculos-table th,
+.pruebas-table th,
+.transformadores-table th {
+  background: #007bff;
+  color: white;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid #ddd;
+}
+
+.medicion-table td,
+.calculos-table td,
+.pruebas-table td,
+.transformadores-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ===== ENCABEZADOS COMBINADOS ===== */
+.medicion-table th[colspan="5"],
+.medicion-table th[colspan="4"],
+.medicion-table th[colspan="3"],
+.calculos-table th[colspan="10"],
+.pruebas-table th[colspan="5"],
+.pruebas-table th[colspan="8"],
+.transformadores-table th[colspan="6"] {
+  background: #007bff;
+  border-left: none;
+  border-right: none;
   font-size: 16px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 8px;
+  padding: 15px;
 }
 
-.input-group {
-  margin-bottom: 15px;
+/* Bordes externos para encabezados combinados */
+.medicion-table thead tr:first-child th:first-child,
+.calculos-table thead tr:first-child th:first-child,
+.pruebas-table thead tr:first-child th:first-child,
+.transformadores-table thead tr:first-child th:first-child {
+  border-left: 1px solid #ddd;
 }
 
-.input-group label {
-  display: block;
-  margin-bottom: 8px;
+.medicion-table thead tr:first-child th:last-child,
+.calculos-table thead tr:first-child th:last-child,
+.pruebas-table thead tr:first-child th:last-child,
+.transformadores-table thead tr:first-child th:last-child {
+  border-right: 1px solid #ddd;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA MEDICIÓN ===== */
+.medicion-type {
+  background: #007bff !important;
+  color: white;
   font-weight: bold;
-  color: #555;
-  min-width: 100px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 40px;
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
+  transform: rotate(180deg);
 }
 
-.input-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+.medicion-type.activa,
+.medicion-type.reactiva {
+  background: #007bff !important;
+}
+
+.ubicacion {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+  min-width: 120px;
+}
+
+.ubicacion.principal,
+.ubicacion.bornera,
+.ubicacion.tcs,
+.ubicacion.tps {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.ubicacion.pruebas {
+  background: #e8f5e8;
+  text-align: center;
+  font-weight: bold;
+}
+
+.ubicacion.celda {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.header-pruebas {
+  background: #ffeb3b3d !important;
+  color: #9b8e1c !important;
+  font-size: 15px;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA CÁLCULOS ===== */
+.fase {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+}
+
+.fase.total {
+  background: #e9ecef;
+  font-weight: bold;
+  color: #000;
+}
+
+.secuencia-fases {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+}
+
+.porcentaje_error, .giros, .tiempo, .horas {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA PRUEBAS ===== */
+.tipo-header, .conforme-header, .prueba-integracion-header {
+  background: #007bff;
+  color: white;
+  font-weight: 600;
+  padding: 10px;
+}
+
+.tipo-item {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: left;
+  padding-left: 12px;
+}
+
+.conforme-item {
+  background: #ffffff;
+  text-align: center;
+  padding: 8px;
+}
+
+.integracion-label {
+  background: #e9ecef;
+  font-weight: 600;
+  color: #495057;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.integracion-input {
+  background: #ffffff;
+  text-align: center;
+  padding: 8px;
+}
+
+.integration_label {
+  background: #e9ecef;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+  padding: 10px;
+}
+
+.integration-label {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* ===== CHECKBOXES Y RADIOS ===== */
+.checkbox-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #495057;
+}
+
+.checkbox-label input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-group-horizontal {
+  display: flex;
+  gap: 20px;
   align-items: center;
 }
 
-.input-row input {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+/* ===== INPUTS GENERALES ===== */
+.medicion-table input,
+.calculos-table input,
+.pruebas-table input[type="text"],
+.transformadores-table input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.medicion-table input:focus,
+.calculos-table input:focus,
+.pruebas-table input[type="text"]:focus,
+.transformadores-table input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  background: #f8f9fa;
+}
+
+.medicion-table input::placeholder,
+.calculos-table input::placeholder,
+.pruebas-table input[type="text"]::placeholder,
+.transformadores-table input::placeholder {
+  color: #6c757d;
+  font-size: 11px;
+}
+
+/* ===== EFECTOS HOVER Y ALTERNANCIA ===== */
+.medicion-table tr:nth-child(even),
+.calculos-table tr:nth-child(even),
+.pruebas-table tr:nth-child(even),
+.transformadores-table tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.medicion-table tr:hover,
+.calculos-table tr:hover,
+.pruebas-table tr:hover,
+.transformadores-table tr:hover {
+  background: #e3f2fd;
+}
+
+/* Eliminar espacios sobrantes en pruebas */
+.pruebas-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.pruebas-table td[rowspan] {
+  vertical-align: middle;
+}
+
+/* ===== SECCIÓN EVIDENCIAS E INFORME ===== */
+.evidencias-section {
+  padding: 25px;
+  background: white;
+  border-radius: 8px;
+}
+
+.section-title {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.evidencias-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.evidencia-options {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.evidencia-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 100px;
+}
+
+.evidencia-option:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.evidencia-option input[type="radio"]:checked + .evidencia-icon {
+  transform: scale(1.2);
+}
+
+.evidencia-option input[type="radio"]:checked ~ span:last-child {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.evidencia-option input[type="radio"] {
+  display: none;
+}
+
+.evidencia-icon {
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.evidencia-option span:last-child {
+  font-size: 14px;
+  color: #495057;
+  transition: all 0.3s ease;
+}
+
+.file-hint {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+/* ===== FORMULARIOS Y SELECTS ===== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.form-group input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.input-row input:focus {
+.informe-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.informe-select:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
+.file-input:disabled {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+/* ===== NAVEGACIÓN ===== */
 .form-navigation {
   display: flex;
   justify-content: space-between;
@@ -93,14 +452,70 @@
   background: #0056b3;
 }
 
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .form3-container {
     padding: 10px;
   }
   
-  .input-row {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .medicion-table,
+  .calculos-table,
+  .pruebas-table,
+  .transformadores-table {
+    min-width: 800px;
+    font-size: 12px;
+  }
+  
+  .medicion-table th,
+  .medicion-table td,
+  .calculos-table th,
+  .calculos-table td,
+  .pruebas-table th,
+  .pruebas-table td,
+  .transformadores-table th,
+  .transformadores-table td {
+    padding: 6px 4px;
+  }
+  
+  .medicion-table input,
+  .calculos-table input,
+  .pruebas-table input[type="text"],
+  .transformadores-table input {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+  
+  .medicion-type {
+    min-width: 30px;
+    font-size: 12px;
+  }
+  
+  .evidencias-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .evidencia-options {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .evidencia-option {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-width: auto;
+  }
+  
+  .checkbox-group {
     gap: 8px;
+  }
+  
+  .checkbox-label {
+    font-size: 11px;
   }
   
   .form-navigation {
