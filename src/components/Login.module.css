@@ -69,7 +69,7 @@
 
 .inputGroup input:focus {
   outline: none;
-  border-color: #333ff0;
+  border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(51, 63, 240, 0.15);
   background: white;
 }
@@ -109,7 +109,7 @@
 }
 
 .passwordToggle:hover {
-  color: #333ff0;
+  color: #007bff;
   background-color: #f0f3ff;
 }
 
@@ -126,7 +126,7 @@
 
 
 .loginButton {
-  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #1482f8 100%);
   color: white;
   border: none;
   padding: 1rem;
@@ -176,7 +176,7 @@
 
 .illustration {
   flex: 1;
-  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #117ef3 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -255,7 +255,7 @@
 }
 
 .passwordToggle:hover .passwordIcon {
-  stroke: #333ff0;
+  stroke: #007bff;
 }
 
 .passwordToggle:disabled .passwordIcon {

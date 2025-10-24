@@ -33,7 +33,5 @@ const clientSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índice para búsquedas más rápidas
-clientSchema.index({ codigo: 1 });
 
 export default mongoose.model('Clients', clientSchema);

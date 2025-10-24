@@ -1,0 +1,385 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* Barra de progreso mejorada */
+.progress {
+  display: flex;
+  justify-content: space-between;
+  margin: 40px 0;
+  position: relative;
+}
+
+.progress::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #e0e0e0;
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+/* Línea de progreso azul */
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  height: 3px;
+  background-color: #007bff;
+  z-index: 2;
+  transition: all 0.4s ease;
+  width: 0%;
+}
+
+/* Animación de la línea de progreso */
+.progressStep.completed ~ .progressStep .progress::after,
+.progressStep.active ~ .progressStep .progress::after {
+  width: calc((100% / (var(--total-steps) - 1)) * var(--completed-steps));
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 3;
+  flex: 1;
+}
+
+.stepNumber {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+  transition: all 0.4s ease;
+  border: 3px solid #e0e0e0;
+  font-size: 16px;
+}
+
+/* Paso activo */
+.progressStep.active .stepNumber {
+  background-color: white;
+  color: #007bff;
+  border-color: #007bff;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+}
+
+/* Pasos completados */
+.progressStep.completed .stepNumber {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: scale(1.1);
+}
+
+.stepTitle {
+  font-size: 12px;
+  text-align: center;
+  color: #95a5a6;
+  font-weight: 500;
+  max-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.progressStep.active .stepTitle,
+.progressStep.completed .stepTitle {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.progressStep.active .stepTitle {
+  color: #007bff;
+}
+
+.content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.signerInfo {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.signerInfo h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 22px;
+}
+
+.signerDetails p {
+  margin: 10px 0;
+  color: #34495e;
+  font-size: 15px;
+}
+
+.padContainer {
+  margin-bottom: 30px;
+}
+
+.instructions {
+  background-color: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.instructions p {
+  margin: 0;
+  color: #495057;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.canvas {
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  background-color: white;
+  margin: 0 auto;
+  display: block;
+  cursor: crosshair;
+  transition: all 0.3s ease;
+}
+
+.canvas:hover {
+  border-color: #0056b3;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.navigationButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+/* Botones mejorados */
+.btnBack, .btnPrimary, .btnSecondary {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  border: 2px solid transparent;
+}
+
+.btnBack {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btnBack:hover {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btnPrimary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btnPrimary:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btnSecondary {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 20px;
+  font-size: 15px;
+}
+
+.btnSecondary:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .progress {
+  display: flex;
+  justify-content: space-between;
+  margin: 40px 0;
+  position: relative;
+  counter-reset: step;
+}
+
+/* Línea gris de fondo */
+.progress::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  height: 3px;
+  background-color: #007bff !important;
+  z-index: 2;
+  transition: width 0.5s ease-in-out;
+}
+
+/* Estados de la línea de progreso */
+.progress[data-progress="0"]::after { width: 0%; }
+.progress[data-progress="1"]::after { width: 25%; }
+.progress[data-progress="2"]::after { width: 50%; }
+.progress[data-progress="3"]::after { width: 75%; }
+.progress[data-progress="4"]::after { width: 100%; }
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 3;
+  flex: 1;
+}
+
+.stepNumber {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+  transition: all 0.4s ease;
+  border: 3px solid #e0e0e0;
+  font-size: 16px;
+}
+
+/* Paso activo */
+.progressStep.active .stepNumber {
+  background-color: white;
+  color: #007bff;
+  border-color: #007bff;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+}
+
+/* Pasos completados */
+.progressStep.completed .stepNumber {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: scale(1.1);
+}
+  
+  .stepTitle {
+    text-align: left;
+    max-width: none;
+    font-size: 14px;
+  }
+  
+  .navigationButtons {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .btnBack, .btnPrimary, .btnSecondary {
+    width: 100%;
+  }
+  
+  .canvas {
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .header h2 {
+    font-size: 24px;
+  }
+  
+  .signerInfo h3 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .content {
+    padding: 20px 15px;
+  }
+  
+  .stepNumber {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .canvas {
+    height: 200px;
+  }
+  
+  .btnBack, .btnPrimary, .btnSecondary {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}

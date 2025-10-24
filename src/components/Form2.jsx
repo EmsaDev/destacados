@@ -1,69 +1,8 @@
-import React, { useState } from 'react';
-import './Form2.css';
+import React, { useState, useEffect } from 'react';
+import styles from './Form2.module.css';
 
-const Form2 = ({ data, updateData, nextStep, prevStep }) => {
-  // Estado para todos los campos del formulario
-  const [formData, setFormData] = useState({
-    telefono: data.telefono || '',
-    uso: data.uso || '',
-    direccion: data.direccion || '',
-    nombre: data.nombre || '',
-    ubicacion: data.ubicacion || '',
-    familias: data.familias || '',
-    nivelTension: data.nivelTension || '',
-    bloquesPrueba: data.bloquesPrueba || '',
-    tipoMedidor: data.tipoMedidor || '',
-    tipoInstalacion: data.tipoInstalacion || '',
-    ubicacionMedidor: data.ubicacionMedidor || '',
-    proteccionGeneral: data.proteccionGeneral || '',
-    hF: data.hF || '',
-    acometidaTipo: data.acometidaTipo || '',
-    acometidaLongitud: data.acometidaLongitud || '',
-    acometidaCalibre: data.acometidaCalibre || '',
-    modemUbicacion: data.modemUbicacion || '',
-    configuracionMedida: data.configuracionMedida || '',
-    tipoMedida: data.tipoMedida || '',
-    // Datos de medidor encontrado
-    medidorEncontrado: data.medidorEncontrado || {
-      // Activa1
-      numeroActiva1: '', marcaActiva1: '', tipoActiva1: '', capacidadActiva1: '', 
-      tensionActiva1: '', claseActiva1: '', kdActiva1: '', khActiva1: '', 
-      lecturaActiva1: '', edActiva1: '', fechaLabActiva1: '',
-      
-      // Activa2
-      numeroActiva2: '', marcaActiva2: '', tipoActiva2: '', capacidadActiva2: '', 
-      tensionActiva2: '', claseActiva2: '', kdActiva2: '', khActiva2: '', 
-      lecturaActiva2: '', edActiva2: '', fechaLabActiva2: '',
-      
-      // Reactiva
-      numeroReactiva: '', marcaReactiva: '', tipoReactiva: '', capacidadReactiva: '', 
-      tensionReactiva: '', claseReactiva: '', kdReactiva: '', khReactiva: '', 
-      lecturaReactiva: '', edReactiva: '', fechaLabReactiva: ''
-    },
-    
-    // Datos de medidor instalado
-    medidorInstalado: data.medidorInstalado || {
-      // Activa1
-      numeroActiva1: '', marcaActiva1: '', tipoActiva1: '', capacidadActiva1: '', 
-      tensionActiva1: '', claseActiva1: '', kdActiva1: '', khActiva1: '', 
-      lecturaActiva1: '', edActiva1: '', fechaLabActiva1: '',
-      
-      // Activa2
-      numeroActiva2: '', marcaActiva2: '', tipoActiva2: '', capacidadActiva2: '', 
-      tensionActiva2: '', claseActiva2: '', kdActiva2: '', khActiva2: '', 
-      lecturaActiva2: '', edActiva2: '', fechaLabActiva2: '',
-      
-      // Reactiva
-      numeroReactiva: '', marcaReactiva: '', tipoReactiva: '', capacidadReactiva: '', 
-      tensionReactiva: '', claseReactiva: '', kdReactiva: '', khReactiva: '', 
-      lecturaReactiva: '', edReactiva: '', fechaLabReactiva: ''
-    },
-    // Datos de transformador de potencia
-    transformador: data.transformador || {
-      numero: '', marca: '', kva: '', año: '', v1v2: '', propietario: '', circuito: ''
-    }
-  });
-
+const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
+  
   // Opciones para selects
   const opcionesUso = ['R', 'C', 'I', 'O'];
   const opcionesUbicacion = ['Rural', 'Urbano'];
@@ -75,144 +14,145 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
   const opcionesAcometida = ['ÁREA', 'SUBTERRÁNEA'];
   const opcionesConfiguracion = ['2 ELEM', '3 ELEM'];
   const opcionesTipoMedida = ['DIRECTA', 'SEMIINDIRECTA', 'INDIRECTA'];
-  const opcionesPropietario = ['EMSA', 'PARTICULAR'];
-
-  // Handler para cambios en los campos
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Handler para cambios en objetos anidados
-  const handleNestedChange = (objectName, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [objectName]: {
-        ...prev[objectName],
-        [field]: value
-      }
-    }));
-  };
-
   
-
   return (
-    <div className="form2-container">
-      <div className="form-section">
-  <h3>Datos generales</h3>
-  <div className="datos-generales-grid">
-    <div className="form-group">
-      <label>Nombre</label>
-      <input 
-        type="text" 
-        value={formData.nombre || data.nombre || ''} 
-        onChange={(e) => handleChange('nombre', e.target.value)} 
-        placeholder="Ingrese el nombre"
-      />
-    </div>
-    <div className="form-group">
-      <label>Dirección de la población</label>
-      <input 
-        type="text" 
-        value={formData.direccion || data.direccion || ''} 
-        onChange={(e) => handleChange('direccion', e.target.value)} 
-        placeholder={data.direccion}
-      />
-    </div>
-    <div className="form-group">
-      <label>Carga Kw</label>
-      <input 
-        type="text" 
-        value={formData.cargaKw} 
-        onChange={(e) => handleChange('cargaKw', e.target.value)} 
-        placeholder="Ingrese carga Kw"
-      />
-    </div>
-    <div className="form-group">
-      <label>Ciclo</label>
-      <input 
-        type="text" 
-        value={formData.ciclo} 
-        onChange={(e) => handleChange('ciclo', e.target.value)} 
-        placeholder="Ingrese ciclo"
-      />
-    </div>
-    <div className="form-group">
-      <label>Factor</label>
-      <input 
-        type="text" 
-        value={formData.factor1} 
-        onChange={(e) => handleChange('factor1', e.target.value)} 
-        placeholder="Ingrese factor"
-      />
-    </div>
-    <div className="form-group">
-      <label>Factor</label>
-      <input 
-        type="text" 
-        value={formData.factor2} 
-        onChange={(e) => handleChange('factor2', e.target.value)} 
-        placeholder="Ingrese factor"
-      />
-    </div>
-    <div className="form-group">
-      <label>Factor</label>
-      <input 
-        type="text" 
-        value={formData.factor3} 
-        onChange={(e) => handleChange('factor3', e.target.value)} 
-        placeholder="Ingrese factor"
-      />
-    </div>
-    <div className="form-group">
-      <label>Numero de macromedidor</label>
-      <input 
-        type="text" 
-        value={formData.macromedidor} 
-        onChange={(e) => handleChange('macromedidor', e.target.value)} 
-        placeholder="Ingrese macromedidor"
-      />
-    </div>
-    <div className="form-group">
-      <label>Nodo trafo</label>
-      <input 
-        type="text" 
-        value={formData.nodoTrafo} 
-        onChange={(e) => handleChange('nodoTrafo', e.target.value)} 
-        placeholder="Ingrese nodo trafo"
-      />
-    </div>
-    <div className="form-group">
-      <label>Comercializador</label>
-      <input 
-        type="text" 
-        value={formData.comercializador} 
-        onChange={(e) => handleChange('comercializador', e.target.value)} 
-        placeholder="Ingrese comercializador"
-      />
-    </div>
-  </div>
-        <h3>Datos del suscriptor y Equipos de Medida Encontrados</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Teléfono</label>
-            <input 
-              type="text" 
-              value={formData.telefono} 
-              onChange={(e) => handleChange('telefono', e.target.value)} 
-              placeholder="Ingrese teléfono"
-            />
-          </div>
-        
-
-          <div className="form-group">
-            <label>Uso</label>
-            <div className="button-group">
+    <div className={styles.container}>
+      <div className={styles.formSection}>
+      <h3 className={styles.formSectionTitle}>Datos generales</h3>
+      <div className={styles.datosGeneralesGrid}>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Nombre</label>
+          <input 
+            name="nombre"
+            type="text" 
+            value={data.nombre || data.nombre || ''} 
+            onChange={handleChange}
+            className={styles.input}
+            placeholder="Ingrese el nombre"
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Dirección de la población</label>
+          <input 
+            name="direccion"
+            type="text" 
+            value={data.direccion || data.direccion || ''} 
+            onChange={handleChange} 
+            className={styles.input}
+            placeholder={data.direccion}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Carga Kw</label>
+          <input 
+            name="cargaKw"
+            type="text" 
+            value={data.cargaKw  || ''} 
+            onChange={handleChange}
+            className={styles.input}
+            placeholder="Ingrese carga Kw"
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Ciclo</label>
+          <input
+            name="ciclo"
+            type="text" 
+            value={data.ciclo} 
+            onChange={handleChange}
+            placeholder="Ingrese ciclo"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Factor</label>
+          <input 
+            name="factor1"
+            type="text" 
+            value={data.factor1} 
+            onChange={handleChange} 
+            placeholder="Ingrese factor"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Factor</label>
+          <input
+            name="factor2" 
+            type="text" 
+            value={data.factor2} 
+            onChange={handleChange} 
+            placeholder="Ingrese factor"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Factor</label>
+          <input 
+            name="factor3"
+            type="text" 
+            value={data.factor3} 
+            onChange={handleChange} 
+            placeholder="Ingrese factor"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Numero de macromedidor</label>
+          <input 
+            type="text" 
+            name='macromedidor'
+            value={data.macromedidor} 
+            onChange={handleChange} 
+            placeholder="Ingrese macromedidor"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Nodo trafo</label>
+          <input 
+            name='nodoTrafo'
+            type="text" 
+            value={data.nodoTrafo} 
+            onChange={handleChange} 
+            placeholder="Ingrese nodo trafo"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Comercializador</label>
+          <input 
+            name='comercializador'
+            type="text" 
+            value={data.comercializador} 
+            onChange={handleChange} 
+            placeholder="Ingrese comercializador"
+            className={styles.input}
+          />
+        </div>
+      </div>
+      <h3 className={styles.formSectionTitle}>Datos del suscriptor y Equipos de Medida Encontrados</h3>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Teléfono</label>
+          <input
+            name='telefono'
+            type="text" 
+            value={data.telefono} 
+            onChange={handleChange} 
+            placeholder="Ingrese teléfono"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Uso</label>
+          <div className={styles.buttonGroup}>
               {opcionesUso.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.uso === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('uso', opcion)}
+                  className={data.uso === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'uso',value: opcion}})}
                 >
                   {opcion} {opcion === 'R' ? '(Residencial)' : opcion === 'C' ? '(Comercial)' : opcion === 'I' ? '(Industrial)' : '(Oficial)'}
                 </button>
@@ -220,15 +160,15 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Ubicación</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Ubicación</label>
+            <div className={styles.buttonGroup}>
               {opcionesUbicacion.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.ubicacion === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('ubicacion', opcion)}
+                  className={data.ubicacion === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'ubicacion',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -237,16 +177,16 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Familias</label>
+        <div className={styles.Row}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Familias</label>
             <div className="button-group">
               {opcionesFamilias.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.familias === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('familias', opcion)}
+                  className={data.familias === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'familias',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -254,15 +194,15 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Nivel de Tensión</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Nivel de Tensión</label>
+            <div className={styles.buttonGroup}>
               {opcionesNivelTension.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.nivelTension === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('nivelTension', opcion)}
+                  className={data.nivelTension === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'nivelTension',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -270,15 +210,15 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Bloques de Prueba</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Bloques de Prueba</label>
+            <div className={styles.buttonGroup}>
               {opcionesSiNo.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.bloquesPrueba === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('bloquesPrueba', opcion)}
+                  className={data.bloquesPrueba === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'bloquesPrueba',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -290,50 +230,48 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
 
 
       {/* Sección 2: Protección y Acometida */}
-      <div className="form-section">
-        <h3>Tipo de Instalación y Medidor</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Tipo de Medidor</label>
-            <div className="button-group">
+      <div className={styles.formSection}>
+        <h3 className={styles.formSectionTitle}>Tipo de Instalación y Medidor</h3>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tipo de Medidor</label>
+            <div className={styles.buttonGroup}>
               {opcionesTipoMedidor.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.tipoMedidor === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('tipoMedidor', opcion)}
+                  className={data.tipoMedidor === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'tipoMedidor',value: opcion}})}
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="form-group">
-            <label>Tipo de Instalación</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tipo de Instalación</label>
+            <div className={styles.buttonGroup}>
               {opcionesInteriorExterior.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.tipoInstalacion === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('tipoInstalacion', opcion)}
+                  className={data.tipoInstalacion === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'tipoInstalacion',value: opcion}})}
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="form-group">
-            <h3>Ubicación del Medidor</h3>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Ubicación del Medidor</label>
+            <div className={styles.buttonGroup}>
               {opcionesInteriorExterior.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.ubicacionMedidor === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('ubicacionMedidor', opcion)}
+                  className={data.ubicacionMedidor === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'ubicacionMedidor',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -341,26 +279,29 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           </div>
         </div>
-        </div>
-      <div className="form-section">
-        
-        <h3>Protección y Acometida</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Protección General (A)</label>
+      </div>
+
+      <div className={styles.formSection}>
+        <h3 className={styles.formSectionTitle}>Protección y Acometida</h3>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Protección General (A)</label>
             <input 
+              name="proteccionGeneral"
               type="text" 
-              value={formData.proteccionGeneral} 
-              onChange={(e) => handleChange('proteccionGeneral', e.target.value)} 
+              value={data.proteccionGeneral} 
+              onChange={handleChange} 
               placeholder="Ej: 100A"
+              className={styles.input}
             />
           </div>
-
-          <div className="form-group">
-            <label>Tipo de Acometida</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tipo de Acometida</label>
             <select 
-              value={formData.acometidaTipo} 
-              onChange={(e) => handleChange('acometidaTipo', e.target.value)}
+              name="acometidaTipo"
+              value={data.acometidaTipo} 
+              onChange={handleChange}
+              className={styles.select}
             >
               <option value="">Seleccionar...</option>
               {opcionesAcometida.map(opcion => (
@@ -370,80 +311,83 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-          <div className="form-group">
-            <label>#F #H</label>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>#F #H</label>
             <input 
               type="text" 
-              value={formData.hf} 
-              onChange={(e) => handleChange('proteccionGeneral', e.target.value)} 
+              name="hf"
+              value={data.hf} 
+              onChange={handleChange} 
               placeholder="Ej: "
+              className={styles.input}
             />
           </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Longitud Acometida (M)</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Longitud Acometida (M)</label>
             <input 
+              name="acometidaLongitud"
               type="number" 
-              value={formData.acometidaLongitud} 
-              onChange={(e) => handleChange('acometidaLongitud', e.target.value)} 
+              value={data.acometidaLongitud} 
+              onChange={handleChange} 
               placeholder="Metros"
+              className={styles.input}
             />
           </div>
-
-          <div className="form-group">
-            <label>Calibre Acometida</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Calibre Acometida</label>
             <input 
+              name="acometidaCalibre"
               type="text" 
-              value={formData.acometidaCalibre} 
-              onChange={(e) => handleChange('acometidaCalibre', e.target.value)} 
+              value={data.acometidaCalibre} 
+              onChange={handleChange} 
               placeholder="Ej: 2/0 AWG"
+              className={styles.input}
             />
           </div>
         </div>
-        <h3>Modem y Configuración</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Ubicación del Modem</label>
-            <div className="button-group">
+
+        <h3 className={styles.formSectionTitle}>Modem y Configuración</h3>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Ubicación del Modem</label>
+            <div className={styles.buttonGroup}>
               {opcionesInteriorExterior.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.modemUbicacion === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('modemUbicacion', opcion)}
+                  className={data.modemUbicacion === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'modemUbicacion',value: opcion}})}
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="form-group">
-            <label>Configuración de la Medida</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Configuración de la Medida</label>
+            <div className={styles.buttonGroup}>
               {opcionesConfiguracion.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.configuracionMedida === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('configuracionMedida', opcion)}
+                  className={data.configuracionMedida === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'configuracionMedida',value: opcion}})}
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="form-group">
-            <label>Tipo de Medida</label>
-            <div className="button-group">
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tipo de Medida</label>
+            <div className={styles.buttonGroup}>
               {opcionesTipoMedida.map(opcion => (
                 <button
                   key={opcion}
                   type="button"
-                  className={formData.tipoMedida === opcion ? 'btn-selected' : 'btn-option'}
-                  onClick={() => handleChange('tipoMedida', opcion)}
+                  className={data.tipoMedida === opcion ? styles.btnSelected : styles.btnOption}
+                  onClick={() => handleChange({target: {name: 'tipoMedida',value: opcion}})}
                 >
                   {opcion}
                 </button>
@@ -454,10 +398,10 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       {/* Sección 5: Medidor Encontrado y Medidor Instalado */}
-      <div className="form-section">
-        <h3>Medidor Encontrado</h3>
-        <div className="table-responsive">
-          <table className="data-table">
+      <div className={styles.formSection}>
+        <h3 className={styles.formSectionTitle}>Medidor Encontrado</h3>
+        <div className={styles.tableResponsive}>
+          <table className={styles.dataTable}>
             <thead>
               <tr>
                 <th>Medida</th>
@@ -477,279 +421,327 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
             <tbody>
               {/* Fila para Activa1 */}
               <tr>
-                <td className="measure-type">Activa1</td>
+                <td className={styles.measureType}>Activa1</td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.numeroActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'numeroActiva1', e.target.value)}
-                    className="table-input"
+                    name="numeroActiva1"
+                    value={data.numeroActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select 
+                    name="marcaActiva1"
+                    value={data.marcaActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.select}
+                  >
+                    <option value="">Seleccionar marca...</option>
+                    <option value="elster">Elster</option>
+                    <option value="actaris">Actaris</option>
+                    <option value="landys">Landys</option>
+                    <option value="microstar">Microstar</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tipoActiva1"
+                    value={data.tipoActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.marcaActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'marcaActiva1', e.target.value)}
-                    className="table-input"
+                    name="capacidadActiva1"
+                    value={data.capacidadActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tipoActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tipoActiva1', e.target.value)}
-                    className="table-input"
+                    name="tensionActiva1"
+                    value={data.tensionActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.capacidadActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'capacidadActiva1', e.target.value)}
-                    className="table-input"
+                    name="claseActiva1"
+                    value={data.claseActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tensionActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tensionActiva1', e.target.value)}
-                    className="table-input"
+                    name="kdActiva1"
+                    value={data.kdActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.claseActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'claseActiva1', e.target.value)}
-                    className="table-input"
+                    name="khActiva1"
+                    value={data.khActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.kdActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'kdActiva1', e.target.value)}
-                    className="table-input"
+                    name="lecturaActiva1"
+                    value={data.lecturaActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.khActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'khActiva1', e.target.value)}
-                    className="table-input"
+                    name="edActiva1"
+                    value={data.edActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.lecturaActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'lecturaActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.edActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'edActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.fechaLabActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'fechaLabActiva1', e.target.value)}
-                    className="table-input"
+                    name="fechaLabActiva1"
+                    value={data.fechaLabActiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
               </tr>
 
               {/* Fila para Activa2 */}
               <tr>
-                <td className="measure-type">Activa2</td>
+                <td className={styles.measureType}>Activa2</td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.numeroActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'numeroActiva2', e.target.value)}
-                    className="table-input"
+                    name="numeroActiva2"
+                    value={data.numeroActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select 
+                    name="marcaActiva2"
+                    value={data.marcaActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.select}
+                  >
+                    <option value="">Seleccionar marca...</option>
+                    <option value="elster">Elster</option>
+                    <option value="actaris">Actaris</option>
+                    <option value="landys">Landys</option>
+                    <option value="microstar">Microstar</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tipoActiva2"
+                    value={data.tipoActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.marcaActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'marcaActiva2', e.target.value)}
-                    className="table-input"
+                    name="capacidadActiva2"
+                    value={data.capacidadActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tipoActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tipoActiva2', e.target.value)}
-                    className="table-input"
+                    name="tensionActiva2"
+                    value={data.tensionActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.capacidadActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'capacidadActiva2', e.target.value)}
-                    className="table-input"
+                    name="claseActiva2"
+                    value={data.claseActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tensionActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tensionActiva2', e.target.value)}
-                    className="table-input"
+                    name="kdActiva2"
+                    value={data.kdActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.claseActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'claseActiva2', e.target.value)}
-                    className="table-input"
+                    name="khActiva2"
+                    value={data.khActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.kdActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'kdActiva2', e.target.value)}
-                    className="table-input"
+                    name="lecturaActiva2"
+                    value={data.lecturaActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.khActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'khActiva2', e.target.value)}
-                    className="table-input"
+                    name="edActiva2"
+                    value={data.edActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.lecturaActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'lecturaActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.edActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'edActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.fechaLabActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'fechaLabActiva2', e.target.value)}
-                    className="table-input"
+                    name="fechaLabActiva2"
+                    value={data.fechaLabActiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
               </tr>
 
               {/* Fila para Reactiva */}
               <tr>
-                <td className="measure-type">Reactiva</td>
+                <td className={styles.measureType}>Reactiva</td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.numeroReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'numeroReactiva', e.target.value)}
-                    className="table-input"
+                    name="numeroReactiva"
+                    value={data.numeroReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select 
+                    name="marcaReactiva1"
+                    value={data.marcaReactiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.select}
+                  >
+                    <option value="">Seleccionar marca...</option>
+                    <option value="elster">Elster</option>
+                    <option value="actaris">Actaris</option>
+                    <option value="landys">Landys</option>
+                    <option value="microstar">Microstar</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tipoReactiva"
+                    value={data.tipoReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.marcaReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'marcaReactiva', e.target.value)}
-                    className="table-input"
+                    name="capacidadReactiva"
+                    value={data.capacidadReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tipoReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tipoReactiva', e.target.value)}
-                    className="table-input"
+                    name="tensionReactiva"
+                    value={data.tensionReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.capacidadReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'capacidadReactiva', e.target.value)}
-                    className="table-input"
+                    name="claseReactiva"
+                    value={data.claseReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.tensionReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'tensionReactiva', e.target.value)}
-                    className="table-input"
+                    name="kdReactiva"
+                    value={data.kdReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.claseReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'claseReactiva', e.target.value)}
-                    className="table-input"
+                    name="khReactiva"
+                    value={data.khReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.kdReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'kdReactiva', e.target.value)}
-                    className="table-input"
+                    name="lecturaReactiva"
+                    value={data.lecturaReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.khReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'khReactiva', e.target.value)}
-                    className="table-input"
+                    name="edReactiva"
+                    value={data.edReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <input
                     type="text"
-                    value={formData.medidorEncontrado.lecturaReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'lecturaReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.edReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'edReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorEncontrado.fechaLabReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorEncontrado', 'fechaLabReactiva', e.target.value)}
-                    className="table-input"
+                    name="fechaLabReactiva"
+                    value={data.fechaLabReactiva || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
                   />
                 </td>
               </tr>
@@ -757,394 +749,453 @@ const Form2 = ({ data, updateData, nextStep, prevStep }) => {
           </table>
         </div>
 
-        <h3>Medidor Instalado</h3>
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Medida</th>
-                <th>Número</th>
-                <th>Marca</th>
-                <th>Tipo</th>
-                <th>Capac. (A)</th>
-                <th>Tensión (V)</th>
-                <th>Clase</th>
-                <th>Kd (rev/kWh)</th>
-                <th>Kh (kWh/rev)</th>
-                <th>Lectura</th>
-                <th>E/D</th>
-                <th>Fecha Lab</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Fila para Activa1 */}
-              <tr>
-                <td className="measure-type">Activa1</td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.numeroActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'numeroActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.marcaActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'marcaActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tipoActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tipoActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.capacidadActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'capacidadActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tensionActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tensionActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.claseActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'claseActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.kdActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'kdActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.khActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'khActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.lecturaActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'lecturaActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.edActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'edActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.fechaLabActiva1 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'fechaLabActiva1', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-              </tr>
-
-              {/* Fila para Activa2 */}
-              <tr>
-                <td className="measure-type">Activa2</td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.numeroActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'numeroActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.marcaActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'marcaActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tipoActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tipoActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.capacidadActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'capacidadActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tensionActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tensionActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.claseActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'claseActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.kdActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'kdActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.khActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'khActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.lecturaActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'lecturaActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.edActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'edActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.fechaLabActiva2 || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'fechaLabActiva2', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-              </tr>
-
-              {/* Fila para Reactiva */}
-              <tr>
-                <td className="measure-type">Reactiva</td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.numeroReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'numeroReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.marcaReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'marcaReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tipoReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tipoReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.capacidadReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'capacidadReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.tensionReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'tensionReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.claseReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'claseReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.kdReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'kdReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.khReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'khReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.lecturaReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'lecturaReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.edReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'edReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={formData.medidorInstalado.fechaLabReactiva || ''}
-                    onChange={(e) => handleNestedChange('medidorInstalado', 'fechaLabReactiva', e.target.value)}
-                    className="table-input"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Sección 6S: Transformador de Potencia */}
-      <div className="form-section">
-        <h3>Transformador de Potencia</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Número</label>
-            <input 
-              type="text" 
-              value={formData.transformador.numero} 
-              onChange={(e) => handleNestedChange('transformador', 'numero', e.target.value)} 
+        <h3 className={styles.formSectionTitle}>Medidor Instalado</h3>
+        <div className={styles.tableResponsive}>
+        <table className={styles.dataTable}>
+          <thead>
+            <tr>
+              <th>Medida</th>
+              <th>Número</th>
+              <th>Marca</th>
+              <th>Tipo</th>
+              <th>Capac. (A)</th>
+              <th>Tensión (V)</th>
+              <th>Clase</th>
+              <th>Kd (rev/kWh)</th>
+              <th>Kh (kWh/rev)</th>
+              <th>Lectura</th>
+              <th>E/D</th>
+              <th>Fecha Lab</th>
+            </tr>
+      </thead>
+      <tbody>
+        {/* Fila para Activa1 */}
+        <tr>
+          <td className={styles.measureType}>Activa1</td>
+          <td>
+            <input
+              type="text"
+              name="numeroActivaIns1"
+              value={data.numeroActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
             />
-          </div>
-
-          <div className="form-group">
-            <label>Marca</label>
-            <input 
-              type="text" 
-              value={formData.transformador.marca} 
-              onChange={(e) => handleNestedChange('transformador', 'marca', e.target.value)} 
-            />
-          </div>
-
-          <div className="form-group">
-            <label>kVA</label>
-            <input 
-              type="text" 
-              value={formData.transformador.kva} 
-              onChange={(e) => handleNestedChange('transformador', 'kva', e.target.value)} 
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Año</label>
-            <input 
-              type="text" 
-              value={formData.transformador.año} 
-              onChange={(e) => handleNestedChange('transformador', 'año', e.target.value)} 
-            />
-          </div>
-
-          <div className="form-group">
-            <label>V1/V2</label>
-            <input 
-              type="text" 
-              value={formData.transformador.v1v2} 
-              onChange={(e) => handleNestedChange('transformador', 'v1v2', e.target.value)} 
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Propietario</label>
+          </td>
+          <td>
             <select 
-              value={formData.transformador.propietario} 
-              onChange={(e) => handleNestedChange('transformador', 'propietario', e.target.value)}
+              name="marcaActivaIns1"
+              value={data.marcaActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.select}
             >
-              <option value="">Seleccionar...</option>
-              {opcionesPropietario.map(opcion => (
-                <option key={opcion} value={opcion}>{opcion}</option>
-              ))}
+              <option value="">Seleccionar marca...</option>
+              <option value="elster">Elster</option>
+              <option value="actaris">Actaris</option>
+              <option value="landys">Landys</option>
+              <option value="microstar">Microstar</option>
             </select>
-          </div>
-
-          <div className="form-group">
-            <label>Circuito</label>
-            <input 
-              type="text" 
-              value={formData.transformador.circuito} 
-              onChange={(e) => handleNestedChange('transformador', 'circuito', e.target.value)} 
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tipoActivaIns1"
+              value={data.tipoActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
             />
-          </div>
-        </div>
-      </div>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadActivaIns1"
+              value={data.capacidadActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionActivaIns1"
+              value={data.tensionActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseActivaIns1"
+              value={data.claseActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdActivaIns1"
+              value={data.kdActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khActivaIns1"
+              value={data.khActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaActivaIns1"
+              value={data.lecturaActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edActivaIns1"
+              value={data.edActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabActivaIns1"
+              value={data.fechaLabActivaIns1 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
 
-      {/* Botones de navegación */}
-      <div className="navigation-buttons">
-        <button className="btn-back" onClick={prevStep}>
-          ← Anterior
-        </button>
-        <button className="btn-primary" onClick={nextStep}>
-          Continuar →
-        </button>
-      </div>
+        {/* Fila para Activa2 */}
+        <tr>
+          <td className={styles.measureType}>Activa2</td>
+          <td>
+            <input
+              type="text"
+              name="numeroActivaIns2"
+              value={data.numeroActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <select 
+              name="marcaActivaIns2"
+              value={data.marcaActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.select}
+            >
+              <option value="">Seleccionar marca...</option>
+              <option value="elster">Elster</option>
+              <option value="actaris">Actaris</option>
+              <option value="landys">Landys</option>
+              <option value="microstar">Microstar</option>
+            </select>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tipoActivaIns2"
+              value={data.tipoActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadActivaIns2"
+              value={data.capacidadActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionActivaIns2"
+              value={data.tensionActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseActivaIns2"
+              value={data.claseActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdActivaIns2"
+              value={data.kdActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khActivaIns2"
+              value={data.khActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaActivaIns2"
+              value={data.lecturaActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edActivaIns2"
+              value={data.edActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabActivaIns2"
+              value={data.fechaLabActivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
+
+        {/* Fila para Reactiva */}
+        <tr>
+          <td className={styles.measureType}>Reactiva</td>
+          <td>
+            <input
+              type="text"
+              name="numeroReactivaIns"
+              value={data.numeroReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <select 
+              name="marcaReactivaIns"
+              value={data.marcaReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.select}
+            >
+              <option value="">Seleccionar marca...</option>
+              <option value="elster">Elster</option>
+              <option value="actaris">Actaris</option>
+              <option value="landys">Landys</option>
+              <option value="microstar">Microstar</option>
+            </select>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tipoReactivaIns"
+              value={data.tipoReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadReactivaIns"
+              value={data.capacidadReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionReactivaIns"
+              value={data.tensionReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseReactivaIns"
+              value={data.claseReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdReactivaIns"
+              value={data.kdReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khReactivaIns"
+              value={data.khReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaReactivaIns"
+              value={data.lecturaReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edReactivaIns"
+              value={data.edReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabReactivaIns"
+              value={data.fechaLabReactivaIns || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div className={styles.formSection}>
+  <h3 className={styles.formSectionTitle}>Transformador de Potencia</h3>
+  <div className={styles.formRow}>
+    <div className={styles.formGroup}>
+      <label>Número</label>
+      <input 
+        type="text" 
+        name="transformadorPoNumero"
+        value={data.transformadorPoNumero || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
     </div>
+
+    <div className={styles.formGroup}>
+      <label>Marca</label>
+      <input 
+        type="text" 
+        name="transformadorPoMarca"
+        value={data.transformadorPoMarca || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
+    </div>
+
+    <div className={styles.formGroup}>
+      <label>kVA</label>
+      <input 
+        type="text" 
+        name="transformadorPoKva"
+        value={data.transformadorPoKva || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
+    </div>
+  </div>
+
+  <div className={styles.formRow}>
+    <div className={styles.formGroup}>
+      <label>Año</label>
+      <input 
+        type="text" 
+        name="transformadorPoAno"
+        value={data.transformadorPoAno || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
+    </div>
+
+    <div className={styles.formGroup}>
+      <label>V1/V2</label>
+      <input 
+        type="text" 
+        name="transformadorPoV1V2"
+        value={data.transformadorPoV1V2 || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
+    </div>
+
+    <div className={styles.formGroup}>
+      <label>Propietario</label>
+      <select 
+              name="transformadorPoPropietario"
+              value={data.transformadorPoPropietario || ''}
+              onChange={handleChange}
+              className={styles.select}
+            >
+              <option value="">Seleccionar marca...</option>
+              <option value="elster">EMSA</option>
+              <option value="actaris">PARTICULAR</option>
+            </select>
+    </div>
+
+    <div className={styles.formGroup}>
+      <label>Circuito</label>
+      <input 
+        type="text" 
+        name="transformadorPoCircuito"
+        value={data.transformadorPoCircuito || ''}
+        onChange={handleChange}
+        className={styles.formInput}
+      />
+    </div>
+  </div>
+</div>
+
+<div className={styles.navigationButtons}>
+  <button className={styles.btnBack} onClick={prevStep}>
+    ← Anterior
+  </button>
+  <button className={styles.btnPrimary} onClick={nextStep}>
+    Continuar →
+  </button>
+</div>
+</div>
   );
 };
 

@@ -468,35 +468,35 @@ const [diagramImages, setDiagramImages] = useState({
 </head>
 <body>
   <!-- HOJA 1: ACTA DE REVISIÓN ORIGINAL -->
-      <div class="page">
-        <!-- Copia todo el HTML de la hoja 1 aquí -->
-         <div class="header-table-content">
+<div class="page">
+    <!-- Copia todo el HTML de la hoja 1 aquí -->
+    <div class="header-table-content">
         <table class="header-table">
-          <tr>
-            <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                <img src="${base64Logo}" alt="Logo" style="height:50px;"/>
-            </td>
-            <td style="width: 30%; padding: 0; ">
-                <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
-                    <tr>
-                        <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
-                        <td style="border: 1px solid #34495e;">FO-GD-CP-03</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
-                        <td style="border: 1px solid #34495e;">1/02/2023</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
-                        <td style="border: 1px solid #34495e;">4</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
-                        <td style="border: 1px solid #34495e;">1 DE 1</td>
-                    </tr>
-                </table>
-            </td>
-          </tr>
+            <tr>
+                <td style="width: 70%; padding: 5px; text-align: center; border: none;">
+                    <img src="${base64Logo}" alt="Logo" style="height:50px;"/>
+                </td>
+                <td style="width: 30%; padding: 0; ">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
+                        <tr>
+                            <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
+                            <td style="border: 1px solid #34495e;">FO-GD-CP-03</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
+                            <td style="border: 1px solid #34495e;">${new Date().toLocaleDateString('es-ES')}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
+                            <td style="border: 1px solid #34495e;">4</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
+                            <td style="border: 1px solid #34495e;">1 DE 2</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
         </table>
     </div>
     
@@ -519,14 +519,14 @@ const [diagramImages, setDiagramImages] = useState({
         </tr>
         <tr>
             <td class="field-label">Solicitud No.</td>
-            <td class="field-value">${data.solicitud || ''}</td>
+            <td class="field-value">${data.solicitudNo || ''}</td>
             <td class="field-label">Código de cliente</td>
             <td class="field-value">${data.codigo || ''}</td>
             <td class="field-label">ASIC</td>
             <td class="field-value">${data.asic || ''}</td>
             <td class="field-label">Revisión No.</td>
             <td colspan="2" class="field-value">
-                <span id="revision">${data.revision || ''}</span>
+                <span id="revision">${data.revisionNo || ''}</span>
             </td>
         </tr>
         <tr>
@@ -580,10 +580,13 @@ const [diagramImages, setDiagramImages] = useState({
               </p>
             </td>
             <td class="field-label">CARGA KW</td>
+            <td class="field-value">${data.cargaKw || '______'}</td>
             <td class="field-label">CICLO</td>
+            <td class="field-value">${data.ciclo || '______'}</td>
             <td class="field-label">FACTOR</td>
+            <td class="field-value">${data.factor1 || '______'}</td>
             <td class="field-label">FACTOR</td>
-            <td class="field-label">FACTOR</td>
+            <td class="field-value">${data.factor2 || '______'}</td>
         </tr>
         <tr>
             <td colspan="3" class="field-label">DIRECCIÓN <br> POBLACIÓN
@@ -591,19 +594,134 @@ const [diagramImages, setDiagramImages] = useState({
                 <strong>${data.direccion || '______'}</strong>
               </p>
             </td>
+            <td class="field-label">FACTOR</td>
+            <td class="field-value">${data.factor3 || '______'}</td>
             <td class="field-label">NÚMERO MACROMEDIDOR</td>
-            <td class="field-value">123987645</td>
+            <td class="field-value">${data.macromedidor || '______'}</td>
             <td class="field-label">NODO TRAFO</td>
-            <td class="field-value">
-                COMERCIALIZADOR:<br>
-                <strong style="color: #2980b9;">EMSA</strong>
-            </td>
+            <td class="field-value">${data.nodoTrafo || '______'}</td>
+            <td class="field-label">COMERCIALIZADOR</td>
+            <td class="field-value">${data.comercializador || 'EMSA'}</td>
         </tr>
     </table>
     
     <table>
         <tr>
             <td class="section-title" colspan="9">DATOS DEL SUSCRIPTOR Y EQUIPO DE MEDIDA ENCONTRADOS</td>
+        </tr>
+        <tr>
+            <td class="field-label">TELÉFONO</td>
+            <td class="field-value">${data.telefono || '______'}</td>
+            <td class="field-label">USO</td>
+            <td class="field-value">
+                ${data.uso === 'R' ? 'RESIDENCIAL' : 
+                  data.uso === 'C' ? 'COMERCIAL' : 
+                  data.uso === 'I' ? 'INDUSTRIAL' : 
+                  data.uso === 'O' ? 'OFICIAL' : '______'}
+            </td>
+            <td class="field-label">UBICACIÓN</td>
+            <td class="field-value">${data.ubicacion || '______'}</td>
+            <td class="field-label">FAMILIAS</td>
+            <td class="field-value">${data.familias || '______'}</td>
+            <td class="field-label">NIVEL TENSIÓN</td>
+            <td class="field-value">${data.nivelTension || '______'}</td>
+        </tr>
+        <tr>
+            <td class="field-label">BLOQUES PRUEBA</td>
+            <td class="field-value">${data.bloquesPrueba || '______'}</td>
+            <td class="field-label">TIPO MEDIDOR</td>
+            <td class="field-value">${data.tipoMedidor || '______'}</td>
+            <td class="field-label">TIPO INSTALACIÓN</td>
+            <td class="field-value">${data.tipoInstalacion || '______'}</td>
+            <td class="field-label">UBICACIÓN MEDIDOR</td>
+            <td class="field-value">${data.ubicacionMedidor || '______'}</td>
+            <td class="field-label">PROTECCIÓN GENERAL</td>
+            <td class="field-value">${data.proteccionGeneral || '______'}</td>
+        </tr>
+        <tr>
+            <td class="field-label">TIPO ACOMETIDA</td>
+            <td class="field-value">${data.acometidaTipo || '______'}</td>
+            <td class="field-label">#F #H</td>
+            <td class="field-value">${data.hf || '______'}</td>
+            <td class="field-label">LONGITUD ACOMETIDA</td>
+            <td class="field-value">${data.acometidaLongitud ? data.acometidaLongitud + ' M' : '______'}</td>
+            <td class="field-label">CALIBRE ACOMETIDA</td>
+            <td class="field-value">${data.acometidaCalibre || '______'}</td>
+            <td class="field-label">UBICACIÓN MODEM</td>
+            <td class="field-value">${data.modemUbicacion || '______'}</td>
+        </tr>
+        <tr>
+            <td class="field-label">CONFIGURACIÓN MEDIDA</td>
+            <td class="field-value">${data.configuracionMedida || '______'}</td>
+            <td class="field-label">TIPO MEDIDA</td>
+            <td class="field-value">${data.tipoMedida || '______'}</td>
+            <td colspan="4"></td>
+        </tr>
+    </table>
+
+    <!-- TABLA DE MEDIDORES ENCONTRADOS -->
+    <table>
+        <tr>
+            <td class="section-title" colspan="12">MEDIDOR ENCONTRADO</td>
+        </tr>
+        <tr>
+            <th style="width: 8%;">Medida</th>
+            <th style="width: 10%;">Número</th>
+            <th style="width: 10%;">Marca</th>
+            <th style="width: 8%;">Tipo</th>
+            <th style="width: 8%;">Capac. (A)</th>
+            <th style="width: 8%;">Tensión (V)</th>
+            <th style="width: 6%;">Clase</th>
+            <th style="width: 8%;">Kd (rev/kWh)</th>
+            <th style="width: 8%;">Kh (kWh/rev)</th>
+            <th style="width: 8%;">Lectura</th>
+            <th style="width: 8%;">E/D</th>
+            <th style="width: 10%;">Fecha Lab</th>
+        </tr>
+        <!-- Fila Activa 1 -->
+        <tr>
+            <td>Activa1</td>
+            <td>${data.numeroActiva1 || ''}</td>
+            <td>${data.marcaActiva1 ? data.marcaActiva1.toUpperCase() : ''}</td>
+            <td>${data.tipoActiva1 || ''}</td>
+            <td>${data.capacidadActiva1 || ''}</td>
+            <td>${data.tensionActiva1 || ''}</td>
+            <td>${data.claseActiva1 || ''}</td>
+            <td>${data.kdActiva1 || ''}</td>
+            <td>${data.khActiva1 || ''}</td>
+            <td>${data.lecturaActiva1 || ''}</td>
+            <td>${data.edActiva1 || ''}</td>
+            <td>${data.fechaLabActiva1 || ''}</td>
+        </tr>
+        <!-- Fila Activa 2 -->
+        <tr>
+            <td>Activa2</td>
+            <td>${data.numeroActiva2 || ''}</td>
+            <td>${data.marcaActiva2 ? data.marcaActiva2.toUpperCase() : ''}</td>
+            <td>${data.tipoActiva2 || ''}</td>
+            <td>${data.capacidadActiva2 || ''}</td>
+            <td>${data.tensionActiva2 || ''}</td>
+            <td>${data.claseActiva2 || ''}</td>
+            <td>${data.kdActiva2 || ''}</td>
+            <td>${data.khActiva2 || ''}</td>
+            <td>${data.lecturaActiva2 || ''}</td>
+            <td>${data.edActiva2 || ''}</td>
+            <td>${data.fechaLabActiva2 || ''}</td>
+        </tr>
+        <!-- Fila Reactiva -->
+        <tr>
+            <td>Reactiva</td>
+            <td>${data.numeroReactiva || ''}</td>
+            <td>${data.marcaReactiva1 ? data.marcaReactiva1.toUpperCase() : ''}</td>
+            <td>${data.tipoReactiva || ''}</td>
+            <td>${data.capacidadReactiva || ''}</td>
+            <td>${data.tensionReactiva || ''}</td>
+            <td>${data.claseReactiva || ''}</td>
+            <td>${data.kdReactiva || ''}</td>
+            <td>${data.khReactiva || ''}</td>
+            <td>${data.lecturaReactiva || ''}</td>
+            <td>${data.edReactiva || ''}</td>
+            <td>${data.fechaLabReactiva || ''}</td>
         </tr>
     </table>
 
@@ -617,53 +735,53 @@ const [diagramImages, setDiagramImages] = useState({
     </div>
 
     <!-- TABLA DE FIRMAS (3 COLUMNAS) -->
-<table class="firma-table">
-    <tr>
-        <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-        <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
-        <td style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
-    </tr>
-    <tr>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${userData.name || 'No especificado'}</td>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
-        <td class="firma-label" style="text-align: left; width: 33.34%;">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
-    </tr>
-    <tr>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">
-            <div class="firma-container" style="justify-content: flex-start;">
-                <span class="firma-text">FIRMA:</span>
-                ${signatures.firmaFuncionario ? 
-                    `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 40px;"/></div>` : 
-                    '<span class="firma-faltante">No disponible</span>'
-                }
-            </div>
-        </td>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">
-            <div class="firma-container" style="justify-content: flex-start;">
-                <span class="firma-text">FIRMA:</span>
-                ${signatures.firmaSuscriptor ? 
-                    `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" style="max-width: 100px; max-height: 40px;"/></div>` : 
-                    '<span class="firma-faltante">No disponible</span>'
-                }
-            </div>
-        </td>
-        <td class="firma-label" style="text-align: left; width: 33.34%;">
-            <div class="firma-container" style="justify-content: flex-start;">
-                <span class="firma-text">FIRMA:</span>
-                ${signatures.firmaSupervisor ? 
-                    `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" style="max-width: 100px; max-height: 40px;"/></div>` : 
-                    '<span class="firma-faltante">No disponible</span>'
-                }
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
-        <td class="firma-label" style="text-align: left; width: 33.33%;">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
-        <td class="firma-label" style="text-align: left; width: 33.34%;">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
-    </tr>
-</table>
-      </div>
+    <table class="firma-table">
+        <tr>
+            <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
+            <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
+            <td style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
+        </tr>
+        <tr>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${userData.name || 'No especificado'}</td>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
+            <td class="firma-label" style="text-align: left; width: 33.34%;">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
+        </tr>
+        <tr>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">
+                <div class="firma-container" style="justify-content: flex-start;">
+                    <span class="firma-text">FIRMA:</span>
+                    ${signatures.firmaFuncionario ? 
+                        `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                        '<span class="firma-faltante">No disponible</span>'
+                    }
+                </div>
+            </td>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">
+                <div class="firma-container" style="justify-content: flex-start;">
+                    <span class="firma-text">FIRMA:</span>
+                    ${signatures.firmaSuscriptor ? 
+                        `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                        '<span class="firma-faltante">No disponible</span>'
+                    }
+                </div>
+            </td>
+            <td class="firma-label" style="text-align: left; width: 33.34%;">
+                <div class="firma-container" style="justify-content: flex-start;">
+                    <span class="firma-text">FIRMA:</span>
+                    ${signatures.firmaSupervisor ? 
+                        `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                        '<span class="firma-faltante">No disponible</span>'
+                    }
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
+            <td class="firma-label" style="text-align: left; width: 33.33%;">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
+            <td class="firma-label" style="text-align: left; width: 33.34%;">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
+        </tr>
+    </table>
+</div>
 
 
   <!-- HOJA 2: FORMATO ACTA DE DIAGRAMAS -->
@@ -1265,6 +1383,322 @@ const handleCloseModal = () => {
           </div>
         </div>
       </div>
+
+      {/* Sección: Información General del Cliente */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>👤 Información del Cliente</h2>
+  <div className={styles.sectionContent}>
+    <div className={styles.summaryGrid}>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Nombre:</span>
+        <span className={styles.value}>{data.nombre || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Dirección:</span>
+        <span className={styles.value}>{data.direccion || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Teléfono:</span>
+        <span className={styles.value}>{data.telefono || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Ubicación:</span>
+        <span className={styles.value}>{data.ubicacion || 'No especificado'}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Características Técnicas */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>⚡ Características Técnicas</h2>
+  <div className={styles.sectionContent}>
+    <div className={styles.summaryGrid}>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Uso del Servicio:</span>
+        <span className={styles.value}>
+          {data.uso === 'R' ? '🏠 Residencial' : 
+           data.uso === 'C' ? '🏢 Comercial' : 
+           data.uso === 'I' ? '🏭 Industrial' : 
+           data.uso === 'O' ? '🏛️ Oficial' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Nivel de Tensión:</span>
+        <span className={styles.value}>{data.nivelTension || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Carga (Kw):</span>
+        <span className={styles.value}>{data.cargaKw || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>N° Familias:</span>
+        <span className={styles.value}>{data.familias || 'No especificado'}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Configuración Eléctrica */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🔌 Configuración Eléctrica</h2>
+  <div className={styles.sectionContent}>
+    <div className={styles.summaryGrid}>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Protección General:</span>
+        <span className={styles.value}>{data.proteccionGeneral || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Tipo de Acometida:</span>
+        <span className={styles.value}>{data.acometidaTipo || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Longitud Acometida:</span>
+        <span className={styles.value}>
+          {data.acometidaLongitud ? `${data.acometidaLongitud} metros` : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Calibre Acometida:</span>
+        <span className={styles.value}>{data.acometidaCalibre || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>#F #H:</span>
+        <span className={styles.value}>{data.hf || 'No especificado'}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Equipos de Medida */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>📊 Equipos de Medida</h2>
+  
+  {/* Medidor Encontrado */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔍 Medidor Encontrado</h3>
+    <div className={styles.medidoresGrid}>
+      
+      {/* Activa 1 */}
+      {(data.numeroActiva1 || data.marcaActiva1 || data.lecturaActiva1) && (
+        <div className={styles.medidorCard}>
+          <h4 className={styles.medidorType}>Activa 1</h4>
+          <div className={styles.medidorDetails}>
+            <div className={styles.medidorItem}>
+              <span>Número:</span>
+              <strong>{data.numeroActiva1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Marca:</span>
+              <strong>{data.marcaActiva1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Lectura:</span>
+              <strong>{data.lecturaActiva1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Capacidad:</span>
+              <strong>{data.capacidadActiva1 || '-'}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Activa 2 */}
+      {(data.numeroActiva2 || data.marcaActiva2 || data.lecturaActiva2) && (
+        <div className={styles.medidorCard}>
+          <h4 className={styles.medidorType}>Activa 2</h4>
+          <div className={styles.medidorDetails}>
+            <div className={styles.medidorItem}>
+              <span>Número:</span>
+              <strong>{data.numeroActiva2 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Marca:</span>
+              <strong>{data.marcaActiva2 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Lectura:</span>
+              <strong>{data.lecturaActiva2 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Capacidad:</span>
+              <strong>{data.capacidadActiva2 || '-'}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Reactiva */}
+      {(data.numeroReactiva || data.marcaReactiva1 || data.lecturaReactiva) && (
+        <div className={styles.medidorCard}>
+          <h4 className={styles.medidorType}>Reactiva</h4>
+          <div className={styles.medidorDetails}>
+            <div className={styles.medidorItem}>
+              <span>Número:</span>
+              <strong>{data.numeroReactiva || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Marca:</span>
+              <strong>{data.marcaReactiva1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Lectura:</span>
+              <strong>{data.lecturaReactiva || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Capacidad:</span>
+              <strong>{data.capacidadReactiva || '-'}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Medidor Instalado */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔄 Medidor Instalado</h3>
+    <div className={styles.medidoresGrid}>
+      
+      {/* Activa 1 Instalado */}
+      {(data.numeroActivaIns1 || data.marcaActivaIns1 || data.lecturaActivaIns1) && (
+        <div className={styles.medidorCard}>
+          <h4 className={styles.medidorType}>Activa 1</h4>
+          <div className={styles.medidorDetails}>
+            <div className={styles.medidorItem}>
+              <span>Número:</span>
+              <strong>{data.numeroActivaIns1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Marca:</span>
+              <strong>{data.marcaActivaIns1 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Lectura:</span>
+              <strong>{data.lecturaActivaIns1 || '-'}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Activa 2 Instalado */}
+      {(data.numeroActivaIns2 || data.marcaActivaIns2 || data.lecturaActivaIns2) && (
+        <div className={styles.medidorCard}>
+          <h4 className={styles.medidorType}>Activa 2</h4>
+          <div className={styles.medidorDetails}>
+            <div className={styles.medidorItem}>
+              <span>Número:</span>
+              <strong>{data.numeroActivaIns2 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Marca:</span>
+              <strong>{data.marcaActivaIns2 || '-'}</strong>
+            </div>
+            <div className={styles.medidorItem}>
+              <span>Lectura:</span>
+              <strong>{data.lecturaActivaIns2 || '-'}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+{/* Sección: Transformador y Configuración */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🏗️ Transformador y Configuración</h2>
+  <div className={styles.sectionContent}>
+    
+    {/* Transformador de Potencia */}
+    {(data.transformadorPoNumero || data.transformadorPoMarca || data.transformadorPoKva) && (
+      <div className={styles.subsection}>
+        <h3 className={styles.subsectionTitle}>🔋 Transformador de Potencia</h3>
+        <div className={styles.summaryGrid}>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Número:</span>
+            <span className={styles.value}>{data.transformadorPoNumero || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Marca:</span>
+            <span className={styles.value}>{data.transformadorPoMarca || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>kVA:</span>
+            <span className={styles.value}>{data.transformadorPoKva || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Propietario:</span>
+            <span className={styles.value}>{data.transformadorPoPropietario || 'No especificado'}</span>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Configuración del Sistema */}
+    <div className={styles.subsection}>
+      <h3 className={styles.subsectionTitle}>⚙️ Configuración del Sistema</h3>
+      <div className={styles.summaryGrid}>
+        <div className={styles.summaryItem}>
+          <span className={styles.label}>Tipo de Medidor:</span>
+          <span className={styles.value}>{data.tipoMedidor || 'No especificado'}</span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.label}>Ubicación Medidor:</span>
+          <span className={styles.value}>{data.ubicacionMedidor || 'No especificado'}</span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.label}>Configuración Medida:</span>
+          <span className={styles.value}>{data.configuracionMedida || 'No especificado'}</span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.label}>Tipo de Medida:</span>
+          <span className={styles.value}>{data.tipoMedida || 'No especificado'}</span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.label}>Ubicación Modem:</span>
+          <span className={styles.value}>{data.modemUbicacion || 'No especificado'}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Información Adicional */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>📋 Información Adicional</h2>
+  <div className={styles.sectionContent}>
+    <div className={styles.summaryGrid}>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Ciclo:</span>
+        <span className={styles.value}>{data.ciclo || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Factores:</span>
+        <span className={styles.value}>
+          {[data.factor1, data.factor2, data.factor3].filter(Boolean).join(' / ') || 'No especificados'}
+        </span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Macromedidor:</span>
+        <span className={styles.value}>{data.macromedidor || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Nodo Trafo:</span>
+        <span className={styles.value}>{data.nodoTrafo || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Comercializador:</span>
+        <span className={styles.value}>{data.comercializador || 'No especificado'}</span>
+      </div>
+      <div className={styles.summaryItem}>
+        <span className={styles.label}>Bloques de Prueba:</span>
+        <span className={styles.value}>{data.bloquesPrueba || 'No especificado'}</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 {/* Sección de Diagramas */}
 <div className={styles.section}>

@@ -338,7 +338,7 @@ function App() {
               {step === 4 && (
                 <DiagramSelectionStep 
                   data={formData} 
-                  updateData={handleFormData} // Necesitarás esta función
+                  updateData={handleFormData}
                   nextStep={nextStep} 
                   prevStep={prevStep} 
                 />

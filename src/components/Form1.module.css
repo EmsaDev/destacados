@@ -73,7 +73,7 @@
 
 .input:focus {
   outline: none;
-  border-color: #333ff0;
+  border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(51, 63, 240, 0.15);
   background: white;
 }
@@ -125,7 +125,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid #f3f3f3;
-  border-top: 2px solid #333ff0;
+  border-top: 2px solid #007bff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -154,10 +154,10 @@
 
 .radioButton {
   padding: 0.75rem 1.25rem;
-  border: 2px solid #333ff0;
+  border: 2px solid #007bff;
   border-radius: 8px;
   background-color: white;
-  color: #333ff0;
+  color: #007bff;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -171,7 +171,7 @@
 }
 
 .radioButtonSelected {
-  background-color: #333ff0;
+  background-color: #007bff;
   color: white;
   box-shadow: 0 4px 12px rgba(51, 63, 240, 0.25);
 }
@@ -187,7 +187,7 @@
   padding: 1.5rem;
   background-color: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #333ff0;
+  border-left: 4px solid #007bff;
   grid-column: 1 / -1;
 }
 
@@ -222,7 +222,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #1284fd 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -353,7 +353,7 @@
 /* Mejoras de accesibilidad */
 .radioButton:focus-visible,
 .primaryButton:focus-visible {
-  outline: 2px solid #333ff0;
+  outline: 2px solid #007bff;
   outline-offset: 2px;
 }
 
@@ -362,7 +362,7 @@
   max-height: 300px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #333ff0 #f0f0f0;
+  scrollbar-color: #007bff #f0f0f0;
 }
 
 .generatedText::-webkit-scrollbar {
@@ -375,12 +375,12 @@
 }
 
 .generatedText::-webkit-scrollbar-thumb {
-  background: #333ff0;
+  background: #007bff;
   border-radius: 3px;
 }
 
 .generatedText::-webkit-scrollbar-thumb:hover {
-  background: #2938d6;
+  background: #007bff;
 }
 
 
@@ -419,7 +419,7 @@
 
 /* Hover state */
 .select:hover {
-  border-color: #333ff0;
+  border-color: #007bff;
   background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
   box-shadow: 0 4px 12px rgba(51, 63, 240, 0.15);
   transform: translateY(-1px);
@@ -429,7 +429,7 @@
 .select:focus {
   color: #333;
   outline: none;
-  border-color: #333ff0;
+  border-color: #007bff;
   box-shadow: 0 0 0 4px rgba(51, 63, 240, 0.2);
   background: white;
   animation: selectPulse 1.5s infinite;
