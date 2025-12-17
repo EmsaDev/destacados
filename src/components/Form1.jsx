@@ -175,6 +175,15 @@ function Form1({ data, handleChange, nextStep }) {
   if (!data.derecho) {
     newErrors.derecho = 'Debe seleccionar SI o NO';
   }
+  // validar dependencia
+  if (!data.dependencia) {
+    newErrors.dependencia = 'Debe seleccionar una dependencia';
+  }
+  // validar contratista
+  if (!data.contratista) {
+    newErrors.contratista = 'Contratista es obligatorio';
+  }
+  
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -458,6 +467,92 @@ function Form1({ data, handleChange, nextStep }) {
               SÍ (<span className="resaltado">{data.derecho === 'SI' ? 'X' : ' '}</span>) NO (<span className="resaltado">{data.derecho === 'NO' ? 'X' : ' '}</span>). Transcurrido ese tiempo, se procede a hacer la revisión.
             </p>
 
+          </div>
+        </div>
+
+        {/* Quinta fila - Dependencia y contratista */}
+        <div className={`${styles.formRow} ${styles.twoColumns}`}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              Dependencia <span className={styles.required}>*</span>
+            </label>
+            <div className={styles.selectContainer}>
+              <select
+                name="dependencia"
+                value={data.dependencia || ''}
+                onChange={handleChange}
+                className={`${styles.select} ${errors.dependencia ? styles.errorSelect : ''}`}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="CGM">CGM</option>
+                <option value="Control Energia">Control de Energia</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              Contratista <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              name="contratista"
+              placeholder="Contratista"
+              value={data.contratista || ''}
+              onChange={handleChange}
+              className={`${styles.input} ${errors.contratista ? styles.errorInput : ''}`}
+            />
+          </div>
+
+        {/* Errores */}
+        {(errors.dependencia || errors.contratista) && (
+          <div className={styles.errorMessage}>
+            {errors.dependencia && <p>{errors.dependencia}</p>}
+            {errors.contratista && <p>{errors.contratista}</p>}
+          </div>
+        )}
+
+        </div>
+        {/* Sexta fila - Items de Pago */}
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              Item de pago
+            </label>
+            <input
+              type="text"
+              name="itemPago"
+              placeholder="Item de pago 1"
+              value={data.itemPago || ''}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              Item de pago 
+            </label>
+            <input
+              type="text"
+              name="itemPago2"
+              placeholder="Item de pago 2"
+              value={data.itemPago2 || ''}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              item de pago
+            </label>
+            <input
+              type="text"
+              name="itemPago3"
+              placeholder="Item de pago 3"
+              value={data.itemPago3 || ''}
+              onChange={handleChange}
+              className={styles.input}
+            />
           </div>
         </div>
         

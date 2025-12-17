@@ -39,6 +39,16 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
+.formRow.twoColumns {
+  grid-template-columns: repeat(2, 1fr); /* mantenemos 3 columnas */
+}
+
+.formRow.twoColumns .formGroup {
+  grid-column: span 1;
+  justify-self: center;      /* centra el bloque */
+  max-width: 360px;          /* evita que se estire */
+  width: 100%;
+}
 
 .formGroup {
   display: flex;

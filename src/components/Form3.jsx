@@ -1,579 +1,190 @@
 import { useState } from 'react';
-import './Form3.css';
+import styles from './Form3.module.css';
+import { FiVideo,FiCamera } from "react-icons/fi";
 
-const Form3 = ({ data, updateData, nextStep, prevStep,type, files}) => {
-  const [showOtroInforme, setShowOtroInforme] = useState(false);
-  
-  
-  const [formData, setFormData] = useState({
-    // === MEDICIÓN ACTIVA TAPA PRINCIPAL ===
-    medActiva_tipoCol1: data.medActiva_tipoCol1 || '',
-    medActiva_num1: data.medActiva_num1 || '',
-    medActiva_E1: data.medActiva_E1 || '',
-    medActiva_R1: data.medActiva_R1 || '',
-    medActiva_tipoCol2: data.medActiva_tipoCol2 || '',
-    medActiva_num2: data.medActiva_num2 || '',
-    medActiva_E2: data.medActiva_E2 || '',
-    medActiva_R2: data.medActiva_R2 || '',
-    medActiva_tipoCol3: data.medActiva_tipoCol3 || '',
-    medActiva_num3: data.medActiva_num3 || '',
-    medActiva_E3: data.medActiva_E3 || '',
-    medActiva_R3: data.medActiva_R3 || '',
-    medActivaInst_tipoColor1: data.medActivaInst_tipoColor1 || '',
-    medActivaInst_num1: data.medActivaInst_num1 || '',
-    medActivaInst_tipoColor2: data.medActivaInst_tipoColor2 || '',
-    medActivaInst_num2: data.medActivaInst_num2 || '',
-    medActivaInst_tipoColor3: data.medActivaInst_tipoColor3 || '',
-    medActivaInst_num3: data.medActivaInst_num3 || '',
-
-    // === MEDICIÓN ACTIVA TAPA BORNERA ===
-    tapaBorneraActiva_tipoCol1: data.tapaBorneraActiva_tipoCol1 || '',
-    tapaBorneraActiva_num1: data.tapaBorneraActiva_num1 || '',
-    tapaBorneraActiva_E1: data.tapaBorneraActiva_E1 || '',
-    tapaBorneraActiva_R1: data.tapaBorneraActiva_R1 || '',
-    tapaBorneraActiva_tipoCol2: data.tapaBorneraActiva_tipoCol2 || '',
-    tapaBorneraActiva_num2: data.tapaBorneraActiva_num2 || '',
-    tapaBorneraActiva_E2: data.tapaBorneraActiva_E2 || '',
-    tapaBorneraActiva_R2: data.tapaBorneraActiva_R2 || '',
-    tapaBorneraActiva_tipoCol3: data.tapaBorneraActiva_tipoCol3 || '',
-    tapaBorneraActiva_num3: data.tapaBorneraActiva_num3 || '',
-    tapaBorneraActiva_E3: data.tapaBorneraActiva_E3 || '',
-    tapaBorneraActiva_R3: data.tapaBorneraActiva_R3 || '',
-    tapaBorneraActivaInst_tipoColor1: data.tapaBorneraActivaInst_tipoColor1 || '',
-    tapaBorneraActivaInst_num1: data.tapaBorneraActivaInst_num1 || '',
-    tapaBorneraActivaInst_tipoColor2: data.tapaBorneraActivaInst_tipoColor2 || '',
-    tapaBorneraActivaInst_num2: data.tapaBorneraActivaInst_num2 || '',
-    tapaBorneraActivaInst_tipoColor3: data.tapaBorneraActivaInst_tipoColor3 || '',
-    tapaBorneraActivaInst_num3: data.tapaBorneraActivaInst_num3 || '',
-
-    // === MEDICIÓN REACTIVA TAPA PRINCIPAL ===
-    medReactiva_tipoCol1: data.medReactiva_tipoCol1 || '',
-    medReactiva_num1: data.medReactiva_num1 || '',
-    medReactiva_E1: data.medReactiva_E1 || '',
-    medReactiva_R1: data.medReactiva_R1 || '',
-    medReactiva_tipoCol2: data.medReactiva_tipoCol2 || '',
-    medReactiva_num2: data.medReactiva_num2 || '',
-    medReactiva_E2: data.medReactiva_E2 || '',
-    medReactiva_R2: data.medReactiva_R2 || '',
-    medReactiva_tipoCol3: data.medReactiva_tipoCol3 || '',
-    medReactiva_num3: data.medReactiva_num3 || '',
-    medReactiva_E3: data.medReactiva_E3 || '',
-    medReactiva_R3: data.medReactiva_R3 || '',
-    medReactivaInst_tipoColor1: data.medReactivaInst_tipoColor1 || '',
-    medReactivaInst_num1: data.medReactivaInst_num1 || '',
-    medReactivaInst_tipoColor2: data.medReactivaInst_tipoColor2 || '',
-    medReactivaInst_num2: data.medReactivaInst_num2 || '',
-    medReactivaInst_tipoColor3: data.medReactivaInst_tipoColor3 || '',
-    medReactivaInst_num3: data.medReactivaInst_num3 || '',
-
-    // === MEDICIÓN REACTIVA TAPA BORNERA ===
-    tapaBorneraReactiva_tipoCol1: data.tapaBorneraReactiva_tipoCol1 || '',
-    tapaBorneraReactiva_num1: data.tapaBorneraReactiva_num1 || '',
-    tapaBorneraReactiva_E1: data.tapaBorneraReactiva_E1 || '',
-    tapaBorneraReactiva_R1: data.tapaBorneraReactiva_R1 || '',
-    tapaBorneraReactiva_tipoCol2: data.tapaBorneraReactiva_tipoCol2 || '',
-    tapaBorneraReactiva_num2: data.tapaBorneraReactiva_num2 || '',
-    tapaBorneraReactiva_E2: data.tapaBorneraReactiva_E2 || '',
-    tapaBorneraReactiva_R2: data.tapaBorneraReactiva_R2 || '',
-    tapaBorneraReactiva_tipoCol3: data.tapaBorneraReactiva_tipoCol3 || '',
-    tapaBorneraReactiva_num3: data.tapaBorneraReactiva_num3 || '',
-    tapaBorneraReactiva_E3: data.tapaBorneraReactiva_E3 || '',
-    tapaBorneraReactiva_R3: data.tapaBorneraReactiva_R3 || '',
-    tapaBorneraReactivaInst_tipoColor1: data.tapaBorneraReactivaInst_tipoColor1 || '',
-    tapaBorneraReactivaInst_num1: data.tapaBorneraReactivaInst_num1 || '',
-    tapaBorneraReactivaInst_tipoColor2: data.tapaBorneraReactivaInst_tipoColor2 || '',
-    tapaBorneraReactivaInst_num2: data.tapaBorneraReactivaInst_num2 || '',
-    tapaBorneraReactivaInst_tipoColor3: data.tapaBorneraReactivaInst_tipoColor3 || '',
-    tapaBorneraReactivaInst_num3: data.tapaBorneraReactivaInst_num3 || '',
-
-    // === BLOQUE DE PRUEBAS ===
-    bloquePruebas_tipoCol1: data.bloquePruebas_tipoCol1 || '',
-    bloquePruebas_num1: data.bloquePruebas_num1 || '',
-    bloquePruebas_E1: data.bloquePruebas_E1 || '',
-    bloquePruebas_R1: data.bloquePruebas_R1 || '',
-    bloquePruebas_tipoCol2: data.bloquePruebas_tipoCol2 || '',
-    bloquePruebas_num2: data.bloquePruebas_num2 || '',
-    bloquePruebas_E2: data.bloquePruebas_E2 || '',
-    bloquePruebas_R2: data.bloquePruebas_R2 || '',
-    bloquePruebasInst_tipoColor1: data.bloquePruebasInst_tipoColor1 || '',
-    bloquePruebasInst_num1: data.bloquePruebasInst_num1 || '',
-    bloquePruebasInst_tipoColor2: data.bloquePruebasInst_tipoColor2 || '',
-    bloquePruebasInst_num2: data.bloquePruebasInst_num2 || '',
-
-    // === TC'S ===
-    tcs_tipoCol1: data.tcs_tipoCol1 || '',
-    tcs_numero1: data.tcs_numero1 || '',
-    tcs_E1: data.tcs_E1 || '',
-    tcs_R1: data.tcs_R1 || '',
-    tcs_tipoCol2: data.tcs_tipoCol2 || '',
-    tcs_numero2: data.tcs_numero2 || '',
-    tcs_E2: data.tcs_E2 || '',
-    tcs_R2: data.tcs_R2 || '',
-    tcs_tipoCol3: data.tcs_tipoCol3 || '',
-    tcs_numero3: data.tcs_numero3 || '',
-    tcs_E3: data.tcs_E3 || '',
-    tcs_R3: data.tcs_R3 || '',
-    tcsInst_tipoColor1: data.tcsInst_tipoColor1 || '',
-    tcsInst_numero1: data.tcsInst_numero1 || '',
-    tcsInst_tipoColor2: data.tcsInst_tipoColor2 || '',
-    tcsInst_numero2: data.tcsInst_numero2 || '',
-    tcsInst_tipoColor3: data.tcsInst_tipoColor3 || '',
-    tcsInst_numero3: data.tcsInst_numero3 || '',
-
-    // === TP'S ===
-    tps_tipoCol1: data.tps_tipoCol1 || '',
-    tps_numero1: data.tps_numero1 || '',
-    tps_E1: data.tps_E1 || '',
-    tps_R1: data.tps_R1 || '',
-    tps_tipoCol2: data.tps_tipoCol2 || '',
-    tps_numero2: data.tps_numero2 || '',
-    tps_E2: data.tps_E2 || '',
-    tps_R2: data.tps_R2 || '',
-    tps_tipoCol3: data.tps_tipoCol3 || '',
-    tps_numero3: data.tps_numero3 || '',
-    tps_E3: data.tps_E3 || '',
-    tps_R3: data.tps_R3 || '',
-    tpsInst_tipoColor1: data.tpsInst_tipoColor1 || '',
-    tpsInst_numero1: data.tpsInst_numero1 || '',
-    tpsInst_tipoColor2: data.tpsInst_tipoColor2 || '',
-    tpsInst_numero2: data.tpsInst_numero2 || '',
-    tpsInst_tipoColor3: data.tpsInst_tipoColor3 || '',
-    tpsInst_numero3: data.tpsInst_numero3 || '',
-
-    // === CELDA DE MEDIDA ===
-    celda_tipoCol1: data.celda_tipoCol1 || '',
-    celda_numero1: data.celda_numero1 || '',
-    celda_E1: data.celda_E1 || '',
-    celda_R1: data.celda_R1 || '',
-    celda_tipoCol2: data.celda_tipoCol2 || '',
-    celda_numero2: data.celda_numero2 || '',
-    celda_E2: data.celda_E2 || '',
-    celda_R2: data.celda_R2 || '',
-    celda_tipoCol3: data.celda_tipoCol3 || '',
-    celda_numero3: data.celda_numero3 || '',
-    celda_E3: data.celda_E3 || '',
-    celda_R3: data.celda_R3 || '',
-    celdaInst_tipoColor1: data.celdaInst_tipoColor1 || '',
-    celdaInst_numero1: data.celdaInst_numero1 || '',
-    celdaInst_tipoColor2: data.celdaInst_tipoColor2 || '',
-    celdaInst_numero2: data.celdaInst_numero2 || '',
-    celdaInst_tipoColor3: data.celdaInst_tipoColor3 || '',
-    celdaInst_numero3: data.celdaInst_numero3 || '',
-
-    // === MEDIDOR ACTIVA ===
-    activa_tension_r: data.activa_tension_r || '',
-    activa_corriente_r: data.activa_corriente_r || '',
-    activa_pinst_r: data.activa_pinst_r || '',
-    activa_tension_s: data.activa_tension_s || '',
-    activa_corriente_s: data.activa_corriente_s || '',
-    activa_pinst_s: data.activa_pinst_s || '',
-    activa_tension_t: data.activa_tension_t || '',
-    activa_corriente_t: data.activa_corriente_t || '',
-    activa_pinst_t: data.activa_pinst_t || '',
-    activa_tension_total: data.activa_tension_total || '',
-    activa_corriente_total: data.activa_corriente_total || '',
-    activa_pinst_total: data.activa_pinst_total || '',
-    activa_porcentaje_error: data.activa_porcentaje_error || '',
-    activa_giros: data.activa_giros || '',
-    activa_tiempo: data.activa_tiempo || '',
-    activa_horas: data.activa_horas || '',
-    activa_rst: data.activa_rst || '',
-    activa_rts: data.activa_rts || '',
-    activa_fp: data.activa_fp || '',
-    activa_w: data.activa_w || '',
-
-    // === MEDIDOR REACTIVA ===
-    reactiva_tension_r: data.reactiva_tension_r || '',
-    reactiva_corriente_r: data.reactiva_corriente_r || '',
-    reactiva_pinst_r: data.reactiva_pinst_r || '',
-    reactiva_tension_s: data.reactiva_tension_s || '',
-    reactiva_corriente_s: data.reactiva_corriente_s || '',
-    reactiva_pinst_s: data.reactiva_pinst_s || '',
-    reactiva_tension_t: data.reactiva_tension_t || '',
-    reactiva_corriente_t: data.reactiva_corriente_t || '',
-    reactiva_pinst_t: data.reactiva_pinst_t || '',
-    reactiva_tension_total: data.reactiva_tension_total || '',
-    reactiva_corriente_total: data.reactiva_corriente_total || '',
-    reactiva_pinst_total: data.reactiva_pinst_total || '',
-    reactiva_porcentaje_error: data.reactiva_porcentaje_error || '',
-    reactiva_giros: data.reactiva_giros || '',
-    reactiva_tiempo: data.reactiva_tiempo || '',
-    reactiva_horas: data.reactiva_horas || '',
-    reactiva_rst: data.reactiva_rst || '',
-    reactiva_rts: data.reactiva_rts || '',
-    reactiva_fp: data.reactiva_fp || '',
-    reactiva_w: data.reactiva_w || '',
-
-    // === PRUEBAS ACTIVA ===
-    activa_conexiones: data.activa_conexiones || '',
-    activa_continuidad: data.activa_continuidad || '',
-    activa_puentes: data.activa_puentes || '',
-    activa_lectura_inicial: data.activa_lectura_inicial || '',
-    activa_patron_inicial: data.activa_patron_inicial || '',
-    activa_lectura_final: data.activa_lectura_final || '',
-    activa_patron_final: data.activa_patron_final || '',
-    activa_diferencia: data.activa_diferencia || '',
-    activa_patron: data.activa_patron || '',
-    activa_porcentaje_error_prueba: data.activa_porcentaje_error_prueba || '',
-    activa_integrador: data.activa_integrador || '',
-    activa_giro_vacio: data.activa_giro_vacio || '',
-    activa_registra: data.activa_registra || '',
-    activa_se_frena: data.activa_se_frena || '',
-
-    // === PRUEBAS REACTIVA ===
-    reactiva_conexiones: data.reactiva_conexiones || '',
-    reactiva_continuidad: data.reactiva_continuidad || '',
-    reactiva_puentes: data.reactiva_puentes || '',
-    reactiva_lectura_inicial: data.reactiva_lectura_inicial || '',
-    reactiva_patron_inicial: data.reactiva_patron_inicial || '',
-    reactiva_lectura_final: data.reactiva_lectura_final || '',
-    reactiva_patron_final: data.reactiva_patron_final || '',
-    reactiva_diferencia: data.reactiva_diferencia || '',
-    reactiva_patron: data.reactiva_patron || '',
-    reactiva_porcentaje_error_prueba: data.reactiva_porcentaje_error_prueba || '',
-    reactiva_integrador: data.reactiva_integrador || '',
-    reactiva_giro_vacio: data.reactiva_giro_vacio || '',
-    reactiva_registra: data.reactiva_registra || '',
-    reactiva_se_frena: data.reactiva_se_frena || '',
-
-    // === TRANSFORMADORES TC'S ===
-    tc_marca_1: data.tc_marca_1 || '',
-    tc_series_1: data.tc_series_1 || '',
-    tc_tipo_1: data.tc_tipo_1 || '',
-    tc_relacion_1: data.tc_relacion_1 || '',
-    tc_clase_1: data.tc_clase_1 || '',
-    tc_va_1: data.tc_va_1 || '',
-    tc_marca_2: data.tc_marca_2 || '',
-    tc_series_2: data.tc_series_2 || '',
-    tc_tipo_2: data.tc_tipo_2 || '',
-    tc_relacion_2: data.tc_relacion_2 || '',
-    tc_clase_2: data.tc_clase_2 || '',
-    tc_va_2: data.tc_va_2 || '',
-    tc_marca_3: data.tc_marca_3 || '',
-    tc_series_3: data.tc_series_3 || '',
-    tc_tipo_3: data.tc_tipo_3 || '',
-    tc_relacion_3: data.tc_relacion_3 || '',
-    tc_clase_3: data.tc_clase_3 || '',
-    tc_va_3: data.tc_va_3 || '',
-
-    // === TRANSFORMADORES TP'S ===
-    tp_marca_1: data.tp_marca_1 || '',
-    tp_series_1: data.tp_series_1 || '',
-    tp_tipo_1: data.tp_tipo_1 || '',
-    tp_relacion_1: data.tp_relacion_1 || '',
-    tp_clase_1: data.tp_clase_1 || '',
-    tp_va_1: data.tp_va_1 || '',
-    tp_marca_2: data.tp_marca_2 || '',
-    tp_series_2: data.tp_series_2 || '',
-    tp_tipo_2: data.tp_tipo_2 || '',
-    tp_relacion_2: data.tp_relacion_2 || '',
-    tp_clase_2: data.tp_clase_2 || '',
-    tp_va_2: data.tp_va_2 || '',
-    tp_marca_3: data.tp_marca_3 || '',
-    tp_series_3: data.tp_series_3 || '',
-    tp_tipo_3: data.tp_tipo_3 || '',
-    tp_relacion_3: data.tp_relacion_3 || '',
-    tp_clase_3: data.tp_clase_3 || '',
-    tp_va_3: data.tp_va_3 || '',
-
-    // === EVIDENCIAS E INFORME ===
-    codigos_irregularidades: data.codigos_irregularidades || '',
-    tipo_evidencia: data.tipo_evidencia || '',
-    irregularidad_corrida: data.irregularidad_corrida || '',
-    medidor_retirado: data.medidor_retirado || '',
-    tipo_informe: data.tipo_informe || '',
-    otro_informe: data.otro_informe || ''
-  });
-
-  const handleContinue = () => {
-    // Guardar TODOS los datos antes de continuar
-    updateData({
-      // === MEDICIÓN ACTIVA TAPA PRINCIPAL ===
-      medActiva_tipoCol1: formData.medActiva_tipoCol1,
-      medActiva_num1: formData.medActiva_num1,
-      medActiva_E1: formData.medActiva_E1,
-      medActiva_R1: formData.medActiva_R1,
-      medActiva_tipoCol2: formData.medActiva_tipoCol2,
-      medActiva_num2: formData.medActiva_num2,
-      medActiva_E2: formData.medActiva_E2,
-      medActiva_R2: formData.medActiva_R2,
-      medActiva_tipoCol3: formData.medActiva_tipoCol3,
-      medActiva_num3: formData.medActiva_num3,
-      medActiva_E3: formData.medActiva_E3,
-      medActiva_R3: formData.medActiva_R3,
-      medActivaInst_tipoColor1: formData.medActivaInst_tipoColor1,
-      medActivaInst_num1: formData.medActivaInst_num1,
-      medActivaInst_tipoColor2: formData.medActivaInst_tipoColor2,
-      medActivaInst_num2: formData.medActivaInst_num2,
-      medActivaInst_tipoColor3: formData.medActivaInst_tipoColor3,
-      medActivaInst_num3: formData.medActivaInst_num3,
-
-      // === MEDICIÓN ACTIVA TAPA BORNERA ===
-      tapaBorneraActiva_tipoCol1: formData.tapaBorneraActiva_tipoCol1,
-      tapaBorneraActiva_num1: formData.tapaBorneraActiva_num1,
-      tapaBorneraActiva_E1: formData.tapaBorneraActiva_E1,
-      tapaBorneraActiva_R1: formData.tapaBorneraActiva_R1,
-      tapaBorneraActiva_tipoCol2: formData.tapaBorneraActiva_tipoCol2,
-      tapaBorneraActiva_num2: formData.tapaBorneraActiva_num2,
-      tapaBorneraActiva_E2: formData.tapaBorneraActiva_E2,
-      tapaBorneraActiva_R2: formData.tapaBorneraActiva_R2,
-      tapaBorneraActiva_tipoCol3: formData.tapaBorneraActiva_tipoCol3,
-      tapaBorneraActiva_num3: formData.tapaBorneraActiva_num3,
-      tapaBorneraActiva_E3: formData.tapaBorneraActiva_E3,
-      tapaBorneraActiva_R3: formData.tapaBorneraActiva_R3,
-      tapaBorneraActivaInst_tipoColor1: formData.tapaBorneraActivaInst_tipoColor1,
-      tapaBorneraActivaInst_num1: formData.tapaBorneraActivaInst_num1,
-      tapaBorneraActivaInst_tipoColor2: formData.tapaBorneraActivaInst_tipoColor2,
-      tapaBorneraActivaInst_num2: formData.tapaBorneraActivaInst_num2,
-      tapaBorneraActivaInst_tipoColor3: formData.tapaBorneraActivaInst_tipoColor3,
-      tapaBorneraActivaInst_num3: formData.tapaBorneraActivaInst_num3,
-
-      // ... (repetir para TODAS las secciones con todos sus campos)
-      
-      // === EVIDENCIAS E INFORME ===
-      codigos_irregularidades: formData.codigos_irregularidades,
-      tipo_evidencia: formData.tipo_evidencia,
-      irregularidad_corrida: formData.irregularidad_corrida,
-      medidor_retirado: formData.medidor_retirado,
-      tipo_informe: formData.tipo_informe,
-      otro_informe: formData.otro_informe
-    });
-    nextStep();
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    nextStep();
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    updateData({ [name]: value });
-
-    let newValue = value;
-    
-    // Manejar archivos
-    if (type === 'file') {
-      newValue = files;
-    }
-    
-    // Manejar radios
-    if (type === 'radio') {
-      newValue = value;
-    }
-    
-    // Actualizar los datos usando updateData
-    if (updateData) {
-      updateData({ [name]: newValue });
-    }
-    // Manejar la visibilidad del campo "Otro"
-    if (name === 'tipo_informe') {
-      setShowOtroInforme(value === 'otro');
-    }
-  };
+const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
 
   return (
-    <div className="form3-container">
-      <h2>Medición Activa y Reactiva</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="table-container">
-          <table className="medicion-table">
-            <thead>
-              <tr>
-                <th colSpan="5">Encontrados</th>
-                <th colSpan="4">Instalados</th>
-              </tr>
-              <tr>
-                <th colSpan="2" className="medicion-type">Ubicación</th>
-                <th>Tipo/Col</th>
-                <th>Número</th>
-                <th>E</th>
-                <th>R</th>
-                <th>Tipo/Color</th>
-                <th>Número</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* MEDICIÓN ACTIVA - TAPA PRINCIPAL */}
-              <tr>
-                <td rowSpan="6" className="medicion-type activa">Medición Activa</td>
-                <td rowSpan="3" className="ubicacion principal">
-                  Tapa Principal
-                </td>
-                {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="medActiva_tipoCol1" onChange={handleChange} value={formData.medActiva_tipoCol1 || ''} placeholder="Tipo/Col"  /></td>
-                <td><input type="text" name="medActiva_num1" value={formData.medActiva_num1} placeholder='Número' onChange={(e) => handleTpChange('medActiva_num1', e.target.value)}  /></td>
-                <td><input type="text" name="medActiva_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_R1" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 1 */}
-                <td><input type="text" name="medActivaInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medActivaInst_num1" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="medActiva_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_num2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_R2" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 2 */}
-                <td><input type="text" name="medActivaInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medActivaInst_num2" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="medActiva_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_num3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medActiva_R3" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 3 */}
-                <td><input type="text" name="medActivaInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medActivaInst_num3" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
+    <div className={styles.form3Container}>
+      <h2 className={styles.formSectionTitle}>Medición Activa y Reactiva</h2>
+        <div className={styles.tableContainer}>
+        <table className={styles.medicionTable}>
+          <thead>
+            <tr>
+              <th colSpan="5">Encontrados</th>
+              <th colSpan="4">Instalados</th>
+            </tr>
+            <tr>
+              <th colSpan="2" className={styles.medicionType}>Ubicación</th>
+              <th>Tipo/Col</th>
+              <th>Número</th>
+              <th>E</th>
+              <th>R</th>
+              <th>Tipo/Color</th>
+              <th>Número</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* MEDICIÓN ACTIVA - TAPA PRINCIPAL */}
+            <tr>
+              <td rowSpan="5" className={styles.medicionType}>Medición Activa</td>
+              <td rowSpan="3" className={styles.ubicacion}>
+                Tapa Principal
+              </td>
+              {/* Encontrados - Fila 1 */}
+              <td><input type="text" name="medActivaTipoCol1" value={data.medActivaTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaNum1" value={data.medActivaNum1 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaE1" value={data.medActivaE1 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaR1" value={data.medActivaR1 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 1 */}
+              <td><input type="text" name="medActivaInstTipoColor1" value={data.medActivaInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaInstNum1" value={data.medActivaInstNum1 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 2 */}
+              <td><input type="text" name="medActivaTipoCol2" value={data.medActivaTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaNum2" value={data.medActivaNum2 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaE2" value={data.medActivaE2 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaR2" value={data.medActivaR2 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 2 */}
+              <td><input type="text" name="medActivaInstTipoColor2" value={data.medActivaInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaInstNum2" value={data.medActivaInstNum2 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 3 */}
+              <td><input type="text" name="medActivaTipoCol3" value={data.medActivaTipoCol3 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaNum3" value={data.medActivaNum3 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaE3" value={data.medActivaE3 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaR3" value={data.medActivaR3 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 3 */}
+              <td><input type="text" name="medActivaInstTipoColor3" value={data.medActivaInstTipoColor3 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medActivaInstNum3" value={data.medActivaInstNum3 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
 
-              {/* MEDICIÓN ACTIVA - TAPA BORNERA */}
-              <tr>
-                <td rowSpan="3" className="ubicacion bornera">
-                  Tapa Bornera
-                </td>
-                {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="tapaBorneraActiva_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_num1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_R1" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 1 */}
-                <td><input type="text" name="tapaBorneraActivaInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActivaInst_num1" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="tapaBorneraActiva_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_num2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_R2" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 2 */}
-                <td><input type="text" name="tapaBorneraActivaInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActivaInst_num2" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="tapaBorneraActiva_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_num3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActiva_R3" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 3 */}
-                <td><input type="text" name="tapaBorneraActivaInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraActivaInst_num3" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
+            {/* MEDICIÓN ACTIVA - TAPA BORNERA */}
+            <tr>
+              <td rowSpan="2" className={styles.ubicacion}>
+                Tapa Bornera
+              </td>
+              {/* Encontrados - Fila 1 */}
+              <td><input type="text" name="tapaBorneraActivaTipoCol1" value={data.tapaBorneraActivaTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaNum1" value={data.tapaBorneraActivaNum1 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaE1" value={data.tapaBorneraActivaE1 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaR1" value={data.tapaBorneraActivaR1 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 1 */}
+              <td><input type="text" name="tapaBorneraActivaInstTipoColor1" value={data.tapaBorneraActivaInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaInstNum1" value={data.tapaBorneraActivaInstNum1 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 2 */}
+              <td><input type="text" name="tapaBorneraActivaTipoCol2" value={data.tapaBorneraActivaTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaNum2" value={data.tapaBorneraActivaNum2 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaE2" value={data.tapaBorneraActivaE2 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaR2" value={data.tapaBorneraActivaR2 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 2 */}
+              <td><input type="text" name="tapaBorneraActivaInstTipoColor2" value={data.tapaBorneraActivaInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraActivaInstNum2" value={data.tapaBorneraActivaInstNum2 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
 
-              {/* MEDICIÓN REACTIVA - TAPA PRINCIPAL */}
-              <tr>
-                <td rowSpan="6" className="medicion-type reactiva">Medición Reactiva</td>
-                <td rowSpan="3" className="ubicacion principal">
-                  Tapa Principal
-                </td>
-                {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="medReactiva_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_num1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_R1" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 1 */}
-                <td><input type="text" name="medReactivaInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactivaInst_num1" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="medReactiva_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_num2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_R2" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 2 */}
-                <td><input type="text" name="medReactivaInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactivaInst_num2" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="medReactiva_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_num3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="medReactiva_R3" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 3 */}
-                <td><input type="text" name="medReactivaInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="medReactivaInst_num3" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
+            {/* MEDICIÓN REACTIVA - TAPA PRINCIPAL */}
+            <tr>
+              <td rowSpan="5" className={styles.medicionType}>Medición Reactiva</td>
+              <td rowSpan="3" className={styles.ubicacion}>
+                Tapa Principal
+              </td>
+              {/* Encontrados - Fila 1 */}
+              <td><input type="text" name="medReactivaTipoCol1" value={data.medReactivaTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaNum1" value={data.medReactivaNum1 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaE1" value={data.medReactivaE1 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaR1" value={data.medReactivaR1 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 1 */}
+              <td><input type="text" name="medReactivaInstTipoColor1" value={data.medReactivaInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaInstNum1" value={data.medReactivaInstNum1 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 2 */}
+              <td><input type="text" name="medReactivaTipoCol2" value={data.medReactivaTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaNum2" value={data.medReactivaNum2 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaE2" value={data.medReactivaE2 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaR2" value={data.medReactivaR2 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 2 */}
+              <td><input type="text" name="medReactivaInstTipoColor2" value={data.medReactivaInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaInstNum2" value={data.medReactivaInstNum2 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 3 */}
+              <td><input type="text" name="medReactivaTipoCol3" value={data.medReactivaTipoCol3 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaNum3" value={data.medReactivaNum3 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaE3" value={data.medReactivaE3 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaR3" value={data.medReactivaR3 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 3 */}
+              <td><input type="text" name="medReactivaInstTipoColor3" value={data.medReactivaInstTipoColor3 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="medReactivaInstNum3" value={data.medReactivaInstNum3 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
 
-              {/* MEDICIÓN REACTIVA - TAPA BORNERA */}
-              <tr>
-                <td rowSpan="3" className="ubicacion bornera">
-                  Tapa Bornera
-                </td>
-                {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="tapaBorneraReactiva_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_num1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_R1" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 1 */}
-                <td><input type="text" name="tapaBorneraReactivaInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactivaInst_num1" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="tapaBorneraReactiva_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_num2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_R2" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 2 */}
-                <td><input type="text" name="tapaBorneraReactivaInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactivaInst_num2" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="tapaBorneraReactiva_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_num3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactiva_R3" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 3 */}
-                <td><input type="text" name="tapaBorneraReactivaInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tapaBorneraReactivaInst_num3" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
+            {/* MEDICIÓN REACTIVA - TAPA BORNERA */}
+            <tr>
+              <td rowSpan="2" className={styles.ubicacion}>
+                Tapa Bornera
+              </td>
+              {/* Encontrados - Fila 1 */}
+              <td><input type="text" name="tapaBorneraReactivaTipoCol1" value={data.tapaBorneraReactivaTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaNum1" value={data.tapaBorneraReactivaNum1 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaE1" value={data.tapaBorneraReactivaE1 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaR1" value={data.tapaBorneraReactivaR1 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 1 */}
+              <td><input type="text" name="tapaBorneraReactivaInstTipoColor1" value={data.tapaBorneraReactivaInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaInstNum1" value={data.tapaBorneraReactivaInstNum1 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 2 */}
+              <td><input type="text" name="tapaBorneraReactivaTipoCol2" value={data.tapaBorneraReactivaTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaNum2" value={data.tapaBorneraReactivaNum2 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaE2" value={data.tapaBorneraReactivaE2 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaR2" value={data.tapaBorneraReactivaR2 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 2 */}
+              <td><input type="text" name="tapaBorneraReactivaInstTipoColor2" value={data.tapaBorneraReactivaInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="tapaBorneraReactivaInstNum2" value={data.tapaBorneraReactivaInstNum2 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
 
-              {/* BLOQUE DE PRUEBAS */}
-              <tr>
-                <td colSpan="2" rowSpan="2" className="ubicacion pruebas header-pruebas">
-                  Bloque de Pruebas
-                </td>
-                {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="bloquePruebas_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_num1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_R1" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 1 */}
-                <td><input type="text" name="bloquePruebasInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebasInst_num1" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-              <tr>
-                {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="bloquePruebas_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_num2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebas_R2" placeholder='R' onChange={handleChange} /></td>
-                {/* Instalados - Fila 2 */}
-                <td><input type="text" name="bloquePruebasInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="bloquePruebasInst_num2" placeholder='Número' onChange={handleChange}/></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            {/* BLOQUE DE PRUEBAS */}
+            <tr>
+              <td colSpan="2" rowSpan="2" className={styles.ubicacion}>
+                Bloque de Pruebas
+              </td>
+              {/* Encontrados - Fila 1 */}
+              <td><input type="text" name="bloquePruebasTipoCol1" value={data.bloquePruebasTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasNum1" value={data.bloquePruebasNum1 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasE1" value={data.bloquePruebasE1 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasR1" value={data.bloquePruebasR1 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 1 */}
+              <td><input type="text" name="bloquePruebasInstTipoColor1" value={data.bloquePruebasInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasInstNum1" value={data.bloquePruebasInstNum1 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+            <tr>
+              {/* Encontrados - Fila 2 */}
+              <td><input type="text" name="bloquePruebasTipoCol2" value={data.bloquePruebasTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasNum2" value={data.bloquePruebasNum2 || ''} placeholder='Número' onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasE2" value={data.bloquePruebasE2 || ''} placeholder='E' onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasR2" value={data.bloquePruebasR2 || ''} placeholder='R' onChange={handleChange} /></td>
+              {/* Instalados - Fila 2 */}
+              <td><input type="text" name="bloquePruebasInstTipoColor2" value={data.bloquePruebasInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+              <td><input type="text" name="bloquePruebasInstNum2" value={data.bloquePruebasInstNum2 || ''} placeholder='Número' onChange={handleChange}/></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
         {/*TABLA PARA Tc's, Tp's y Celda de Medida */}
-        <div className="table-container" style={{marginTop: '40px'}}>
-          <table className="medicion-table">
+        <div className={styles.tableContainer} style={{marginTop: '40px'}}>
+          <table className={styles.medicionTable}>
             <thead>
               <tr>
                 <th colSpan="4">Encontrados</th>
                 <th colSpan="4">Instalados</th>
               </tr>
               <tr>
-                <th className="medicion-type">Ubicación</th>
+                <th className={styles.medicionType}>Ubicación</th>
                 <th>Tipo/Col</th>
                 <th>Número</th>
                 <th>E</th>
@@ -585,116 +196,115 @@ const Form3 = ({ data, updateData, nextStep, prevStep,type, files}) => {
             <tbody>
               {/* TC'S */}
               <tr>
-                <td rowSpan="3" className="ubicacion tcs">
+                <td rowSpan="3" className={styles.ubicacion}>
                   Tc's
                 </td>
                 {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="tcs_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_numero1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_R1" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsTipoCol1" value={data.tcsTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsNumero1" value={data.tcsNumero1 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsE1" value={data.tcsE1 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsR1" value={data.tcsR1 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 1 */}
-                <td><input type="text" name="tcsInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tcsInst_numero1" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tcsInstTipoColor1" value={data.tcsInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsInstNumero1" value={data.tcsInstNumero1 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="tcs_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_numero2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_R2" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsTipoCol2" value={data.tcsTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsNumero2" value={data.tcsNumero2 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsE2" value={data.tcsE2 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsR2" value={data.tcsR2 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 2 */}
-                <td><input type="text" name="tcsInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tcsInst_numero2" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tcsInstTipoColor2" value={data.tcsInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsInstNumero2" value={data.tcsInstNumero2 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="tcs_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_numero3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tcs_R3" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsTipoCol3" value={data.tcsTipoCol3 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsNumero3" value={data.tcsNumero3 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsE3" value={data.tcsE3 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tcsR3" value={data.tcsR3 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 3 */}
-                <td><input type="text" name="tcsInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tcsInst_numero3" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tcsInstTipoColor3" value={data.tcsInstTipoColor3 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tcsInstNumero3" value={data.tcsInstNumero3 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
 
               {/* TP'S */}
               <tr>
-                <td rowSpan="3" className="ubicacion tps">
+                <td rowSpan="3" className={styles.ubicacion}>
                   Tp's
                 </td>
                 {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="tps_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tps_numero1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_R1" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsTipoCol1" value={data.tpsTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsNumero1" value={data.tpsNumero1 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsE1" value={data.tpsE1 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsR1" value={data.tpsR1 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 1 */}
-                <td><input type="text" name="tpsInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tpsInst_numero1" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tpsInstTipoColor1" value={data.tpsInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsInstNumero1" value={data.tpsInstNumero1 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="tps_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tps_numero2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_R2" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsTipoCol2" value={data.tpsTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsNumero2" value={data.tpsNumero2 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsE2" value={data.tpsE2 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsR2" value={data.tpsR2 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 2 */}
-                <td><input type="text" name="tpsInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tpsInst_numero2" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tpsInstTipoColor2" value={data.tpsInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsInstNumero2" value={data.tpsInstNumero2 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="tps_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="tps_numero3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="tps_R3" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsTipoCol3" value={data.tpsTipoCol3 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsNumero3" value={data.tpsNumero3 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsE3" value={data.tpsE3 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="tpsR3" value={data.tpsR3 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 3 */}
-                <td><input type="text" name="tpsInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="tpsInst_numero3" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="tpsInstTipoColor3" value={data.tpsInstTipoColor3 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="tpsInstNumero3" value={data.tpsInstNumero3 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
 
               {/* CELDA DE MEDIDA */}
               <tr>
-                <td rowSpan="3" className="ubicacion celda">
+                <td rowSpan="3" className={styles.ubicacion}>
                   Celda de Medida
                 </td>
                 {/* Encontrados - Fila 1 */}
-                <td><input type="text" name="celda_tipoCol1" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="celda_numero1" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_E1" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_R1" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaTipoCol1" value={data.celdaTipoCol1 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaNumero1" value={data.celdaNumero1 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaE1" value={data.celdaE1 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaR1" value={data.celdaR1 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 1 */}
-                <td><input type="text" name="celdaInst_tipoColor1" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="celdaInst_numero1" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="celdaInstTipoColor1" value={data.celdaInstTipoColor1 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaInstNumero1" value={data.celdaInstNumero1 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 2 */}
-                <td><input type="text" name="celda_tipoCol2" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="celda_numero2" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_E2" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_R2" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaTipoCol2" value={data.celdaTipoCol2 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaNumero2" value={data.celdaNumero2 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaE2" value={data.celdaE2 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaR2" value={data.celdaR2 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 2 */}
-                <td><input type="text" name="celdaInst_tipoColor2" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="celdaInst_numero2" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="celdaInstTipoColor2" value={data.celdaInstTipoColor2 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaInstNumero2" value={data.celdaInstNumero2 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
               <tr>
                 {/* Encontrados - Fila 3 */}
-                <td><input type="text" name="celda_tipoCol3" placeholder="Tipo/Col" onChange={handleChange} /></td>
-                <td><input type="text" name="celda_numero3" placeholder='Número' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_E3" placeholder='E' onChange={handleChange} /></td>
-                <td><input type="text" name="celda_R3" placeholder='R' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaTipoCol3" value={data.celdaTipoCol3 || ''} placeholder="Tipo/Col" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaNumero3" value={data.celdaNumero3 || ''} placeholder='Número' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaE3" value={data.celdaE3 || ''} placeholder='E' onChange={handleChange} /></td>
+                <td><input type="text" name="celdaR3" value={data.celdaR3 || ''} placeholder='R' onChange={handleChange} /></td>
                 {/* Instalados - Fila 3 */}
-                <td><input type="text" name="celdaInst_tipoColor3" placeholder="Tipo/Color" onChange={handleChange} /></td>
-                <td><input type="text" name="celdaInst_numero3" placeholder='Número' onChange={handleChange}/></td>
+                <td><input type="text" name="celdaInstTipoColor3" value={data.celdaInstTipoColor3 || ''} placeholder="Tipo/Color" onChange={handleChange} /></td>
+                <td><input type="text" name="celdaInstNumero3" value={data.celdaInstNumero3 || ''} placeholder='Número' onChange={handleChange}/></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        
-          {/* MEDIDOR ACTIVA */}
-        <div className="table-container">
-          <table className="calculos-table">
+        {/* MEDIDOR ACTIVA */}
+        <div className={styles.tableContainer}>
+          <table className={styles.calculosTable}>
             <thead>
               <tr>
                 <th colSpan="10">Medidor Activa</th>
@@ -712,588 +322,572 @@ const Form3 = ({ data, updateData, nextStep, prevStep,type, files}) => {
                 <th colSpan="2" rowSpan="2">Secuencia de Fases</th>
               </tr>
               <tr>
-                <td colSpan="2" className="fase">R</td>
-                <td colSpan="2"><input type="text" name="activa_tension_r" placeholder='Tensión (V) R' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_corriente_r" placeholder='Corriente (A) R' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_pinst_r" placeholder='P.inst. (W) R' onChange={handleChange} /></td>
+                <td colSpan="2" className={styles.fase}>R</td>
+                <td colSpan="2"><input type="text" name="activaTensionR" value={data.activaTensionR || ''} placeholder='Tensión (V) R' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaCorrienteR" value={data.activaCorrienteR || ''} placeholder='Corriente (A) R' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaPinstR" value={data.activaPinstR || ''} placeholder='P.inst. (W) R' onChange={handleChange} /></td>
               </tr>
               <tr>
-                <td colSpan="2" className="fase">S</td>
-                <td colSpan="2"><input type="text" name="activa_tension_s" placeholder='Tensión (V) S' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_corriente_s" placeholder='Corriente (A) S' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_pinst_s" placeholder='P.inst. (W) S' onChange={handleChange} /></td>
-                <td className="secuencia-fases">RST</td>
-                <td><input type="text" name="activa_rst" placeholder='RST' onChange={handleChange} /></td>
+                <td colSpan="2" className={styles.fase}>S</td>
+                <td colSpan="2"><input type="text" name="activaTensionS" value={data.activaTensionS || ''} placeholder='Tensión (V) S' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaCorrienteS" value={data.activaCorrienteS || ''} placeholder='Corriente (A) S' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaPinstS" value={data.activaPinstS || ''} placeholder='P.inst. (W) S' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>RST</td>
+                <td><input type="text" name="activaRst" value={data.activaRst || ''} placeholder='RST' onChange={handleChange} /></td>
               </tr>
               <tr>
-                <td colSpan="2" className="fase">T</td>
-                <td colSpan="2"><input type="text" name="activa_tension_t" placeholder='Tensión (V) T' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_corriente_t" placeholder='Corriente (A) T' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_pinst_t" placeholder='P.inst. (W) T' onChange={handleChange} /></td>
-                <td className="secuencia-fases">RTS</td>
-                <td><input type="text" name="activa_rts" placeholder='RTS' onChange={handleChange} /></td>
+                <td colSpan="2" className={styles.fase}>T</td>
+                <td colSpan="2"><input type="text" name="activaTensionT" value={data.activaTensionT || ''} placeholder='Tensión (V) T' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaCorrienteT" value={data.activaCorrienteT || ''} placeholder='Corriente (A) T' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaPinstT" value={data.activaPinstT || ''} placeholder='P.inst. (W) T' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>RTS</td>
+                <td><input type="text" name="activaRts" value={data.activaRts || ''} placeholder='RTS' onChange={handleChange} /></td>
               </tr>
               <tr>
-                <td colSpan="2" className="fase total">TOTAL (L-L)</td>
-                <td colSpan="2"><input type="text" name="activa_tension_total" placeholder='Tensión Total (V)' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_corriente_total" placeholder='Corriente Total (A)' onChange={handleChange} /></td>
-                <td colSpan="2"><input type="text" name="activa_pinst_total" placeholder='P.inst. (W) Total' onChange={handleChange} /></td>
-                <td className="secuencia-fases">F.P.</td>
-                <td><input type="text" name="activa_fp" placeholder='F.P.' onChange={handleChange} /></td>          
+                <td colSpan="2" className={styles.faseTotal}>TOTAL (L-L)</td>
+                <td colSpan="2"><input type="text" name="activaTensionTotal" value={data.activaTensionTotal || ''} placeholder='Tensión Total (V)' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaCorrienteTotal" value={data.activaCorrienteTotal || ''} placeholder='Corriente Total (A)' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="activaPinstTotal" value={data.activaPinstTotal || ''} placeholder='P.inst. (W) Total' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>F.P.</td>
+                <td><input type="text" name="activaFp" value={data.activaFp || ''} placeholder='F.P.' onChange={handleChange} /></td>          
               </tr>
               <tr>
-                <td className='porcentaje_error'>% Error</td>
-                <td><input type="text" name="activa_porcentaje_error" placeholder='% Error' onChange={handleChange} /></td>
-                <td className='giros'>Giros</td>
-                <td><input type="text" name="activa_giros" placeholder='giros' onChange={handleChange} /></td>
-                <td className='tiempo'>Tiempo (S)</td>
-                <td><input type="text" name="activa_tiempo" placeholder='Tiempo (S)' onChange={handleChange} /></td>
-                <td className='horas' >Horas</td>
-                <td ><input type="text" name="activa_horas" placeholder='Horas' onChange={handleChange} /></td>
-                <td className="secuencia-fases">W</td>
-                <td><input type="text" name="activa_w" placeholder='W' onChange={handleChange} /></td>
+                <td className={styles.porcentajeError}>% Error</td>
+                <td><input type="text" name="activaPorcentajeError" value={data.activaPorcentajeError || ''} placeholder='% Error' onChange={handleChange} /></td>
+                <td className={styles.giros}>Giros</td>
+                <td><input type="text" name="activaGiros" value={data.activaGiros || ''} placeholder='giros' onChange={handleChange} /></td>
+                <td className={styles.tiempo}>Tiempo (S)</td>
+                <td><input type="text" name="activaTiempo" value={data.activaTiempo || ''} placeholder='Tiempo (S)' onChange={handleChange} /></td>
+                <td className={styles.horas}>Horas</td>
+                <td><input type="text" name="activaHoras" value={data.activaHoras || ''} placeholder='Horas' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>W</td>
+                <td><input type="text" name="activaW" value={data.activaW || ''} placeholder='W' onChange={handleChange} /></td>
               </tr>
             </tbody>
           </table>
         </div>
           
-          {/* MEDIDOR REACTIVA */}
-          <div className="table-container">
-            <table className="calculos-table">
-              <thead>
-                <tr>
-                  <th colSpan="10">Medidor Reactiva</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th colSpan="10">Cuadro de Cálculo del Error</th>
-                </tr>
-                <tr>
-                  <th colSpan="2">Fase</th>
-                  <th colSpan="2">Tensión (V)</th>
-                  <th colSpan="2">CORRIENTE (A)</th>
-                  <th colSpan="2">P.Inst (W)</th>
-                  <th colSpan="2" rowSpan="2">Secuencia de Fases</th>
-                </tr>
-                <tr>
-                  <td colSpan="2" className="fase">R</td>
-                  <td colSpan="2"><input type="text" name="reactiva_tension_r" placeholder='Tensión (V) R' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_corriente_r" placeholder='Corriente (A) R' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_pinst_r" placeholder='P.inst. (W) R' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td colSpan="2" className="fase">S</td>
-                  <td colSpan="2"><input type="text" name="reactiva_tension_s" placeholder='Tensión (V) S' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_corriente_s" placeholder='Corriente (A) S' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_pinst_s" placeholder='P.inst. (W) S' onChange={handleChange} /></td>
-                  <td className="secuencia-fases">RST</td>
-                  <td><input type="text" name="reactiva_rst" placeholder='RST' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td colSpan="2" className="fase">T</td>
-                  <td colSpan="2"><input type="text" name="reactiva_tension_t" placeholder='Tensión (V) T' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_corriente_t" placeholder='Corriente (A) T' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_pinst_t" placeholder='P.inst. (W) T' onChange={handleChange} /></td>
-                  <td className="secuencia-fases">RTS</td>
-                  <td><input type="text" name="reactiva_rts" placeholder='RTS' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td colSpan="2" className="fase total">TOTAL (L-L)</td>
-                  <td colSpan="2"><input type="text" name="reactiva_tension_total" placeholder='Tensión Total (V)' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_corriente_total" placeholder='Corriente Total (A)' onChange={handleChange} /></td>
-                  <td colSpan="2"><input type="text" name="reactiva_pinst_total" placeholder='P.inst. (W) Total' onChange={handleChange} /></td>
-                  <td className="secuencia-fases">F.P.</td>
-                  <td><input type="text" name="reactiva_fp" placeholder='F.P.' onChange={handleChange} /></td>          
-                </tr>
-                <tr>
-                  <td className='porcentaje_error'>% Error</td>
-                  <td><input type="text" name="reactiva_porcentaje_error" placeholder='% Error' onChange={handleChange} /></td>
-                  <td className='giros'>Giros</td>
-                  <td><input type="text" name="reactiva_giros" placeholder='giros' onChange={handleChange} /></td>
-                  <td className='tiempo'>Tiempo (S)</td>
-                  <td><input type="text" name="reactiva_tiempo" placeholder='Tiempo (S)' onChange={handleChange} /></td>
-                  <td className='horas' >Horas</td>
-                  <td ><input type="text" name="reactiva_horas" placeholder='Horas' onChange={handleChange} /></td>
-                  <td className="secuencia-fases">W</td>
-                  <td><input type="text" name="reactiva_w" placeholder='W' onChange={handleChange} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* MEDIDOR REACTIVA */}
+        <div className={styles.tableContainer}>
+          <table className={styles.calculosTable}>
+            <thead>
+              <tr>
+                <th colSpan="10">Medidor Reactiva</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th colSpan="10">Cuadro de Cálculo del Error</th>
+              </tr>
+              <tr>
+                <th colSpan="2">Fase</th>
+                <th colSpan="2">Tensión (V)</th>
+                <th colSpan="2">CORRIENTE (A)</th>
+                <th colSpan="2">P.Inst (W)</th>
+                <th colSpan="2" rowSpan="2">Secuencia de Fases</th>
+              </tr>
+              <tr>
+                <td colSpan="2" className={styles.fase}>R</td>
+                <td colSpan="2"><input type="text" name="reactivaTensionR" value={data.reactivaTensionR || ''} placeholder='Tensión (V) R' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaCorrienteR" value={data.reactivaCorrienteR || ''} placeholder='Corriente (A) R' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaPinstR" value={data.reactivaPinstR || ''} placeholder='P.inst. (W) R' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td colSpan="2" className={styles.fase}>S</td>
+                <td colSpan="2"><input type="text" name="reactivaTensionS" value={data.reactivaTensionS || ''} placeholder='Tensión (V) S' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaCorrienteS" value={data.reactivaCorrienteS || ''} placeholder='Corriente (A) S' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaPinstS" value={data.reactivaPinstS || ''} placeholder='P.inst. (W) S' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>RST</td>
+                <td><input type="text" name="reactivaRst" value={data.reactivaRst || ''} placeholder='RST' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td colSpan="2" className={styles.fase}>T</td>
+                <td colSpan="2"><input type="text" name="reactivaTensionT" value={data.reactivaTensionT || ''} placeholder='Tensión (V) T' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaCorrienteT" value={data.reactivaCorrienteT || ''} placeholder='Corriente (A) T' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaPinstT" value={data.reactivaPinstT || ''} placeholder='P.inst. (W) T' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>RTS</td>
+                <td><input type="text" name="reactivaRts" value={data.reactivaRts || ''} placeholder='RTS' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td colSpan="2" className={styles.faseTotal}>TOTAL (L-L)</td>
+                <td colSpan="2"><input type="text" name="reactivaTensionTotal" value={data.reactivaTensionTotal || ''} placeholder='Tensión Total (V)' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaCorrienteTotal" value={data.reactivaCorrienteTotal || ''} placeholder='Corriente Total (A)' onChange={handleChange} /></td>
+                <td colSpan="2"><input type="text" name="reactivaPinstTotal" value={data.reactivaPinstTotal || ''} placeholder='P.inst. (W) Total' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>F.P.</td>
+                <td><input type="text" name="reactivaFp" value={data.reactivaFp || ''} placeholder='F.P.' onChange={handleChange} /></td>          
+              </tr>
+              <tr>
+                <td className={styles.porcentajeError}>% Error</td>
+                <td><input type="text" name="reactivaPorcentajeError" value={data.reactivaPorcentajeError || ''} placeholder='% Error' onChange={handleChange} /></td>
+                <td className={styles.giros}>Giros</td>
+                <td><input type="text" name="reactivaGiros" value={data.reactivaGiros || ''} placeholder='giros' onChange={handleChange} /></td>
+                <td className={styles.tiempo}>Tiempo (S)</td>
+                <td><input type="text" name="reactivaTiempo" value={data.reactivaTiempo || ''} placeholder='Tiempo (S)' onChange={handleChange} /></td>
+                <td className={styles.horas}>Horas</td>
+                <td><input type="text" name="reactivaHoras" value={data.reactivaHoras || ''} placeholder='Horas' onChange={handleChange} /></td>
+                <td className={styles.secuenciaFases}>W</td>
+                <td><input type="text" name="reactivaW" value={data.reactivaW || ''} placeholder='W' onChange={handleChange} /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* PRUEBAS DE FUNCIONAMIENTO - MEDIDOR ACTIVA */}
-          <div className="table-container">
-            <table className="pruebas-table">
-              <thead>
-                <tr>
-                  <th colSpan="8">Pruebas de Funcionamiento del Medidor de Activa</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th className="tipo-header">Tipo</th>
-                  <th className="conforme-header">Conforme</th>
-                  <th colSpan="3" className="prueba-integracion-header">Prueba de Integración</th>
-                </tr>
-                <tr>
-                  <td className="tipo-item">Conexiones</td>
-                  <td className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_conexiones" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_conexiones" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Lectura Inicial</td>
-                  <td className="integracion-input">
-                    <input type="text" name="activa_lectura_inicial" placeholder='Lectura' onChange={handleChange} />
-                  </td>
-                  <td className="integracion-label">% Error</td>
-                </tr>
-                <tr>
-                  <td className="tipo-item">Continuidad</td>
-                  <td className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_continuidad" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_continuidad" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Lectura Final</td>
-                  <td className="integracion-input">
-                    <input type="text" name="activa_lectura_final" placeholder='Lectura' onChange={handleChange} />
-                  </td>
-                  <td rowSpan="3" className="integracion-input">
-                    <input type="text" name="activa_porcentaje_error" placeholder='% Error' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td rowSpan="2" className="tipo-item">Prueba de Puentes</td>
-                  <td rowSpan="2" className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_puentes" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_puentes" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Diferencia</td>
-                  <td className="integracion-input">
-                    <input type="text" name="activa_diferencia" placeholder='Diferencia' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="integracion-label">Patron</td>
-                  <td className="integracion-input">
-                    <input type="text" name="activa_patron" placeholder='Patron' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="4" className='integration_label'>Estado del integrador</td>
-                  <td className='integration_label'> Medidor se frena</td>
-                </tr>
-                <tr>
-                  <td className='integration-label'>¿Giro en vacio?</td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_giro_vacio" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_giro_vacio" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className='integration-label'>¿Registra?</td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_registra" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_registra" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_se_frena" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="activa_se_frena" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* PRUEBAS DE FUNCIONAMIENTO - MEDIDOR ACTIVA */}
+        <div className={styles.tableContainer}>
+          <table className={styles.pruebasTable}>
+            <thead>
+              <tr>
+                <th colSpan="8">Pruebas de Funcionamiento del Medidor de Activa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th className={styles.tipoHeader}>Tipo</th>
+                <th className={styles.conformeHeader}>Conforme</th>
+                <th colSpan="3" className={styles.pruebaIntegracionHeader}>Prueba de Integración</th>
+              </tr>
+              <tr>
+                <td className={styles.tipoItem}>Conexiones</td>
+                <td className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaConexiones" value="si" checked={data.activaConexiones === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaConexiones" value="no" checked={data.activaConexiones === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Lectura Inicial</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="activaLecturaInicial" value={data.activaLecturaInicial || ''} placeholder='Lectura' onChange={handleChange} />
+                </td>
+                <td className={styles.integracionLabel}>% Error</td>
+              </tr>
+              <tr>
+                <td className={styles.tipoItem}>Continuidad</td>
+                <td className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaContinuidad" value="si" checked={data.activaContinuidad === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaContinuidad" value="no" checked={data.activaContinuidad === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Lectura Final</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="activaLecturaFinal" value={data.activaLecturaFinal || ''} placeholder='Lectura' onChange={handleChange} />
+                </td>
+                <td rowSpan="3" className={styles.integracionInput}>
+                  <input type="text" name="activaPorcentajeErrorPruebas" value={data.activaPorcentajeErrorPruebas || ''} placeholder='% Error' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td rowSpan="2" className={styles.tipoItem}>Prueba de Puentes</td>
+                <td rowSpan="2" className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaPuentes" value="si" checked={data.activaPuentes === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaPuentes" value="no" checked={data.activaPuentes === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Diferencia</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="activaDiferencia" value={data.activaDiferencia || ''} placeholder='Diferencia' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td className={styles.integracionLabel}>Patron</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="activaPatron" value={data.activaPatron || ''} placeholder='Patron' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td colSpan="4" className={styles.integrationLabel}>Estado del integrador</td>
+                <td className={styles.integrationLabel}>Medidor se frena</td>
+              </tr>
+              <tr>
+                <td className={styles.integrationLabel}>¿Giro en vacio?</td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaGiroVacio" value="si" checked={data.activaGiroVacio === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaGiroVacio" value="no" checked={data.activaGiroVacio === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integrationLabel}>¿Registra?</td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaRegistra" value="si" checked={data.activaRegistra === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaRegistra" value="no" checked={data.activaRegistra === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaSeFrena" value="si" checked={data.activaSeFrena === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="activaSeFrena" value="no" checked={data.activaSeFrena === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* PRUEBAS DE FUNCIONAMIENTO - MEDIDOR REACTIVA */}
-          <div className="table-container">
-            <table className="pruebas-table">
-              <thead>
-                <tr>
-                  <th colSpan="5">Pruebas de Funcionamiento del Medidor de Reactiva</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th className="tipo-header">Tipo</th>
-                  <th className="conforme-header">Conforme</th>
-                  <th colSpan="3" className="prueba-integracion-header">Prueba de Integración</th>
-                </tr>
-                <tr>
-                  <td className="tipo-item">Conexiones</td>
-                  <td className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_conexiones" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_conexiones" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Lectura Inicial</td>
-                  <td className="integracion-input">
-                    <input type="text" name="reactiva_lectura_inicial" placeholder='Lectura' onChange={handleChange} />
-                  </td>
-                  <td className="integracion-label">% Error</td>
-                </tr>
-                <tr>
-                  <td className="tipo-item">Continuidad</td>
-                  <td className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_continuidad" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_continuidad" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Lectura Final</td>
-                  <td className="integracion-input">
-                    <input type="text" name="reactiva_lectura_final" placeholder='Lectura' onChange={handleChange} />
-                  </td>
-                  <td rowSpan="3" className="integracion-input">
-                    <input type="text" name="reactiva_porcentaje_error" placeholder='% Error' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td rowSpan="2" className="tipo-item">Prueba de Puentes</td>
-                  <td rowSpan="2" className="conforme-item">
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_puentes" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_puentes" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className="integracion-label">Diferencia</td>
-                  <td className="integracion-input">
-                    <input type="text" name="reactiva_diferencia" placeholder='Diferencia' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="integracion-label">Patron</td>
-                  <td className="integracion-input">
-                    <input type="text" name="reactiva_patron" placeholder='Patron' onChange={handleChange} />
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="4" className='integration_label'>Estado del integrador</td>
-                  <td className='integration_label'> Medidor se frena</td>
-                </tr>
-                <tr>
-                  <td className='integration-label'>¿Giro en vacio?</td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_giro_vacio" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_giro_vacio" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td className='integration-label'>¿Registra?</td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_registra" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_registra" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_se_frena" value="si" onChange={handleChange} />
-                        <span>Sí</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input type="radio" name="reactiva_se_frena" value="no" onChange={handleChange} />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* PRUEBAS DE FUNCIONAMIENTO - MEDIDOR REACTIVA */}
+        <div className={styles.tableContainer}>
+          <table className={styles.pruebasTable}>
+            <thead>
+              <tr>
+                <th colSpan="5">Pruebas de Funcionamiento del Medidor de Reactiva</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th className={styles.tipoHeader}>Tipo</th>
+                <th className={styles.conformeHeader}>Conforme</th>
+                <th colSpan="3" className={styles.pruebaIntegracionHeader}>Prueba de Integración</th>
+              </tr>
+              <tr>
+                <td className={styles.tipoItem}>Conexiones</td>
+                <td className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaConexiones" value="si" checked={data.reactivaConexiones === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaConexiones" value="no" checked={data.reactivaConexiones === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Lectura Inicial</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="reactivaLecturaInicial" value={data.reactivaLecturaInicial || ''} placeholder='Lectura' onChange={handleChange} />
+                </td>
+                <td className={styles.integracionLabel}>% Error</td>
+              </tr>
+              <tr>
+                <td className={styles.tipoItem}>Continuidad</td>
+                <td className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaContinuidad" value="si" checked={data.reactivaContinuidad === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaContinuidad" value="no" checked={data.reactivaContinuidad === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Lectura Final</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="reactivaLecturaFinal" value={data.reactivaLecturaFinal || ''} placeholder='Lectura' onChange={handleChange} />
+                </td>
+                <td rowSpan="3" className={styles.integracionInput}>
+                  <input type="text" name="reactivaPorcentajeErrorPruebas" value={data.reactivaPorcentajeErrorPruebas || ''} placeholder='% Error' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td rowSpan="2" className={styles.tipoItem}>Prueba de Puentes</td>
+                <td rowSpan="2" className={styles.conformeItem}>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaPuentes" value="si" checked={data.reactivaPuentes === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaPuentes" value="no" checked={data.reactivaPuentes === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integracionLabel}>Diferencia</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="reactivaDiferencia" value={data.reactivaDiferencia || ''} placeholder='Diferencia' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td className={styles.integracionLabel}>Patron</td>
+                <td className={styles.integracionInput}>
+                  <input type="text" name="reactivaPatron" value={data.reactivaPatron || ''} placeholder='Patron' onChange={handleChange} />
+                </td>
+              </tr>
+              <tr>
+                <td colSpan="4" className={styles.integrationLabel}>Estado del integrador</td>
+                <td className={styles.integrationLabel}>Medidor se frena</td>
+              </tr>
+              <tr>
+                <td className={styles.integrationLabel}>¿Giro en vacio?</td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaGiroVacio" value="si" checked={data.reactivaGiroVacio === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaGiroVacio" value="no" checked={data.reactivaGiroVacio === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td className={styles.integrationLabel}>¿Registra?</td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaRegistra" value="si" checked={data.reactivaRegistra === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaRegistra" value="no" checked={data.reactivaRegistra === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+                <td>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaSeFrena" value="si" checked={data.reactivaSeFrena === 'si'} onChange={handleChange} />
+                      <span>Sí</span>
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input type="radio" name="reactivaSeFrena" value="no" checked={data.reactivaSeFrena === 'no'} onChange={handleChange} />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* TRANSFORMADORES DE CORRIENTE TC'S ENCONTRADOS */}
-          <div className="table-container">
-            <table className="transformadores-table">
-              <thead>
-                <tr>
-                  <th colSpan="6">Características Transformadores de Corriente TC'S Encontrados</th>
-                </tr>
-                <tr>
-                  <th>Marca</th>
-                  <th>Series</th>
-                  <th>Tipo</th>
-                  <th>Relación</th>
-                  <th>Clase</th>
-                  <th>VA</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><input type="text" name="tc_marca_1" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_series_1" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_tipo_1" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_relacion_1" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_clase_1" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_va_1" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td><input type="text" name="tc_marca_2" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_series_2" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_tipo_2" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_relacion_2" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_clase_2" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_va_2" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td><input type="text" name="tc_marca_3" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_series_3" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_tipo_3" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_relacion_3" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_clase_3" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tc_va_3" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* TRANSFORMADORES DE CORRIENTE TC'S ENCONTRADOS */}
+        <div className={styles.tableContainer}>
+          <table className={styles.transformadoresTable}>
+            <thead>
+              <tr>
+                <th colSpan="6">Características Transformadores de Corriente TC'S Encontrados</th>
+              </tr>
+              <tr>
+                <th>Marca</th>
+                <th>Series</th>
+                <th>Tipo</th>
+                <th>Relación</th>
+                <th>Clase</th>
+                <th>VA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="text" name="tcMarca1" value={data.tcMarca1 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tcSeries1" value={data.tcSeries1 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tcTipo1" value={data.tcTipo1 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tcRelacion1" value={data.tcRelacion1 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tcClase1" value={data.tcClase1 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tcVa1" value={data.tcVa1 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="tcMarca2" value={data.tcMarca2 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tcSeries2" value={data.tcSeries2 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tcTipo2" value={data.tcTipo2 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tcRelacion2" value={data.tcRelacion2 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tcClase2" value={data.tcClase2 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tcVa2" value={data.tcVa2 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="tcMarca3" value={data.tcMarca3 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tcSeries3" value={data.tcSeries3 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tcTipo3" value={data.tcTipo3 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tcRelacion3" value={data.tcRelacion3 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tcClase3" value={data.tcClase3 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tcVa3" value={data.tcVa3 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* TRANSFORMADORES DE POTENCIA TP'S ENCONTRADOS */}
-          <div className="table-container">
-            <table className="transformadores-table">
-              <thead>
-                <tr>
-                  <th colSpan="6">Características Transformadores de Potencia TP'S Encontrados</th>
-                </tr>
-                <tr>
-                  <th>Marca</th>
-                  <th>Series</th>
-                  <th>Tipo</th>
-                  <th>Relación</th>
-                  <th>Clase</th>
-                  <th>VA</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><input type="text" name="tp_marca_1" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_series_1" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_tipo_1" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_relacion_1" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_clase_1" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_va_1" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td><input type="text" name="tp_marca_2" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_series_2" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_tipo_2" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_relacion_2" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_clase_2" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_va_2" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-                <tr>
-                  <td><input type="text" name="tp_marca_3" placeholder='Marca' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_series_3" placeholder='Series' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_tipo_3" placeholder='Tipo' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_relacion_3" placeholder='Relación' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_clase_3" placeholder='Clase' onChange={handleChange} /></td>
-                  <td><input type="text" name="tp_va_3" placeholder='VA' onChange={handleChange} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* TRANSFORMADORES DE POTENCIA TP'S ENCONTRADOS */}
+        <div className={styles.tableContainer}>
+          <table className={styles.transformadoresTable}>
+            <thead>
+              <tr>
+                <th colSpan="6">Características Transformadores de Potencia TP'S Encontrados</th>
+              </tr>
+              <tr>
+                <th>Marca</th>
+                <th>Series</th>
+                <th>Tipo</th>
+                <th>Relación</th>
+                <th>Clase</th>
+                <th>VA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="text" name="tpMarca1" value={data.tpMarca1 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tpSeries1" value={data.tpSeries1 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tpTipo1" value={data.tpTipo1 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tpRelacion1" value={data.tpRelacion1 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tpClase1" value={data.tpClase1 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tpVa1" value={data.tpVa1 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="tpMarca2" value={data.tpMarca2 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tpSeries2" value={data.tpSeries2 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tpTipo2" value={data.tpTipo2 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tpRelacion2" value={data.tpRelacion2 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tpClase2" value={data.tpClase2 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tpVa2" value={data.tpVa2 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="tpMarca3" value={data.tpMarca3 || ''} placeholder='Marca' onChange={handleChange} /></td>
+                <td><input type="text" name="tpSeries3" value={data.tpSeries3 || ''} placeholder='Series' onChange={handleChange} /></td>
+                <td><input type="text" name="tpTipo3" value={data.tpTipo3 || ''} placeholder='Tipo' onChange={handleChange} /></td>
+                <td><input type="text" name="tpRelacion3" value={data.tpRelacion3 || ''} placeholder='Relación' onChange={handleChange} /></td>
+                <td><input type="text" name="tpClase3" value={data.tpClase3 || ''} placeholder='Clase' onChange={handleChange} /></td>
+                <td><input type="text" name="tpVa3" value={data.tpVa3 || ''} placeholder='VA' onChange={handleChange} /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* EVIDENCIAS E INFORME */}
-{/* EVIDENCIAS E INFORME */}
-        <div className="table-container">
-          <div className="evidencias-section">
-            <h3 className="section-title">Evidencias e Informe</h3>
+        <div className={styles.tableContainer}>
+          <div className={styles.evidenciasSection}>
+            <h3 className={styles.sectionTitle}>Evidencias e Informe</h3>
             
-            <div className="evidencias-grid">
-              <div className="form-group">
+            <div className={styles.evidenciasGrid}>
+              <div className={styles.formGroup}>
                 <label>Códigos de las Irregularidades</label>
                 <input 
+                  className={styles.informeInput}
                   type="text" 
-                  name="codigos_irregularidades" 
+                  name="codigosIrregularidades" 
                   placeholder='Ingrese códigos' 
                   onChange={handleChange}
-                  value={formData.codigos_irregularidades || ''}
+                  value={data.codigosIrregularidades || ''}
                 />
               </div>
               
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Tipo de Evidencia</label>
-                <div className="evidencia-options">
-                  <label className="evidencia-option">
+                <div className={styles.evidenciaOptions}>
+                  <label className={styles.evidenciaOption}>
                     <input 
                       type="radio" 
-                      name="tipo_evidencia" 
+                      name="tipoEvidencia" 
                       value="foto" 
                       onChange={handleChange}
-                      checked={formData.tipo_evidencia === 'foto'}
+                      checked={data.tipoEvidencia === 'foto'}
                     />
-                    <span className="evidencia-icon">📷</span>
+                    <FiCamera className={styles.evidenciaIcon} />
                     <span>Fotos</span>
                   </label>
-                  <label className="evidencia-option">
+                  <label className={styles.evidenciaOption}>
                     <input 
                       type="radio" 
-                      name="tipo_evidencia" 
+                      name="tipoEvidencia" 
                       value="video" 
                       onChange={handleChange}
-                      checked={formData.tipo_evidencia === 'video'}
+                      checked={data.tipoEvidencia === 'video'}
                     />
-                    <span className="evidencia-icon">🎥</span>
+                    <FiVideo className={styles.evidenciaIcon} />
                     <span>Video</span>
                   </label>
                 </div>
               </div>
               
-              <div className="form-group">
-                <label>Subir Evidencia</label>
-                <input 
-                  type="file" 
-                  name="evidencia_archivo" 
-                  accept={formData.tipo_evidencia === 'foto' ? 'image/*' : 'video/*'}
-                  multiple={formData.tipo_evidencia === 'foto'}
-                  onChange={handleChange} 
-                  className="file-input"
-                  disabled={!formData.tipo_evidencia}
-                />
-                <small className="file-hint">
-                  {formData.tipo_evidencia === 'foto' ? 'Puede seleccionar múltiples fotos' : 'Seleccione un video'}
-                </small>
-              </div>
-              
-              <div className="form-group">
-                <label>Irregularidad Corrida</label>
-                <div className="checkbox-group-horizontal">
-                  <label className="checkbox-label">
+              <div className={styles.formGroup}>
+                <label>Irregularidad Corregida</label>
+                <div className={styles.checkboxGroupHorizontal}>
+                  <label className={styles.checkboxLabel}>
                     <input 
                       type="radio" 
-                      name="irregularidad_corrida" 
+                      name="irregularidadCorrida" 
                       value="si" 
                       onChange={handleChange}
-                      checked={formData.irregularidad_corrida === 'si'}
+                      checked={data.irregularidadCorrida === 'si'}
                     />
                     <span>Sí</span>
                   </label>
-                  <label className="checkbox-label">
+                  <label className={styles.checkboxLabel}>
                     <input 
                       type="radio" 
-                      name="irregularidad_corrida" 
+                      name="irregularidadCorrida" 
                       value="no" 
                       onChange={handleChange}
-                      checked={formData.irregularidad_corrida === 'no'}
+                      checked={data.irregularidadCorrida === 'no'}
                     />
                     <span>No</span>
                   </label>
                 </div>
               </div>
               
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Medidor Retirado</label>
-                <div className="checkbox-group-horizontal">
-                  <label className="checkbox-label">
+                <div className={styles.checkboxGroupHorizontal}>
+                  <label className={styles.checkboxLabel}>
                     <input 
                       type="radio" 
-                      name="medidor_retirado" 
+                      name="medidorRetirado" 
                       value="si" 
                       onChange={handleChange}
-                      checked={formData.medidor_retirado === 'si'}
+                      checked={data.medidorRetirado === 'si'}
                     />
                     <span>Sí</span>
                   </label>
-                  <label className="checkbox-label">
+                  <label className={styles.checkboxLabel}>
                     <input 
                       type="radio" 
-                      name="medidor_retirado" 
+                      name="medidorRetirado" 
                       value="no" 
                       onChange={handleChange}
-                      checked={formData.medidor_retirado === 'no'}
+                      checked={data.medidorRetirado === 'no'}
                     />
                     <span>No</span>
                   </label>
                 </div>
               </div>
               
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Tipo de Informe</label>
                 <select 
-                  name="tipo_informe" 
+                  name="tipoInforme" 
                   onChange={handleChange} 
-                  className="informe-select"
-                  value={formData.tipo_informe || ''}
+                  className={styles.informeSelect}
+                  value={data.tipoInforme || ''}
                 >
                   <option value="">Seleccione una opción</option>
-                  <option value="visita_sitio">Se realizó visita al sitio</option>
+                  <option value="Se realizó visita al sitio">Se realizó visita al sitio</option>
                   <option value="instalacion_completada">Instalación completada</option>
                   <option value="medicion_realizada">Medición realizada</option>
                   <option value="pruebas_completadas">Pruebas completadas</option>
@@ -1302,15 +896,16 @@ const Form3 = ({ data, updateData, nextStep, prevStep,type, files}) => {
                 </select>
               </div>
               
-              {showOtroInforme && (
-                <div className="form-group full-width">
-                  <label>Especifique</label>
+              {data.tipoInforme === 'otro' && (
+                <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.especifiqueOtro}`}>
+                  <label>Especifique el tipo de informe:</label>
                   <input 
                     type="text" 
-                    name="otro_informe" 
-                    placeholder='Especifique el tipo de informe' 
+                    name="tipoInformeOtro"
+                    value={data.tipoInformeOtro || ''} 
                     onChange={handleChange}
-                    value={formData.otro_informe || ''}
+                    placeholder="Describa el tipo de informe realizado"
+                    className={styles.informeInput}
                   />
                 </div>
               )}
@@ -1318,15 +913,14 @@ const Form3 = ({ data, updateData, nextStep, prevStep,type, files}) => {
           </div>
         </div>
 
-        <div className="form-navigation">
-          <button type="button" onClick={prevStep} className="back-button">
+        <div className={styles.formNavigation}>
+          <button type="button" onClick={prevStep} className={styles.backButton}>
             Anterior
           </button>
-          <button type="submit" className="next-button" onClick={nextStep}>
+          <button type="submit" className={styles.nextButton} onClick={nextStep}>
             Siguiente
           </button>
         </div>
-      </form>
     </div>
   );
 };

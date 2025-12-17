@@ -169,7 +169,7 @@ app.get("/api/next-review-number", authenticateToken, async (req, res) => {
     let nextNumber = 1000; // Valor por defecto si no hay actas
     
     if (lastReview.length > 0 && lastReview[0]["No"]) { // ← Acceder con ["No."]
-      nextNumber = lastReview[0]["No"] + 1; // ← Incrementar el último número
+      nextNumber = lastReview[0]["No"] + 1; 
     }
     
     res.json({ 
@@ -186,6 +186,6 @@ app.get("/api/next-review-number", authenticateToken, async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en http://172.18.24.57:${PORT}`);
-  console.log(`Accesible desde la red en: http://172.18.24.57:${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Accesible desde la red en: http://localhost:${PORT}`);
 });

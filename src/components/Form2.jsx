@@ -130,6 +130,30 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             className={styles.input}
           />
         </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Longitud</label>
+          <input 
+            name='longitud'
+            type="number" 
+            step="0.001"
+            value={data.longitud} 
+            onChange={handleChange} 
+            placeholder="Ingrese la longitud"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Latitud</label>
+          <input 
+            name='latitud'
+            type="number"
+            step="0.001" 
+            value={data.latitud} 
+            onChange={handleChange} 
+            placeholder="Ingrese la latitud"
+            className={styles.input}
+          />
+        </div>
       </div>
       <h3 className={styles.formSectionTitle}>Datos del suscriptor y Equipos de Medida Encontrados</h3>
       <div className={styles.formRow}>
@@ -316,8 +340,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             <label className={styles.label}>#F #H</label>
             <input 
               type="text" 
-              name="hf"
-              value={data.hf} 
+              name="fh"
+              value={data.fh} 
               onChange={handleChange} 
               placeholder="Ej: "
               className={styles.input}
@@ -348,6 +372,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
         </div>
 
         <h3 className={styles.formSectionTitle}>Modem y Configuración</h3>
+
+        {/* Fila 1 - Botones existentes */}
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label className={styles.label}>Ubicación del Modem</label>
@@ -357,13 +383,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   key={opcion}
                   type="button"
                   className={data.modemUbicacion === opcion ? styles.btnSelected : styles.btnOption}
-                  onClick={() => handleChange({target: {name: 'modemUbicacion',value: opcion}})}
+                  onClick={() =>
+                    handleChange({ target: { name: 'modemUbicacion', value: opcion } })
+                  }
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.label}>Configuración de la Medida</label>
             <div className={styles.buttonGroup}>
@@ -372,13 +401,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   key={opcion}
                   type="button"
                   className={data.configuracionMedida === opcion ? styles.btnSelected : styles.btnOption}
-                  onClick={() => handleChange({target: {name: 'configuracionMedida',value: opcion}})}
+                  onClick={() =>
+                    handleChange({ target: { name: 'configuracionMedida', value: opcion } })
+                  }
                 >
                   {opcion}
                 </button>
               ))}
             </div>
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.label}>Tipo de Medida</label>
             <div className={styles.buttonGroup}>
@@ -387,7 +419,9 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   key={opcion}
                   type="button"
                   className={data.tipoMedida === opcion ? styles.btnSelected : styles.btnOption}
-                  onClick={() => handleChange({target: {name: 'tipoMedida',value: opcion}})}
+                  onClick={() =>
+                    handleChange({ target: { name: 'tipoMedida', value: opcion } })
+                  }
                 >
                   {opcion}
                 </button>
@@ -395,6 +429,91 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             </div>
           </div>
         </div>
+
+        {/* Fila 2 - Marca modem */}
+        <div className={styles.formRow}>
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+            <label className={styles.label}>Marca del modem</label>
+            <select
+              name="marcaModem"
+              value={data.marcaModem || ''}
+              onChange={handleChange}
+              className={styles.select}
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="Teltonika">Teltonika</option>
+              <option value="wLink">wLink</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          {data.marcaModem === 'Otro' && (
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+              <label className={styles.label}>Especifique la marca del modem</label>
+              <input
+                type="text"
+                name="marcaModemOtro"
+                value={data.marcaModemOtro || ''}
+                onChange={handleChange}
+                placeholder="Ingrese la marca del modem"
+                className={styles.input}
+              />
+            </div>
+          )}
+          {/* Serie */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Serie del modem</label>
+            <input
+              type="text"
+              name="serieModem"
+              value={data.serieModem || ''}
+              onChange={handleChange}
+              placeholder="Serie del modem"
+              className={styles.input}
+            />
+          </div>
+        </div>
+
+
+        {/* Fila 3 - Datos técnicos */}
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>IP</label>
+            <input
+              type="text"
+              name="ipModem"
+              value={data.ipModem || ''}
+              onChange={handleChange}
+              placeholder="Ej: 192.168.1.1"
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Marca del cable</label>
+            <input
+              type="text"
+              name="marcaCable"
+              value={data.marcaCable || ''}
+              onChange={handleChange}
+              placeholder="Marca del cable"
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Marca de la celda de medida</label>
+            <input
+              type="text"
+              name="marcaCeldaMedida"
+              value={data.marcaCeldaMedida || ''}
+              onChange={handleChange}
+              placeholder="Marca de la celda"
+              className={styles.input}
+            />
+          </div>
+        </div>
+
       </div>
 
       {/* Sección 5: Medidor Encontrado y Medidor Instalado */}
@@ -639,12 +758,12 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
 
               {/* Fila para Reactiva */}
               <tr>
-                <td className={styles.measureType}>Reactiva</td>
+                <td className={styles.measureType}>Reactiva1</td>
                 <td>
                   <input
                     type="text"
-                    name="numeroReactiva"
-                    value={data.numeroReactiva || ''}
+                    name="numeroReactiva1"
+                    value={data.numeroReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -666,8 +785,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="tipoReactiva"
-                    value={data.tipoReactiva || ''}
+                    name="tipoReactiva1"
+                    value={data.tipoReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -675,8 +794,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="capacidadReactiva"
-                    value={data.capacidadReactiva || ''}
+                    name="capacidadReactiva1"
+                    value={data.capacidadReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -684,8 +803,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="tensionReactiva"
-                    value={data.tensionReactiva || ''}
+                    name="tensionReactiva1"
+                    value={data.tensionReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -693,8 +812,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="claseReactiva"
-                    value={data.claseReactiva || ''}
+                    name="claseReactiva1"
+                    value={data.claseReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -702,8 +821,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="kdReactiva"
-                    value={data.kdReactiva || ''}
+                    name="kdReactiva1"
+                    value={data.kdReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -711,8 +830,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="khReactiva"
-                    value={data.khReactiva || ''}
+                    name="khReactiva1"
+                    value={data.khReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -720,8 +839,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="lecturaReactiva"
-                    value={data.lecturaReactiva || ''}
+                    name="lecturaReactiva1"
+                    value={data.lecturaReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -729,8 +848,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="edReactiva"
-                    value={data.edReactiva || ''}
+                    name="edReactiva1"
+                    value={data.edReactiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -738,8 +857,116 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="fechaLabReactiva"
-                    value={data.fechaLabReactiva || ''}
+                    name="fechaLabReactiva1"
+                    value={data.fechaLabReactiva1 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+              </tr>
+              {/* Fila para Reactiva2 */}
+              <tr>
+                <td className={styles.measureType}>Reactiva2</td>
+                <td>
+                  <input
+                    type="text"
+                    name="numeroReactiva2"
+                    value={data.numeroReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select 
+                    name="marcaReactiva2"
+                    value={data.marcaReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.select}
+                  >
+                    <option value="">Seleccionar marca...</option>
+                    <option value="elster">Elster</option>
+                    <option value="actaris">Actaris</option>
+                    <option value="landys">Landys</option>
+                    <option value="microstar">Microstar</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tipoReactiva2"
+                    value={data.tipoReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadReactiva2"
+                    value={data.capacidadReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionReactiva2"
+                    value={data.tensionReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseReactiva2"
+                    value={data.claseReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdReactiva2"
+                    value={data.kdReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khReactiva2"
+                    value={data.khReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaReactiva2"
+                    value={data.lecturaReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edReactiva2"
+                    value={data.edReactiva2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabReactiva2"
+                    value={data.fechaLabReactiva2 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -987,22 +1214,22 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           </td>
         </tr>
 
-        {/* Fila para Reactiva */}
+        {/* Fila para Reactiva1 */}
         <tr>
-          <td className={styles.measureType}>Reactiva</td>
+          <td className={styles.measureType}>Reactiva1</td>
           <td>
             <input
               type="text"
-              name="numeroReactivaIns"
-              value={data.numeroReactivaIns || ''}
+              name="numeroReactivaIns1"
+              value={data.numeroReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
           </td>
           <td>
             <select 
-              name="marcaReactivaIns"
-              value={data.marcaReactivaIns || ''}
+              name="marcaReactivaIns1"
+              value={data.marcaReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.select}
             >
@@ -1016,8 +1243,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="tipoReactivaIns"
-              value={data.tipoReactivaIns || ''}
+              name="tipoReactivaIns1"
+              value={data.tipoReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1025,8 +1252,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="capacidadReactivaIns"
-              value={data.capacidadReactivaIns || ''}
+              name="capacidadReactivaIns1"
+              value={data.capacidadReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1034,8 +1261,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="tensionReactivaIns"
-              value={data.tensionReactivaIns || ''}
+              name="tensionReactivaIns1"
+              value={data.tensionReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1043,8 +1270,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="claseReactivaIns"
-              value={data.claseReactivaIns || ''}
+              name="claseReactivaIns1"
+              value={data.claseReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1052,8 +1279,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="kdReactivaIns"
-              value={data.kdReactivaIns || ''}
+              name="kdReactivaIns1"
+              value={data.kdReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1061,8 +1288,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="khReactivaIns"
-              value={data.khReactivaIns || ''}
+              name="khReactivaIns1"
+              value={data.khReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1070,8 +1297,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="lecturaReactivaIns"
-              value={data.lecturaReactivaIns || ''}
+              name="lecturaReactivaIns1"
+              value={data.lecturaReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1079,8 +1306,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="edReactivaIns"
-              value={data.edReactivaIns || ''}
+              name="edReactivaIns1"
+              value={data.edReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
@@ -1088,13 +1315,121 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="fechaLabReactivaIns"
-              value={data.fechaLabReactivaIns || ''}
+              name="fechaLabReactivaIns1"
+              value={data.fechaLabReactivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
           </td>
         </tr>
+        {/* Fila para ReactivaIns2 */}
+        <tr>
+          <td className={styles.measureType}>Reactiva2</td>
+            <td>
+              <input
+                type="text"
+                name="numeroReactivaIns2"
+                value={data.numeroReactivaIns2 || ''}
+                onChange={handleChange}
+                className={styles.tableInput}
+              />
+            </td>
+            <td>
+              <select 
+                name="marcaReactivaIns2"
+                    value={data.marcaReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.select}
+                  >
+                    <option value="">Seleccionar marca...</option>
+                    <option value="elster">Elster</option>
+                    <option value="actaris">Actaris</option>
+                    <option value="landys">Landys</option>
+                    <option value="microstar">Microstar</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tipoReactivaIns2"
+                    value={data.tipoReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadReactivaIns2"
+                    value={data.capacidadReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionReactivaIns2"
+                    value={data.tensionReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseReactivaIns2"
+                    value={data.claseReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdReactivaIns2"
+                    value={data.kdReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khReactivaIns2"
+                    value={data.khReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaReactivaIns2"
+                    value={data.lecturaReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edReactivaIns2"
+                    value={data.edReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabReactivaIns2"
+                    value={data.fechaLabReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />    
+          </td>      
+        </tr>        
       </tbody>
     </table>
   </div>
@@ -1162,16 +1497,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
 
     <div className={styles.formGroup}>
       <label>Propietario</label>
-      <select 
-              name="transformadorPoPropietario"
-              value={data.transformadorPoPropietario || ''}
-              onChange={handleChange}
-              className={styles.select}
-            >
-              <option value="">Seleccionar marca...</option>
-              <option value="elster">EMSA</option>
-              <option value="actaris">PARTICULAR</option>
-            </select>
+        <select 
+          name="transformadorPoPropietario"
+          value={data.transformadorPoPropietario || ''}
+          onChange={handleChange}
+          className={styles.select}
+        >
+          <option value="">Seleccionar marca...</option>
+          <option value="EMSA">EMSA</option>
+          <option value="PARTICULAR">PARTICULAR</option>
+        </select>
     </div>
 
     <div className={styles.formGroup}>

@@ -93,7 +93,6 @@ const [diagramImages, setDiagramImages] = useState({
     observaciones,
     adecuaciones,
     informe,
-    // ... otros datos de formularios anteriores
   } = data;
 
   // Función para obtener el nombre del diagrama
@@ -160,14 +159,32 @@ const [diagramImages, setDiagramImages] = useState({
       font-family: sans-serif;
       font-size: 10px;
       margin: 0;
-      padding: 15px;
+      padding: 10px;
       background-color: #ffffff;
     }
     
     .page {
+      page-break-inside: avoid;
       page-break-after: always;
       margin-bottom: 20px;
+      
     }
+    
+    @media print {
+    @page {
+      size: legal;
+      margin: 0.5in;
+    }
+
+    .pdf-content {
+      transform: scale(0.95);
+      zoom: 0.85; /* Reduce el tamaño para que quepa en una hoja */
+      transform-origin: top left;
+      width: 8.5in;
+      min-height: 14in;
+      font-size: 11px;
+    }
+  }
     
     .page:last-child {
       page-break-after: auto;
@@ -310,6 +327,7 @@ const [diagramImages, setDiagramImages] = useState({
     }
     
     .text-justify {
+
       text-align: justify;
     }
     
@@ -338,7 +356,7 @@ const [diagramImages, setDiagramImages] = useState({
       border-radius: 5px;
       font-size: 9px;
       line-height: 1.4;
-      color: #495057;
+      color: #373a3dff;
       text-align: justify;
     }
     
@@ -464,17 +482,159 @@ const [diagramImages, setDiagramImages] = useState({
         max-height: 150px;
       }
     }
+    .vertical-header {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+    background-color: #e6e6e6; /* mismo gris del título */
+    font-weight: bold;
+    }
+
+/* CONTENEDOR PRINCIPAL DE DIAGRAMAS - MÁS ALTO */
+.diagrams-section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 650px; /* Aumentado de 500px a 650px */
+  margin: 15px 0 20px 0;
+  border: 1px solid #030303ff;
+}
+
+/* MITAD SUPERIOR: Unifilar y Fasorial lado a lado */
+.diagrams-top-half {
+  display: flex;
+  flex: 1; /* Ocupa 50% de la altura */
+  width: 100%;
+  height: 50%;
+  min-height: 300px; /* Aumentado */
+}
+
+/* MITAD INFERIOR: Conexiones */
+.diagrams-bottom-half {
+  flex: 1; /* Ocupa el otro 50% de la altura */
+  width: 100%;
+  height: 50%;
+  min-height: 300px; /* Aumentado */
+  border-top: 2px solid #cbd5e1;
+}
+
+/* COLUMNAS INDIVIDUALES (Unifilar y Fasorial) */
+.diagram-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Borde entre columnas */
+.diagram-column:first-child {
+  border-right: 2px solid #cbd5e1;
+}
+
+/* TÍTULOS DE DIAGRAMAS - GRIS CLARO */
+.diagram-title {
+  background-color: #f1f5f9; /* Gris claro */
+  color: #334155; /* Texto gris oscuro para buen contraste */
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 6px;
+  font-size: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: 'Arial', sans-serif;
+}
+
+/* CONTENEDORES DE DIAGRAMAS */
+.diagram-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px; /* Aumentado el padding */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
+  height: calc(100% - 35px); /* Ajustado por el título más grande */
+}
+
+/* IMÁGENES DE DIAGRAMAS */
+.diagram-container img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+
+/* ESPECÍFICO PARA CADA DIAGRAMA */
+.diagram-unifilar {
+  background-color: #fafafa;
+}
+
+.diagram-fasorial {
+  background-color: #fafafa;
+}
+
+.diagram-conexiones {
+  height: calc(100% - 35px);
+  min-height: 250px;
+  background-color: #fafafa;
+}
+
+/* Hover effect para mejor interacción */
+.diagram-container:hover {
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
+}
+
+/* Para impresión */
+@media print {
+  .diagrams-section {
+    height: 700px !important; /* Más alto para impresión */
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 25px;
+  }
+  
+  .diagram-title {
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Responsive para pantallas más pequeñas */
+@media (max-width: 992px) {
+  .diagrams-section {
+    height: 550px;
+    min-height: 550px;
+  }
+}
+
+/* Ajuste para cuando no hay imágenes */
+.diagram-container:empty::before {
+  content: "Sin diagrama disponible";
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 14px;
+}
   </style>
 </head>
 <body>
   <!-- HOJA 1: ACTA DE REVISIÓN ORIGINAL -->
-<div class="page">
-    <!-- Copia todo el HTML de la hoja 1 aquí -->
+  <div id="pdf-page-1" class="page">
     <div class="header-table-content">
         <table class="header-table">
             <tr>
                 <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                    <img src="${base64Logo}" alt="Logo" style="height:50px;"/>
+                    <img src="${base64Logo}" alt="Logo" style="height:80px;"/>
                 </td>
                 <td style="width: 30%; padding: 0; ">
                     <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
@@ -492,7 +652,7 @@ const [diagramImages, setDiagramImages] = useState({
                         </tr>
                         <tr>
                             <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
-                            <td style="border: 1px solid #34495e;">1 DE 2</td>
+                            <td style="border: 1px solid #34495e;">1 DE 1</td>
                         </tr>
                     </table>
                 </td>
@@ -531,7 +691,7 @@ const [diagramImages, setDiagramImages] = useState({
         </tr>
         <tr>
             <td colspan="9" class="text-justify">
-                <p style="font-size: 10px; line-height: 1.4; margin: 0;">
+                <p style="font-size: 12px; line-height: 1.4; margin: 0;">
                     A los <strong>${new Date().getDate()}</strong> días del mes de
                     <strong>${new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del
                     <strong>${new Date().getFullYear()}</strong>, siendo las
@@ -556,116 +716,242 @@ const [diagramImages, setDiagramImages] = useState({
                 </p>
             </td>
         </tr>
-        <tr>
+        <tr style=" margin: 0;">
             <td class="field-label">DEPENDENCIA</td>
             <td class="field-value">EMSA</td>
-            <td class="field-value">CGM</td>
-            <td class="field-value">CONTRATISTA</td>
-            <td class="field-value">SYPELC</td>
-            <td class="field-label">ITEM DE PAGO</td>
-            <td class="field-value">1</td>
-            <td class="field-value">2</td>
-            <td class="field-value">3</td>
-        </tr>
-    </table>
-    
-    <table>
-        <tr>
-            <td class="section-title" colspan="9">DATOS GENERALES DEL SUSCRIPTOR</td>
-        </tr>
-        <tr>
-            <td colspan="2" class="field-label">NOMBRE
-              <p style="text-align: center; margin: 0;">
-                <strong>${data.nombre || '______'}</strong>
-              </p>
-            </td>
-            <td class="field-label">CARGA KW</td>
-            <td class="field-value">${data.cargaKw || '______'}</td>
-            <td class="field-label">CICLO</td>
-            <td class="field-value">${data.ciclo || '______'}</td>
-            <td class="field-label">FACTOR</td>
-            <td class="field-value">${data.factor1 || '______'}</td>
-            <td class="field-label">FACTOR</td>
-            <td class="field-value">${data.factor2 || '______'}</td>
-        </tr>
-        <tr>
-            <td colspan="3" class="field-label">DIRECCIÓN <br> POBLACIÓN
-              <p style="text-align: center; margin: 0; padding:0">
-                <strong>${data.direccion || '______'}</strong>
-              </p>
-            </td>
-            <td class="field-label">FACTOR</td>
-            <td class="field-value">${data.factor3 || '______'}</td>
-            <td class="field-label">NÚMERO MACROMEDIDOR</td>
-            <td class="field-value">${data.macromedidor || '______'}</td>
-            <td class="field-label">NODO TRAFO</td>
-            <td class="field-value">${data.nodoTrafo || '______'}</td>
-            <td class="field-label">COMERCIALIZADOR</td>
-            <td class="field-value">${data.comercializador || 'EMSA'}</td>
-        </tr>
-    </table>
-    
-    <table>
-        <tr>
-            <td class="section-title" colspan="9">DATOS DEL SUSCRIPTOR Y EQUIPO DE MEDIDA ENCONTRADOS</td>
-        </tr>
-        <tr>
-            <td class="field-label">TELÉFONO</td>
-            <td class="field-value">${data.telefono || '______'}</td>
-            <td class="field-label">USO</td>
             <td class="field-value">
+            <p style="text-align: center; margin: 0; padding:0">
+            <strong> ${data.dependencia || ''}</strong>
+            </p>
+            </td>
+            <td class="field-value">CONTRATISTA</td>
+            <td  >
+            <p style="text-align: center; margin: 0; padding:0">
+              <strong>${data.contratista || ''}</strong>
+            </p>
+            </td>
+            <td class="field-label">ITEM DE PAGO</td>
+            <td>
+            <p style="text-align: center; margin: 0; padding:0">
+              <strong>${data.itemPago || ''}</strong>
+            </p>
+            </td>
+            <td>
+            <p style="text-align: center; margin: 0; padding:0">
+              <strong>${data.itemPago2 || ''}</strong>
+            </p>
+            </td>
+            <td>
+            <p style="text-align: center; margin: 0; padding:0">
+              <strong>${data.itemPago3 || ''}</strong>
+            </p>
+            </td>
+        </tr>
+    </table>
+    
+    <table>
+        <tr>
+            <td class="section-title" colspan="8">DATOS GENERALES DEL SUSCRIPTOR</td>
+        </tr>
+        <tr>
+            <td colspan="1" class="field-label">NOMBRE
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.nombre || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">CARGA KW
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.cargaKw || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">CICLO
+              <p style="text-align: center; margin: 0; padding:0">
+              <strong>${data.ciclo || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">FACTOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.factor1 || ''}</strong>
+              </p>
+              </td>
+            <td class="field-label">FACTOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.factor2 || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">FACTOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.factor3 || ''}</strong>
+              </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="1" class="field-label">DIRECCIÓN <br> POBLACIÓN
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.direccion || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">NÚMERO MACROMEDIDOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.macromedidor || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">NODO TRAFO
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.nodoTrafo || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">COMERCIALIZADOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.comercializador || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">LONGITUD
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.longitud || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">LATITUD
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.latitud || ''}</strong>
+              </p>
+            </td>
+            
+        </tr>
+    </table>
+    
+    <table>
+        <tr>
+            <td class="section-title" colspan="11">DATOS DEL SUSCRIPTOR Y EQUIPO DE MEDIDA ENCONTRADOS</td>
+        </tr>
+        <tr>
+            <td class="field-label">TELÉFONO
+              <p style="text-align: center; margin: 0; padding:0"></p>
+                <strong>${data.telefono || ''}</strong>
+            </td>
+            <td class="field-label">USO
+            <p style="text-align: center; margin: 0; padding:0">
+                <strong>
                 ${data.uso === 'R' ? 'RESIDENCIAL' : 
                   data.uso === 'C' ? 'COMERCIAL' : 
                   data.uso === 'I' ? 'INDUSTRIAL' : 
-                  data.uso === 'O' ? 'OFICIAL' : '______'}
+                  data.uso === 'O' ? 'OFICIAL' : ''}
+                  </strong>
+                  </p>
             </td>
-            <td class="field-label">UBICACIÓN</td>
-            <td class="field-value">${data.ubicacion || '______'}</td>
-            <td class="field-label">FAMILIAS</td>
-            <td class="field-value">${data.familias || '______'}</td>
-            <td class="field-label">NIVEL TENSIÓN</td>
-            <td class="field-value">${data.nivelTension || '______'}</td>
+            <td class="field-label">UBICACIÓN
+            <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.ubicacion || ''}</strong>
+            </p>    
+            </td>
+            <td class="field-label">FAMILIAS
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.familias || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">NIVEL TENSIÓN
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.nivelTension || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">BLOQUES PRUEBA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.bloquesPrueba || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">TIPO MEDIDOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.tipoMedidor || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">TIPO INSTALACIÓN
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.tipoInstalacion || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">UBICACIÓN MEDIDOR
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.ubicacionMedidor || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">TIPO ACOMETIDA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.acometidaTipo || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">#F #H
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.fh || ''}</strong>
+              </p>
+            </td>
         </tr>
         <tr>
-            <td class="field-label">BLOQUES PRUEBA</td>
-            <td class="field-value">${data.bloquesPrueba || '______'}</td>
-            <td class="field-label">TIPO MEDIDOR</td>
-            <td class="field-value">${data.tipoMedidor || '______'}</td>
-            <td class="field-label">TIPO INSTALACIÓN</td>
-            <td class="field-value">${data.tipoInstalacion || '______'}</td>
-            <td class="field-label">UBICACIÓN MEDIDOR</td>
-            <td class="field-value">${data.ubicacionMedidor || '______'}</td>
-            <td class="field-label">PROTECCIÓN GENERAL</td>
-            <td class="field-value">${data.proteccionGeneral || '______'}</td>
-        </tr>
-        <tr>
-            <td class="field-label">TIPO ACOMETIDA</td>
-            <td class="field-value">${data.acometidaTipo || '______'}</td>
-            <td class="field-label">#F #H</td>
-            <td class="field-value">${data.hf || '______'}</td>
-            <td class="field-label">LONGITUD ACOMETIDA</td>
-            <td class="field-value">${data.acometidaLongitud ? data.acometidaLongitud + ' M' : '______'}</td>
-            <td class="field-label">CALIBRE ACOMETIDA</td>
-            <td class="field-value">${data.acometidaCalibre || '______'}</td>
-            <td class="field-label">UBICACIÓN MODEM</td>
-            <td class="field-value">${data.modemUbicacion || '______'}</td>
-        </tr>
-        <tr>
-            <td class="field-label">CONFIGURACIÓN MEDIDA</td>
-            <td class="field-value">${data.configuracionMedida || '______'}</td>
-            <td class="field-label">TIPO MEDIDA</td>
-            <td class="field-value">${data.tipoMedida || '______'}</td>
-            <td colspan="4"></td>
+
+            <td class="field-label">PROTECCIÓN GENERAL (A)
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.proteccionGeneral || ''}</strong>
+              </p>
+            </td>
+            <td class="field-value">LONGITUD (M)
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.acometidaLongitud ? data.acometidaLongitud + ' M' : ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">CALIBRE ACOMETIDA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.acometidaCalibre || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">UBICACIÓN MODEM
+            <p>
+              <strong>${data.modemUbicacion || ''}</strong>
+            </p>
+            </td>
+            <td class="field-label">MARCA MODEM
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.marcaModem === 'Otro' ? data.marcaModemOtro : data.modemMarca || '' }</strong>
+              </p>
+            </td>
+            <td class="field-label">NÚMERO SERIE MODEM:
+            <p style="text-align: center; margin: 0; padding:0">
+            <strong>${data.serieModem || ''}</strong>
+            </p>
+            </td>
+            <td class="field-label">IP
+            <p style="text-align: center; margin: 0; padding:0">
+            <strong>${data.ipModem || ''}</strong>
+            </p>
+            </td>
+            <td class="field-label">CONFIGURACIÓN MEDIDA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.configuracionMedida || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">TIPO MEDIDA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.tipoMedida || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">MARCA CABLE
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.marcaCable || ''}</strong>
+              </p>
+            </td>
+            <td class="field-label">MARCA CELDA MEDIDA
+              <p style="text-align: center; margin: 0; padding:0">
+                <strong>${data.marcaCeldaMedida || ''}</strong>
+              </p>
+            </td>
         </tr>
     </table>
 
-    <!-- TABLA DE MEDIDORES ENCONTRADOS -->
+    <!-- TABLA DE MEDIDORES ENCONTRADOS Y INSTALADOS -->
     <table>
         <tr>
-            <td class="section-title" colspan="12">MEDIDOR ENCONTRADO</td>
+            <td class="section-title" colspan="13">DATOS MEDIDOR</td>
         </tr>
         <tr>
-            <th style="width: 8%;">Medida</th>
+            <th style="width: 8%;" colspan="2">Medida</th>
             <th style="width: 10%;">Número</th>
             <th style="width: 10%;">Marca</th>
             <th style="width: 8%;">Tipo</th>
@@ -680,6 +966,7 @@ const [diagramImages, setDiagramImages] = useState({
         </tr>
         <!-- Fila Activa 1 -->
         <tr>
+            <td class="vertical-header" rowspan="4">ENCONTRADO</td>
             <td>Activa1</td>
             <td>${data.numeroActiva1 || ''}</td>
             <td>${data.marcaActiva1 ? data.marcaActiva1.toUpperCase() : ''}</td>
@@ -695,7 +982,7 @@ const [diagramImages, setDiagramImages] = useState({
         </tr>
         <!-- Fila Activa 2 -->
         <tr>
-            <td>Activa2</td>
+            <td>Activa 2</td>
             <td>${data.numeroActiva2 || ''}</td>
             <td>${data.marcaActiva2 ? data.marcaActiva2.toUpperCase() : ''}</td>
             <td>${data.tipoActiva2 || ''}</td>
@@ -708,22 +995,901 @@ const [diagramImages, setDiagramImages] = useState({
             <td>${data.edActiva2 || ''}</td>
             <td>${data.fechaLabActiva2 || ''}</td>
         </tr>
-        <!-- Fila Reactiva -->
+        <!-- Fila Reactiva1  -->
         <tr>
-            <td>Reactiva</td>
-            <td>${data.numeroReactiva || ''}</td>
+            <td>Reactiva 1</td>
+            <td>${data.numeroReactiva1 || ''}</td>
             <td>${data.marcaReactiva1 ? data.marcaReactiva1.toUpperCase() : ''}</td>
-            <td>${data.tipoReactiva || ''}</td>
-            <td>${data.capacidadReactiva || ''}</td>
-            <td>${data.tensionReactiva || ''}</td>
-            <td>${data.claseReactiva || ''}</td>
-            <td>${data.kdReactiva || ''}</td>
-            <td>${data.khReactiva || ''}</td>
-            <td>${data.lecturaReactiva || ''}</td>
-            <td>${data.edReactiva || ''}</td>
-            <td>${data.fechaLabReactiva || ''}</td>
+            <td>${data.tipoReactiva1 || ''}</td>
+            <td>${data.capacidadReactiva1 || ''}</td>
+            <td>${data.tensionReactiva1 || ''}</td>
+            <td>${data.claseReactiva1 || ''}</td>
+            <td>${data.kdReactiva1 || ''}</td>
+            <td>${data.khReactiva1 || ''}</td>
+            <td>${data.lecturaReactiva1 || ''}</td>
+            <td>${data.edReactiva1 || ''}</td>
+            <td>${data.fechaLabReactiva1 || ''}</td>
+        </tr>
+        <!-- Fila Reactiva 2  -->
+        <tr>
+            <td>Reactiva 2</td>
+            <td>${data.numeroReactiva2 || ''}</td>
+            <td>${data.marcaReactiva2 ? data.marcaReactiva2.toUpperCase() : ''}</td>
+            <td>${data.tipoReactiva2 || ''}</td>
+            <td>${data.capacidadReactiva2 || ''}</td>
+            <td>${data.tensionReactiva2 || ''}</td>
+            <td>${data.claseReactiva2 || ''}</td>
+            <td>${data.kdReactiva2 || ''}</td>
+            <td>${data.khReactiva2 || ''}</td>
+            <td>${data.lecturaReactiva2 || ''}</td>
+            <td>${data.edReactiva2 || ''}</td>
+            <td>${data.fechaLabReactiva2 || ''}</td>
+        </tr>
+        <!-- Fila Activa 1 -->
+        <tr>
+            <td class="vertical-header" rowspan="4">INSTALADO</td>
+            <td>Activa 1</td>
+            <td>${data.numeroActivaIns1 || ''}</td>
+            <td>${data.marcaActivaIns1 ? data.marcaActivaIns1.toUpperCase() : ''}</td>
+            <td>${data.tipoActivaIns1 || ''}</td>
+            <td>${data.capacidadActivaIns1 || ''}</td>
+            <td>${data.tensionActivaIns1 || ''}</td>
+            <td>${data.claseActivaIns1 || ''}</td>
+            <td>${data.kdActivaIns1 || ''}</td>
+            <td>${data.khActivaIns1 || ''}</td>
+            <td>${data.lecturaActivaIns1 || ''}</td>
+            <td>${data.edActivaIns1 || ''}</td>
+            <td>${data.fechaLabActivaIns1 || ''}</td>
+        </tr>
+        <!-- Fila Activa 2 -->
+        <tr>
+            <td>Activa 2</td>
+            <td>${data.numeroActivaIns2 || ''}</td>
+            <td>${data.marcaActivaIns2 ? data.marcaActivaIns2.toUpperCase() : ''}</td>
+            <td>${data.tipoActivaIns2 || ''}</td>
+            <td>${data.capacidadActivaIns2 || ''}</td>
+            <td>${data.tensionActivaIns2 || ''}</td>
+            <td>${data.claseActivaIns2 || ''}</td>
+            <td>${data.kdActivaIns2 || ''}</td>
+            <td>${data.khActivaIns2 || ''}</td>
+            <td>${data.lecturaActivaIns2 || ''}</td>
+            <td>${data.edActivaIns2 || ''}</td>
+            <td>${data.fechaLabActivaIns2 || ''}</td>
+        </tr>
+        <!-- Fila Reactiva1  -->
+        <tr>
+            <td>Reactiva 1</td>
+            <td>${data.numeroReactivaIns1 || ''}</td>
+            <td>${data.marcaReactivaIns1 ? data.marcaReactivaIns1.toUpperCase() : ''}</td>
+            <td>${data.tipoReactivaIns1 || ''}</td>
+            <td>${data.capacidadReactivaIns1 || ''}</td>
+            <td>${data.tensionReactivaIns1 || ''}</td>
+            <td>${data.claseReactivaIns1 || ''}</td>
+            <td>${data.kdReactivaIns1 || ''}</td>
+            <td>${data.khReactivaIns1 || ''}</td>
+            <td>${data.lecturaReactivaIns1 || ''}</td>
+            <td>${data.edReactivaIns1 || ''}</td>
+            <td>${data.fechaLabReactivaIns1 || ''}</td>
+        </tr>
+        <!-- Fila Reactiva2  -->
+        <tr>
+            <td>Reactiva 2</td>
+            <td>${data.numeroReactivaIns2 || ''}</td>
+            <td>${data.marcaReactivaIns2 ? data.marcaReactivaIns2.toUpperCase() : ''}</td>
+            <td>${data.tipoReactivaIns2 || ''}</td>
+            <td>${data.capacidadReactivaIns2 || ''}</td>
+            <td>${data.tensionReactivaIns2 || ''}</td>
+            <td>${data.claseReactivaIns2 || ''}</td>
+            <td>${data.kdReactivaIns2 || ''}</td>
+            <td>${data.khReactivaIns2 || ''}</td>
+            <td>${data.lecturaReactivaIns2 || ''}</td>
+            <td>${data.edReactivaIns2 || ''}</td>
+            <td>${data.fechaLabReactivaIns2 || ''}</td>
         </tr>
     </table>
+
+  <!-- TABLA TRANSFORMADOR DE POTENCIA -->
+<table>
+    <tr>
+        <td class="section-title" colspan="8">TRANSFORMADOR DE POTENCIA</td>
+    </tr>
+    <tr>
+        <td class="field-label">Transformador Asociado No. 
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoNumero || ''}</strong></p>
+        </td>
+        <td class="field-label">Marca
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoMarca || ''}</strong></p>
+        </td>
+        <td class="field-label">KVA
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoKva || ''}</strong></p>
+        </td>
+        <td class="field-label">Año
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoAno || ''}</strong></p>
+        </td>
+        <td class="field-label">V1/V2
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoV1V2 || ''}</strong></p>
+        </td>
+        <td class="field-label">Circuito
+        <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoCircuito || ''}</strong></p>
+        </td>
+        <td class="field-label" colspan="2">Propietario
+        <p style="text-align: center; margin: 0;">
+        <strong>
+          ${data.transformadorPoPropietario || ''}
+          <!--
+            EMSA (${data.transformadorPoPropietario === 'EMSA' ? 'X' : ' '}) 
+            PARTICULAR (${data.transformadorPoPropietario === 'PARTICULAR' ? 'X' : ' '})
+          -->
+        </strong></p>
+        </td>
+    </tr>
+</table>
+
+<!-- TABLA RELACIÓN DE SELLOS -->
+<table>
+    <tr>
+        <td class="section-title" colspan="16">RELACIÓN DE SELLOS</td>
+    </tr>
+    <!-- Fila de encabezados -->
+    <tr>
+        <th colspan="4" style="text-align: center; border: 1px solid #34495e;">ENCONTRADOS</th>
+        <th colspan="4" style="text-align: center; border: 1px solid #34495e;">INSTALADOS</th>
+        <th colspan="4" style="text-align: center; border: 1px solid #34495e;">ENCONTRADOS</th>
+        <th colspan="4" style="text-align: center; border: 1px solid #34495e;">INSTALADOS</th>
+    </tr>
+    <!-- Fila de ubicación -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;" colspan="2">UBICACIÓN</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COL</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">E</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">R</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COLOR</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">UBICACIÓN</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COL</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">E</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">R</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COLOR</td>
+        <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
+    </tr>
+    <!-- Fila 1  TAPA PRINCIPAL -->
+    <tr>
+        <th rowspan="5" class="vertical-header" style="writing-mode: vertical-lr; transform: rotate(180deg); background-color: #f2f2f2;">MED<br>ACTIVA</th>          
+        <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+            TAPA<br>PRINCIPAL
+        </td>
+        <td style="border: 1px solid #34495e;">${data.medActivaTipoCol1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaNum1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaE1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaR1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstNum1 || ''}</td>
+        <!-- Fila 1 TC'S -->
+        <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+            TC'S
+        </td>
+        <td style="border: 1px solid #34495e;">${data.tcsTipoCol1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsNumero1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsE1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsR1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstNumero1 || ''}</td> 
+    </tr>
+    <tr> <!-- Fila 2 TAPA PRINCIPAL -->
+        <td style="border: 1px solid #34495e;">${data.medActivaTipoCol2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaNum2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaE2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaR2  || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstNum2 || ''}</td>
+        <!-- Fila 2 TC'S -->
+        <td style="border: 1px solid #34495e;">${data.tcsTipoCol2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsNumero2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsE2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsR2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstNumero2 || ''}</td> 
+    </tr>
+    <tr> <!-- Fila 3 TAPA PRINCIPAL -->
+        <td style="border: 1px solid #34495e;">${data.medActivaTipoCol3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaNum3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaE3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaR3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.medActivaInstNum3 || ''}</td>
+        <!-- Fila 3 TC'S -->
+        <td style="border: 1px solid #34495e;">${data.tcsTipoCol3  || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsNumero3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsE3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsR3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor3 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tcsInstNumero3 || ''}</td> 
+    </tr>
+    
+    <tr> 
+        <!-- Fila 1 TAPA BORNERA -->          
+        <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+            TAPA<br>BORNERA
+        </td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaTipoCol1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaNum1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaE1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaR1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstTipoColor1|| ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstNum1  || ''}</td>
+        <!-- Fila 1 TP'S -->
+        <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+            TP'S
+        </td>
+        <td style="border: 1px solid #34495e;">${data.tpsTipoCol1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsNumero1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsE1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsR1 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsInstTipoColor1|| ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsInstNumero1 || ''}</td> 
+    </tr>
+    <tr> <!-- Fila 2 TAPA BORNERA -->
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaTipoCol2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaNum2  || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaE2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaR2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstTipoColor2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstNum2 || ''}</td>
+        <!-- Fila 2 TP'S -->
+        <td style="border: 1px solid #34495e;">${data.tpsTipoCol2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsNumero2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsE2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsR2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsInstTipoColor2 || ''}</td>
+        <td style="border: 1px solid #34495e;">${data.tpsInstNumero2 || ''}</td> 
+    </tr>
+    <tr>
+      <th rowspan="5" class="vertical-header" style="writing-mode: vertical-lr; transform: rotate(180deg); background-color: #f2f2f2;">MED<br>REACTIVA</th>          
+      <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+          TAPA<br>PRINCIPAL
+      </td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaNum1  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaE1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaR1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstNum1 || ''}</td>
+      <!-- Fila 1 CELDA DE MEDIDA -->
+      <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+          CELDA DE<br>MEDIDA
+      </td>
+      <td style="border: 1px solid #34495e;">${data.celdaTipoCol1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaNumero1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaE1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaR1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstNumero1 || ''}</td> 
+  </tr>
+  <tr> <!-- Fila 2 TAPA PRINCIPAL REACTIVA -->
+      <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol2  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaNum2  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaE2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaR2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstNum2 || ''}</td>
+      <!-- Fila 2 CELDA DE MEDIDA -->
+      <td style="border: 1px solid #34495e;">${data.celdaTipoCol2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaNumero2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaE2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaR2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor2  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstNumero2 || ''}</td> 
+  </tr>
+  <tr> <!-- Fila 3 TAPA PRINCIPAL REACTIVA -->
+      <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaNum3  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaE3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaR3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.medReactivaInstNum3 || ''}</td>
+      <!-- Fila 3 CELDA DE MEDIDA -->
+      <td style="border: 1px solid #34495e;">${data.celdaTipoCol3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaNumero3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaE3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaR3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor3 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.celdaInstNumero3 || ''}</td> 
+  </tr>
+
+  <tr> 
+      <!-- Fila 1 TAPA BORNERA REACTIVA -->          
+      <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+          TAPA<br>BORNERA
+      </td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaTipoCol1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaNum1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaE1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaR1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstTipoColor1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstNum1 || ''}</td>
+      <!-- Fila 1 BLOQUES DE PRUEBA -->
+      <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
+          BLOQUES DE<br>PRUEBA
+      </td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasTipoCol1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasNum1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasE1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasR1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasInstTipoColor1 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasInstNum1 || ''}</td> 
+  </tr>
+  <tr> <!-- Fila 2 TAPA BORNERA REACTIVA -->
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaTipoCol2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaNum2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaE2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaR2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstTipoColor2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstNum2 || ''}</td>
+      <!-- Fila 2 BLOQUES DE PRUEBA -->
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasTipoCol2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasNum2  || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasE2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasR2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasInstTipoColor2 || ''}</td>
+      <td style="border: 1px solid #34495e;">${data.bloquePruebasInstNum2 || ''}</td> 
+  </tr>
+</table>
+<table>
+    <tr>
+        <td class="section-title" colspan="10" >PRUEBAS REALIZADAS MEDIDOR ACTIVA</td>
+        <td class="section-title" colspan="10" >PRUEBAS REALIZADAS MEDIDOR REACTIVA</td>
+    </tr>
+    <tr>
+        <td class="section-title" colspan="20">Cuadro de Cálculo del Error</td>
+    </tr>
+    <!-- Encabezados principales -->
+    <tr>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Fase</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tensión (V)</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">CORRIENTE (A)</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">P.Inst (W)</th>
+        <th rowspan="2" colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; vertical-align: middle;">Secuencia de Fases</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Fase</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tensión (V)</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">CORRIENTE (A)</th>
+        <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">P.Inst (W)</th>
+        <th rowspan="2" colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; vertical-align: middle;">Secuencia de Fases</th>
+    </tr>
+    <!-- Fila R -->
+    <tr>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">R</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionR || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteR || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstR || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">R</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionR || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteR || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstR || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila S -->
+    <tr>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">S</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionS || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteS || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstS || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RST</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaRst || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">S</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionS || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteS || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstS || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RST</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaRst || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila T -->
+    <tr>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">T</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionT || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteT || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstT || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RTS</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaRts || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">T</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionT || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteT || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstT || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RTS</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaRts || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila TOTAL (L-L) -->
+    <tr>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #e9ecef;">TOTAL (L-L)</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionTotal || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteTotal || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstTotal || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">F.P.</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaFp || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #e9ecef;">TOTAL (L-L)</td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTensionTotal || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaCorrienteTotal || ''}</strong>
+        </td>
+        <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPinstTotal || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">F.P.</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaFp || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila de cálculos -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">% Error</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPorcentajeError || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Giros</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaGiros || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Tiempo (S)</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTiempo || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Horas</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaHoras || ''}</strong>
+        </td>
+        
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">W</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaW || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">% Error</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPorcentajeError || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Giros</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaGiros || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Tiempo (S)</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaTiempo || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Horas</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaHoras || ''}</strong>
+        </td>
+        
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">W</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaW || ''}</strong>
+        </td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td class="section-title" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE ACTIVA</td>
+        <td class="section-title" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE REACTIVA</td>
+    </tr>
+    <!-- Encabezados -->
+    <tr>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Tipo</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Conforme</th>
+        <th colspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Prueba de Integración</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Tipo</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Conforme</th>
+        <th colspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Prueba de Integración</th>
+    </tr>
+    <!-- Fila 1: Conexiones -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Conexiones</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <p style="margin: 0;">
+                <strong>
+              ${data.activaConexiones === 'si' ? 'SÍ' : data.activaConeciones === 'no' ? 'NO' : ' '}
+                <!--SÍ (${data.activaConexiones === 'si' ? 'X' : ' '}) 
+                NO (${data.activaConexiones === 'no' ? 'X' : ' '})-->
+                </strong>
+            </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Inicial</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaLecturaInicial || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">% Error</td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Conexiones</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <p style="margin: 0;">
+              <strong>
+                ${data.reactivaConexiones === 'si' ? 'SÍ' : data.reactivaConexiones === 'no' ? 'NO' : ' '}
+                <!--SÍ (${data.reactivaConexiones === 'si' ? 'X' : ' '}) 
+                NO (${data.reactivaConexiones === 'no' ? 'X' : ' '})-->
+              </strong>
+            </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Inicial</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.reactivaLecturaInicial || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">% Error</td>
+    </tr>
+    <!-- Fila 2: Continuidad -->
+    <tr>
+      
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Continuidad</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <p>
+              <strong>    
+              ${data.activaContinuidad === 'si' ? 'SÍ' : data.activaContinuidad === 'no' ? 'NO' : ' '}   
+                <!--SÍ (${data.activaContinuidad === 'si' ? 'X' : ' '}) 
+                NO (${data.activaContinuidad === 'no' ? 'X' : ' '})-->
+              </strong>
+            </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Final</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaLecturaFinal || ''}</strong>
+        </td>
+        <td rowspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">
+          <p style="margin: 0; padding: 0.5rem 0;"  >
+            ${data.activaPorcentajeErrorPruebas || ''}
+          </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Continuidad</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <p>
+            <strong>
+              ${data.reactivaContinuidad === 'si' ? 'SÍ' : data.reactivaContinuidad === 'no' ? 'NO' : ' '} 
+                <!--SÍ (${data.reactivaContinuidad === 'si' ? 'X' : ' '}) 
+                NO (${data.reactivaContinuidad === 'no' ? 'X' : ' '})-->
+            </strong>
+            </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Final</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.reactivaLecturaFinal || ''}</strong>
+        </td>
+        <td rowspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">${data.reactivaPorcentajeErrorPruebas || ''}</td>
+    </tr>
+    <!-- Fila 3: Prueba de Puentes (parte 1) -->
+    <tr>
+        <td rowspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">Prueba de Puentes</td>
+        <td rowspan="2" style="border: 1px solid #34495e; text-align: center; vertical-align: middle;">
+            <p style="margin: 0; padding: 0.5rem 0;">
+              <strong>
+                ${data.activaPuentes === 'si' ? 'SÍ' : data.activaPuentes === 'no' ? 'NO' : ' '} 
+                <!--SÍ (${data.activaPuentes === 'si' ? 'X' : ' '}) 
+                NO (${data.activaPuentes === 'no' ? 'X' : ' '})-->
+              </strong>
+            </p>
+        </td>
+        
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Diferencia</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaDiferencia || ''}</strong>
+        </td>
+        
+        <td rowspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">Prueba de Puentes</td>
+        <td rowspan="2" style="border: 1px solid #34495e; text-align: center; vertical-align: middle;">
+            <p style="margin: 0; padding: 0.5rem 0;">
+              <strong>
+                ${data.reactivaPuentes === 'si' ? 'SÍ' : data.reactivaPuentes === 'no' ? 'NO' : ' '}
+                <!--SÍ (${data.reactivaPuentes === 'si' ? 'X' : ' '}) 
+                NO (${data.reactivaPuentes === 'no' ? 'X' : ' '})-->
+              </strong>    
+            </p>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Diferencia</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.reactivaDiferencia || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila 4: Prueba de Puentes (parte 2) -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Patron</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.activaPatron || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Patron</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.reactivaPatron || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila 5: Estado del integrador y Medidor se frena -->
+    <tr>
+        <td colspan="4" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Estado del integrador</td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Medidor se frena</td>
+        <td colspan="4" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Estado del integrador</td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Medidor se frena</td>
+    </tr>
+    <!-- Fila 7: ¿Giro en vacio?, ¿Registra? y checkbox -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Giro en vacio?</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+                ${data.activaGiroVacio === 'si' ? 'SÍ' : data.activaGiroVacio === 'no' ? 'NO' : ' '}
+            </strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Registra?</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+                ${data.activaRegistra === 'si' ? 'SÍ' : data.activaRegistra === 'no' ? 'NO' : ' '}
+            </strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+              ${data.activaSeFrena === 'si' ? 'SÍ' : data.activaSeFrena === 'no' ? 'NO' : ''}
+            </strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Giro en vacio?</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+                ${data.reactivaGiroVacio === 'si' ? 'SÍ' : data.reactivaGiroVacio === 'no' ? 'NO' : ''}
+            </strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Registra?</td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+              ${data.reactivaRegistra === 'si' ? 'SÍ' : data.reactivaRegistra === 'no' ? 'NO' : ''}
+            </strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>
+              ${data.reactivaSeFrena === 'si' ? 'SÍ' : data.reactivaSeFrena === 'no' ? 'NO' : ''}
+            </strong>
+        </td>
+    </tr>
+</table>
+
+<!-- TABLA TC'S ENCONTRADOS -->
+<table>
+    <tr>
+        <td class="section-title" colspan="6">CARACTERISTICAS TRANSFORMADORES DE CORRIENTE TC'S ENCONTRADOS</td>
+        <td class="section-title" colspan="6">CARACTERISTICAS TRANSFORMADORES DE POTENCIA ENCONTRADOS</td>
+    </tr>
+    <!-- Encabezados de columnas -->
+    <tr>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Marca</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Series</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tipo</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Relación</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Clase</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">VA</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Marca</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Series</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tipo</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Relación</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Clase</th>
+        <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">VA</th>
+    </tr>
+    <!-- Fila 1 -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcMarca1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcSeries1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcTipo1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcRelacion1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcClase1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcVa1 || ''}</strong>
+        </td>
+        <!-- Fila 2  TPS -->
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpMarca1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpSeries1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpTipo1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpRelacion1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpClase1 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpVa1 || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila 2 -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcMarca2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcSeries2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcTipo2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcRelacion2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcClase2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcVa2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpMarca2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpSeries2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpTipo2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpRelacion2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpClase2 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpVa2 || ''}</strong>
+        </td>
+    </tr>
+    <!-- Fila 3 -->
+    <tr>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcMarca3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcSeries3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcTipo3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcRelacion3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcClase3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tcVa3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpMarca3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpSeries3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpTipo3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpRelacion3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpClase3 || ''}</strong>
+        </td>
+        <td style="border: 1px solid #34495e; text-align: center;">
+            <strong>${data.tpVa3 || ''}</strong>
+        </td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td class="section-title" colspan="7">IRREGULARIDADES ENCONTRADAS POR LA EMPRESA</td>
+    </tr>
+    <!-- Fila de datos principales -->
+    <tr>
+        <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 25%;">
+            CODIGO(S) DE LA(S) IRREGULARIDAD(ES)
+        </td>
+        <td class="field-value" style="border: 1px solid #34495e; text-align: center; width: 15%;">
+            <strong>${data.codigosIrregularidades || ''}</strong>
+        </td>
+        <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 10%;">
+            Foto<br>
+            <span style="font-weight: bold; font-size: 12px;">
+                ${data.tipoEvidencia === 'foto' ? 'X' : ' '}
+            </span>
+        </td>
+        <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 10%;">
+            Video<br>
+            <span style="font-weight: bold; font-size: 12px;">
+                ${data.tipoEvidencia === 'video' ? 'X' : ' '}
+            </span>
+        </td>
+        <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">
+            IRREGULARIDAD CORREGIDA<br>
+            <span style="font-weight: bold; font-size: 12px;">
+                ${data.irregularidadCorrida === 'si' ? 'SÍ' : data.irregularidadCorrida === 'no' ? 'NO' : ''}
+            </span>
+        </td>
+        <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">
+            MEDIDOR RETIRADO<br>
+            <span style="font-weight: bold; font-size: 12px;">
+                ${data.medidorRetirado === 'si' ? 'SÍ' : data.medidorRetirado === 'no' ? 'NO' : ''}
+            </span>
+        </td>
+    </tr>
+    <!-- Fila de nota -->
+    <tr>
+        <td colspan="7" style="border: 1px solid #34495e; padding: 8px; font-size: 13px; font-style: italic; background-color: #f8f9fa;">
+            NOTA: En caso de detectarse irregularidad(es), esta acta constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica
+        </td>
+    </tr>
+    <!-- Fila de informe -->
+    <tr>
+        <td colspan="7" class="text-justify" style="border: 1px solid #34495e; padding: 8px; font-size: 10px; line-height: 1.4; background-color: #f8f9fa;">
+            <p style="margin: 0;">
+                Informe: <strong>
+                ${data.tipoInforme === 'otro' ? data.tipoInformeOtro ||'' : data.tipoInforme || ''}
+                </strong>
+            </p>
+        </td>
+    </tr>
+</table>
 
     <div class="legal-text">
         <p>
@@ -751,7 +1917,7 @@ const [diagramImages, setDiagramImages] = useState({
                 <div class="firma-container" style="justify-content: flex-start;">
                     <span class="firma-text">FIRMA:</span>
                     ${signatures.firmaFuncionario ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 40px;"/></div>` : 
+                        `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 100px;"/></div>` : 
                         '<span class="firma-faltante">No disponible</span>'
                     }
                 </div>
@@ -785,7 +1951,7 @@ const [diagramImages, setDiagramImages] = useState({
 
 
   <!-- HOJA 2: FORMATO ACTA DE DIAGRAMAS -->
-  <div class="page">
+  <div id="pdf-page-2" class="page">
     <!-- Encabezado hoja 2 -->
     <div class="header-table-content">
       <table class="header-table">
@@ -825,7 +1991,7 @@ const [diagramImages, setDiagramImages] = useState({
       <tr>
         <td colspan="2" style="font-weight: bold; font-size: 12px;">Acta De Revisión No.</td>
         <td colspan="3" style="font-weight: bold; font-size: 18px; color: red;">
-          <span id="numero">${data.numero_acta || '52976'}</span>
+          N° <span id="numero">${data.numero_acta}</span>
         </td>
         <td colspan="3" style="font-weight: bold; font-size: 11px;">CÓDIGO</td>
         <td colspan="3">${data.codigo || ''}</td>
@@ -854,10 +2020,10 @@ const [diagramImages, setDiagramImages] = useState({
         <td>TELEMEDIDA</td>
         <td>${data.telemedida || ''}</td>
         <td>LINEA DEDICADA</td>
-        <td>${data.lineaDedicada === 'SI' ? 'X' : ' '} SI</td>
-        <td></td>
-        <td>${data.lineaDedicada === 'NO' ? 'X' : ' '} NO</td>
-        <td></td>
+        <td>SI</td>
+        <td> ${data.lineaDedicada === 'SI' ? 'X' : ' '} </td>
+        <td>NO</td>
+        <td> ${data.lineaDedicada === 'NO' ? 'X' : ' '}</td>
         <td>TIPO DE FRONTERA</td>
         <td>${data.tipoFrontera === 'MCM' ? 'X' : ' '} MCM</td>
         <td>${data.tipoFrontera === 'RGP' ? 'X' : ' '} RGP</td>
@@ -870,34 +2036,32 @@ const [diagramImages, setDiagramImages] = useState({
     </table>
 
     <!-- Diagramas -->
-    <table>
-      <tr>
-        <td class="section-title">DIAGRAMA UNIFILAR</td>
-        <td class="section-title">DIAGRAMA FASORIAL</td>
-      </tr>
-      <tr>
-        <td>
-          <div class="diagram-container">
-            <img style="height: 180px;" class="diagram-img" src="${diagramImages.diagramaUnifilar || './unifilar.png'}" alt="Diagrama Unifilar">
-          </div>
-        </td>
-        <td>
-          <div class="diagram-container">
-            <img class="diagram-img" src="${diagramImages.diagramaFasorial || './Fasorial.png'}" alt="Diagrama Fasorial">
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="section-title" colspan="2">DIAGRAMA DE CONEXIONES</td>
-      </tr>
-      <tr>
-        <td colspan="2">
-          <div class="diagram-container">
-            <img class="diagram-img" src="${diagramImages.diagramaConexiones || './conexiones.png'}" alt="Diagrama de Conexiones">
-          </div>
-        </td>
-      </tr>
-    </table>
+    <div class="diagrams-section">
+    <!-- PRIMERA MITAD: Unifilar y Fasorial (verticalmente divididos) -->
+    <div class="diagrams-top-half">
+      <div class="diagram-column">
+        <div class="section-title">DIAGRAMA UNIFILAR</div>
+        <div class="diagram-container diagram-unifilar">
+          <img class="diagram-img" src="${diagramImages.diagramaUnifilar || './unifilar.png'}" alt="Diagrama Unifilar">
+        </div>
+      </div>
+      
+      <div class="diagram-column">
+        <div class="section-title">DIAGRAMA FASORIAL</div>
+        <div class="diagram-container diagram-fasorial">
+          <img class="diagram-img" src="${diagramImages.diagramaFasorial || './Fasorial.png'}" alt="Diagrama Fasorial">
+        </div>
+      </div>
+    </div>
+    
+    <!-- SEGUNDA MITAD: Conexiones (ocupa todo el ancho) -->
+    <div class="diagrams-bottom-half">
+      <div class="section-title">DIAGRAMA DE CONEXIONES</div>
+      <div class="diagram-container diagram-conexiones">
+        <img class="diagram-img" src="${diagramImages.diagramaConexiones || './conexiones.png'}" alt="Diagrama de Conexiones">
+      </div>
+    </div>
+  </div>
 
     <!-- Pruebas de Transformadores -->
     <table>
@@ -962,13 +2126,12 @@ const [diagramImages, setDiagramImages] = useState({
     <!-- Factor SIEC y Observaciones -->
     <table>
       <tr>
-        <td class="section-title" colspan="2">FACTOR SIEC</td>
+        <td class="section-title" colspan="1">FACTOR SIEC</td>
         <td class="section-title" colspan="8">OBSERVACIONES GENERALES</td>
         <td rowspan="2" class="section-title" colspan="5">ADECUACIONES Y MEJORAS QUE NECESITA LA INSTALACIÓN ELÉCTRICA</td>
       </tr>
       <tr>
-        <td>FACTOR SIEC</td>
-        <td>${data.factorData?.factorSiec || ''}</td>
+        <td rowspan="2">${data.factorData?.factorSiec || ''}</tdC>
         <td>EQUIPOS</td>
         <td class="estado-cell">B</td>
         <td class="estado-cell">R</td>
@@ -979,8 +2142,6 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">M</td>
       </tr>
       <tr>
-        <td>FACTOR ENCONTRADO</td>
-        <td>${data.factorData?.factorEncontrado || ''}</td>
         <td>RED</td>
         <td class="estado-cell">${data.observaciones?.redMT === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.redMT === 'Regular' ? 'X' : ''}</td>
@@ -990,7 +2151,9 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.tps === 'Regular' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.tps === 'Malo' ? 'X' : ''}</td>
         <td rowspan="9" colspan="5" style="vertical-align: top; font-size: 9px;">
-          <ul class="checkbox-list">
+          <div style="display: flex; gap: 20px;">
+          <!-- COLUMNA 1 -->
+          <ul class="checkbox-list" style="list-style: none; padding: 0; margin: 0;">
             <li><input type="checkbox" ${data.adecuaciones?.cambiarMedidor || data.adecuaciones?.instalarMedidor ? 'checked' : ''}> Cambiar o instalar el medidor</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o instalar TC</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o Instalar TP</li>
@@ -998,6 +2161,10 @@ const [diagramImages, setDiagramImages] = useState({
             <li><input type="checkbox" ${data.adecuaciones?.cambiarPuestaTierra || data.adecuaciones?.instalarPuestaTierra ? 'checked' : ''}> Cambiar o instalar sistema de puesta a tierra</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarBloquePruebas ? 'checked' : ''}> Cambiar o instalar Bloque de Pruebas</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesElectricas ? 'checked' : ''}> Cambiar o instalar Protecciones eléctricas</li>
+          </ul>
+
+          <!-- COLUMNA 2 -->
+          <ul class="checkbox-list" style="list-style: none; padding: 0; margin: 0;">
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCableSenal ? 'checked' : ''}> Cambiar o instalar Cable de señal (según norma)</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarSistemaComunicacion ? 'checked' : ''}> Cambiar o instalar sistema de comunicación</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarModem ? 'checked' : ''}> Cambiar o instalar MODEM</li>
@@ -1007,11 +2174,11 @@ const [diagramImages, setDiagramImages] = useState({
             <li><input type="checkbox" ${data.adecuaciones?.adecuaroInstalaraSeguridadCeldas ? 'checked' : ''}> Adecuar o instalar seguridad a las celdas de medidor</li>
             <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCelda ? 'checked' : ''}> Cambiar o instalar Celda para medida(TP'S y TC'S) norma</li>
           </ul>
+          </div>
         </td>
       </tr>
       <tr>
-        <td>% ERROR FACTOR</td>
-        <td>${data.factorData?.errorFactor || ''}</td>
+        <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;">FACTOR ENCONTRADO</td>
         <td>CRUCETAS</td>
         <td class="estado-cell">${data.observaciones?.crucetas === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.crucetas === 'Regular' ? 'X' : ''}</td>
@@ -1022,8 +2189,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.tcs === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
-        <td>FACTOR FINAL</td>
-        <td>${data.factorData?.factorFinal || ''}</td>
+        <td>${data.factorData?.factorEncontrado || ''}</td>
         <td>PARARRAYOS</td>
         <td class="estado-cell">${data.observaciones?.pararrayos === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.pararrayos === 'Regular' ? 'X' : ''}</td>
@@ -1034,8 +2200,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
-        <td rowspan="5"></td>
-        <td rowspan="5"></td>
+        <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;">%ERROR DE FACT</td>
         <td>CORTACIRCUITOS</td>
         <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Regular' ? 'X' : ''}</td>
@@ -1046,6 +2211,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.celda === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
+        <td>${data.factorData?.errorFactor || ''}</td>
         <td>FUSIBLES</td>
         <td class="estado-cell">${data.observaciones?.fusibles === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.fusibles === 'Regular' ? 'X' : ''}</td>
@@ -1056,6 +2222,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.gabinetes === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
+        <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;" >FACTOR FINAL</td>
         <td>BAJANTES</td>
         <td class="estado-cell">${data.observaciones?.bajantes === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.bajantes === 'Regular' ? 'X' : ''}</td>
@@ -1066,6 +2233,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.modem === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
+        <td rowspan="2" >${data.factorData?.factorFinal || ''}</td>
         <td>TRANSFORMADOR PRINCIPAL</td>
         <td class="estado-cell">${data.observaciones?.transformador === 'Bueno' ? 'X' : ''}</td>
         <td class="estado-cell">${data.observaciones?.transformador === 'Regular' ? 'X' : ''}</td>
@@ -1076,14 +2244,11 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="estado-cell">${data.observaciones?.cableSenal === 'Malo' ? 'X' : ''}</td>
       </tr>
       <tr>
-        <td>EQUIPO PATRON</td>
-        <td class="estado-cell"></td>
-        <td class="estado-cell"></td>
-        <td class="estado-cell"></td>
-        <td></td>
-        <td class="estado-cell"></td>
-        <td class="estado-cell"></td>
-        <td class="estado-cell"></td>
+        <td colspan="8" class="field-label">EQUIPO PATRON
+        <p style="text-align: center; margin: 0; padding:0">
+          <strong>${data.factorData?.equipoPatron || ''}</strong>
+        </p>
+        </td>
       </tr>
     </table>
 
@@ -1096,7 +2261,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="section-title">INFORME</td>
       </tr>
       <tr>
-        <td style="text-align: justify; padding: 8px;">
+        <td style="text-align: justify; padding: 8px; font-size: 12px">
           ${data.informe || 'LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.'}
         </td>
       </tr>
@@ -1149,10 +2314,6 @@ const [diagramImages, setDiagramImages] = useState({
         <td class="firma-label">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
       </tr>
     </table>
-
-    <div style="font-size: 10px; text-align: center; margin-top: 10px;">
-      ORIGINAL: EMPRESA | COPIA VERDE: USUARIO | NO ENTREGAR DINERO AL OPERARIO
-    </div>
   </div>
 </body>
 </html>
@@ -1167,32 +2328,23 @@ const [diagramImages, setDiagramImages] = useState({
   };
 
   // Función para descargar el PDF
- const handleDownloadPDF = () => {
-  const html = generatePDFHtml();
+  const handleDownloadPDF = () => { 
+  const html = generatePDFHtml(); 
   const opt = {
-    margin: 0.5,
-    filename: "ActaRevision No." + (data.numero_acta || '1001') + "_" + new Date().toISOString().slice(0,10) + ".pdf",
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { 
-      scale: 2,
-      useCORS: true,
-      logging: false
-    },
-    jsPDF: { 
-      unit: "in", 
-      format: "legal", 
-      orientation: "portrait" 
-    },
+    margin: 0.5, filename: "ActaRevision No." + (data.numero_acta || '1001') + "_" + new Date().toISOString().slice(0,10) + ".pdf",
+    image: { type: "jpeg", quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: "in", format: "legal" }, }; 
+    html2pdf().set(opt).from(html).save(); 
   };
-  html2pdf().set(opt).from(html).save();
-};
+
   // Función para imprimir el PDF
   const handlePrintPDF = () => {
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
     <html>
       <head>
-        <title>Imprimir Acta de Revisión</title>
+        <title>${"ActaRevision No." + (data.numero_acta || '1001') + "_" + new Date().toISOString().slice(0,10)}</title>
         <style>
           body { 
             font-family: Arial, sans-serif; 
@@ -1200,8 +2352,11 @@ const [diagramImages, setDiagramImages] = useState({
             width: 100%;
           }
           @media print {
+          body {
+            zoom: 0.9;
+          }
             @page {
-              size: legal portrait;  /* Especificar tamaño legal */
+              size: legal;  /* Especificar tamaño legal */
               margin: 0.5in;
             }
             body { 
@@ -1237,7 +2392,7 @@ const handleCloseModal = () => {
     
     setTimeout(() => {
       setShowPreview(false);
-    }, 200); // Debe coincidir con la duración de la animación
+    }, 200);
   } else {
     setShowPreview(false);
   }
@@ -1480,13 +2635,13 @@ const handleCloseModal = () => {
     <div className={styles.medidoresGrid}>
       
       {/* Activa 1 */}
-      {(data.numeroActiva1 || data.marcaActiva1 || data.lecturaActiva1) && (
+      {(data.numeroActivaIns1 || data.marcaActiva1 || data.lecturaActiva1) && (
         <div className={styles.medidorCard}>
           <h4 className={styles.medidorType}>Activa 1</h4>
           <div className={styles.medidorDetails}>
             <div className={styles.medidorItem}>
               <span>Número:</span>
-              <strong>{data.numeroActiva1 || '-'}</strong>
+              <strong>{data.numeroActivaIns1 || '-'}</strong>
             </div>
             <div className={styles.medidorItem}>
               <span>Marca:</span>
@@ -1602,6 +2757,1358 @@ const handleCloseModal = () => {
           </div>
         </div>
       )}
+    </div>
+  </div>
+</div>
+
+{/* Sección: Sellos de Medición */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🔐 Sellos de Medición</h2>
+  
+  {/* Medición Activa - Tapa Principal */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>⚡ Medición Activa - Tapa Principal</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.medActivaTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.medActivaNum1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.medActivaE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.medActivaR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.medActivaTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.medActivaNum2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.medActivaE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.medActivaR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.medActivaTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.medActivaNum3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.medActivaE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.medActivaR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.medActivaInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.medActivaInstNum1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.medActivaInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.medActivaInstNum2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.medActivaInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.medActivaInstNum3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Medición Activa - Tapa Bornera */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔩 Medición Activa - Tapa Bornera</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.tapaBorneraActivaTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tapaBorneraActivaNum1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.tapaBorneraActivaE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.tapaBorneraActivaR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.tapaBorneraActivaTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tapaBorneraActivaNum2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.tapaBorneraActivaE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.tapaBorneraActivaR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.tapaBorneraActivaTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tapaBorneraActivaNum3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.tapaBorneraActivaE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.tapaBorneraActivaR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.tapaBorneraActivaInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tapaBorneraActivaInstNum1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.tapaBorneraActivaInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tapaBorneraActivaInstNum2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.tapaBorneraActivaInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tapaBorneraActivaInstNum3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Medición Reactiva - Tapa Principal */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔄 Medición Reactiva - Tapa Principal</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.medReactivaTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.medReactivaNum1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.medReactivaE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.medReactivaR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.medReactivaTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.medReactivaNum2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.medReactivaE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.medReactivaR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.medReactivaTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.medReactivaNum3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.medReactivaE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.medReactivaR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.medReactivaInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.medReactivaInstNum1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.medReactivaInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.medReactivaInstNum2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.medReactivaInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.medReactivaInstNum3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Medición Reactiva - Tapa Bornera */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔩 Medición Reactiva - Tapa Bornera</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.tapaBorneraReactivaTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tapaBorneraReactivaNum1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.tapaBorneraReactivaE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.tapaBorneraReactivaR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.tapaBorneraReactivaTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tapaBorneraReactivaNum2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.tapaBorneraReactivaE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.tapaBorneraReactivaR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.tapaBorneraReactivaTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tapaBorneraReactivaNum3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.tapaBorneraReactivaE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.tapaBorneraReactivaR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.tapaBorneraReactivaInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tapaBorneraReactivaInstNum1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.tapaBorneraReactivaInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tapaBorneraReactivaInstNum2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.tapaBorneraReactivaInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tapaBorneraReactivaInstNum3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Bloque de Pruebas */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🧪 Bloque de Pruebas</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.bloquePruebasTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.bloquePruebasNum1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.bloquePruebasE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.bloquePruebasR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.bloquePruebasTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.bloquePruebasNum2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.bloquePruebasE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.bloquePruebasR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.bloquePruebasInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.bloquePruebasInstNum1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.bloquePruebasInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.bloquePruebasInstNum2 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Transformadores y Celdas */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🏗️ Transformadores y Celdas</h2>
+  
+  {/* TC's */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔌 TC's</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.tcsTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tcsNumero1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.tcsE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.tcsR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.tcsTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tcsNumero2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.tcsE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.tcsR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.tcsTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tcsNumero3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.tcsE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.tcsR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.tcsInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tcsInstNumero1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.tcsInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tcsInstNumero2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.tcsInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tcsInstNumero3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* TP's */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>⚡ TP's</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.tpsTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tpsNumero1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.tpsE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.tpsR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.tpsTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tpsNumero2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.tpsE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.tpsR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.tpsTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tpsNumero3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.tpsE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.tpsR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.tpsInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.tpsInstNumero1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.tpsInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.tpsInstNumero2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.tpsInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.tpsInstNumero3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Celda de Medida */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>📊 Celda de Medida</h3>
+    <div className={styles.sellosGrid}>
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 1:</span>
+            <strong>{data.celdaTipoCol1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.celdaNumero1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 1:</span>
+            <strong>{data.celdaE1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 1:</span>
+            <strong>{data.celdaR1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 2:</span>
+            <strong>{data.celdaTipoCol2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.celdaNumero2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 2:</span>
+            <strong>{data.celdaE2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 2:</span>
+            <strong>{data.celdaR2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Col 3:</span>
+            <strong>{data.celdaTipoCol3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.celdaNumero3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>E 3:</span>
+            <strong>{data.celdaE3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>R 3:</span>
+            <strong>{data.celdaR3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.sellosGroup}>
+        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 1:</span>
+            <strong>{data.celdaInstTipoColor1 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 1:</span>
+            <strong>{data.celdaInstNumero1 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 2:</span>
+            <strong>{data.celdaInstTipoColor2 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 2:</span>
+            <strong>{data.celdaInstNumero2 || 'No especificado'}</strong>
+          </div>
+        </div>
+        <div className={styles.selloTable}>
+          <div className={styles.selloRow}>
+            <span>Tipo/Color 3:</span>
+            <strong>{data.celdaInstTipoColor3 || 'No especificado'}</strong>
+          </div>
+          <div className={styles.selloRow}>
+            <span>Número 3:</span>
+            <strong>{data.celdaInstNumero3 || 'No especificado'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Cálculos de Error */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>📈 Cálculos de Error</h2>
+  
+  {/* Medidor Activa */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>⚡ Medidor Activa</h3>
+    <div className={styles.calculosGrid}>
+      <div className={styles.calculoFase}>
+        <h4>🔴 Fase R</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.activaTensionR || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.activaCorrienteR || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.activaPinstR || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoFase}>
+        <h4>🟡 Fase S</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.activaTensionS || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.activaCorrienteS || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.activaPinstS || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoFase}>
+        <h4>🔵 Fase T</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.activaTensionT || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.activaCorrienteT || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.activaPinstT || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoTotal}>
+        <h4>📊 Total (L-L)</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión Total:</span>
+          <strong>{data.activaTensionTotal || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente Total:</span>
+          <strong>{data.activaCorrienteTotal || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst. Total:</span>
+          <strong>{data.activaPinstTotal || 'No especificado'} W</strong>
+        </div>
+      </div>
+    </div>
+    
+    <div className={styles.calculosResultados}>
+      <div className={styles.resultadoItem}>
+        <span>% Error:</span>
+        <strong className={styles.errorValue}>{data.activaPorcentajeError || 'No especificado'}%</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Giros:</span>
+        <strong>{data.activaGiros || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Tiempo:</span>
+        <strong>{data.activaTiempo || 'No especificado'} S</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Horas:</span>
+        <strong>{data.activaHoras || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Factor de Potencia:</span>
+        <strong>{data.activaFp || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Secuencia RST:</span>
+        <strong>{data.activaRst || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Secuencia RTS:</span>
+        <strong>{data.activaRts || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>W:</span>
+        <strong>{data.activaW || 'No especificado'}</strong>
+      </div>
+    </div>
+  </div>
+
+  {/* Medidor Reactiva */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔄 Medidor Reactiva</h3>
+    <div className={styles.calculosGrid}>
+      <div className={styles.calculoFase}>
+        <h4>🔴 Fase R</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.reactivaTensionR || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.reactivaCorrienteR || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.reactivaPinstR || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoFase}>
+        <h4>🟡 Fase S</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.reactivaTensionS || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.reactivaCorrienteS || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.reactivaPinstS || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoFase}>
+        <h4>🔵 Fase T</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión:</span>
+          <strong>{data.reactivaTensionT || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente:</span>
+          <strong>{data.reactivaCorrienteT || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst.:</span>
+          <strong>{data.reactivaPinstT || 'No especificado'} W</strong>
+        </div>
+      </div>
+      
+      <div className={styles.calculoTotal}>
+        <h4>📊 Total (L-L)</h4>
+        <div className={styles.calculoItem}>
+          <span>Tensión Total:</span>
+          <strong>{data.reactivaTensionTotal || 'No especificado'} V</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>Corriente Total:</span>
+          <strong>{data.reactivaCorrienteTotal || 'No especificado'} A</strong>
+        </div>
+        <div className={styles.calculoItem}>
+          <span>P. Inst. Total:</span>
+          <strong>{data.reactivaPinstTotal || 'No especificado'} W</strong>
+        </div>
+      </div>
+    </div>
+    
+    <div className={styles.calculosResultados}>
+      <div className={styles.resultadoItem}>
+        <span>% Error:</span>
+        <strong className={styles.errorValue}>{data.reactivaPorcentajeError || 'No especificado'}%</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Giros:</span>
+        <strong>{data.reactivaGiros || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Tiempo:</span>
+        <strong>{data.reactivaTiempo || 'No especificado'} S</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Horas:</span>
+        <strong>{data.reactivaHoras || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Factor de Potencia:</span>
+        <strong>{data.reactivaFp || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Secuencia RST:</span>
+        <strong>{data.reactivaRst || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>Secuencia RTS:</span>
+        <strong>{data.reactivaRts || 'No especificado'}</strong>
+      </div>
+      <div className={styles.resultadoItem}>
+        <span>W:</span>
+        <strong>{data.reactivaW || 'No especificado'}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Pruebas de Funcionamiento */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🧪 Pruebas de Funcionamiento</h2>
+  
+  {/* Medidor Activa */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>⚡ Medidor Activa</h3>
+    <div className={styles.pruebasGrid}>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Conexiones:</span>
+        <span className={`${styles.pruebaValue} ${data.activaConexiones === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.activaConexiones === 'si' ? '✅ Conforme' : data.activaConexiones === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Continuidad:</span>
+        <span className={`${styles.pruebaValue} ${data.activaContinuidad === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.activaContinuidad === 'si' ? '✅ Conforme' : data.activaContinuidad === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Prueba de Puentes:</span>
+        <span className={`${styles.pruebaValue} ${data.activaPuentes === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.activaPuentes === 'si' ? '✅ Conforme' : data.activaPuentes === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Giro en Vacío:</span>
+        <span className={styles.pruebaValue}>
+          {data.activaGiroVacio === 'si' ? '✅ Sí' : data.activaGiroVacio === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Registra:</span>
+        <span className={styles.pruebaValue}>
+          {data.activaRegistra === 'si' ? '✅ Sí' : data.activaRegistra === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Medidor se Frena:</span>
+        <span className={styles.pruebaValue}>
+          {data.activaSeFrena === 'si' ? '✅ Sí' : data.activaSeFrena === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+    </div>
+    
+    {/* Prueba de Integración - Activa */}
+    <div className={styles.integracionSection}>
+      <h4 className={styles.integracionTitle}>📊 Prueba de Integración</h4>
+      <div className={styles.integracionGrid}>
+        <div className={styles.integracionItem}>
+          <span>Lectura Inicial:</span>
+          <strong>{data.activaLecturaInicial || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Lectura Final:</span>
+          <strong>{data.activaLecturaFinal || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Diferencia:</span>
+          <strong>{data.activaDiferencia || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Patrón:</span>
+          <strong>{data.activaPatron || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>% Error Pruebas:</span>
+          <strong className={styles.errorValue}>{data.activaPorcentajeErrorPruebas || 'No especificado'}%</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Medidor Reactiva */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔄 Medidor Reactiva</h3>
+    <div className={styles.pruebasGrid}>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Conexiones:</span>
+        <span className={`${styles.pruebaValue} ${data.reactivaConexiones === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.reactivaConexiones === 'si' ? '✅ Conforme' : data.reactivaConexiones === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Continuidad:</span>
+        <span className={`${styles.pruebaValue} ${data.reactivaContinuidad === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.reactivaContinuidad === 'si' ? '✅ Conforme' : data.reactivaContinuidad === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Prueba de Puentes:</span>
+        <span className={`${styles.pruebaValue} ${data.reactivaPuentes === 'si' ? styles.conforme : styles.noConforme}`}>
+          {data.reactivaPuentes === 'si' ? '✅ Conforme' : data.reactivaPuentes === 'no' ? '❌ No Conforme' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Giro en Vacío:</span>
+        <span className={styles.pruebaValue}>
+          {data.reactivaGiroVacio === 'si' ? '✅ Sí' : data.reactivaGiroVacio === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Registra:</span>
+        <span className={styles.pruebaValue}>
+          {data.reactivaRegistra === 'si' ? '✅ Sí' : data.reactivaRegistra === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+      <div className={styles.pruebaItem}>
+        <span className={styles.pruebaLabel}>Medidor se Frena:</span>
+        <span className={styles.pruebaValue}>
+          {data.reactivaSeFrena === 'si' ? '✅ Sí' : data.reactivaSeFrena === 'no' ? '❌ No' : 'No especificado'}
+        </span>
+      </div>
+    </div>
+    
+    {/* Prueba de Integración - Reactiva */}
+    <div className={styles.integracionSection}>
+      <h4 className={styles.integracionTitle}>📊 Prueba de Integración</h4>
+      <div className={styles.integracionGrid}>
+        <div className={styles.integracionItem}>
+          <span>Lectura Inicial:</span>
+          <strong>{data.reactivaLecturaInicial || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Lectura Final:</span>
+          <strong>{data.reactivaLecturaFinal || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Diferencia:</span>
+          <strong>{data.reactivaDiferencia || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>Patrón:</span>
+          <strong>{data.reactivaPatron || 'No especificado'}</strong>
+        </div>
+        <div className={styles.integracionItem}>
+          <span>% Error Pruebas:</span>
+          <strong className={styles.errorValue}>{data.reactivaPorcentajeErrorPruebas || 'No especificado'}%</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Transformadores */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>🔋 Transformadores</h2>
+  
+  {/* Transformadores de Corriente */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>🔌 Transformadores de Corriente (TC's)</h3>
+    <div className={styles.transformadoresGrid}>
+      <div className={styles.transformadorCard}>
+        <h4>TC 1</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tcMarca1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tcSeries1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tcTipo1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tcRelacion1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tcClase1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tcVa1 || 'No especificado'}</strong>
+        </div>
+      </div>
+      
+      <div className={styles.transformadorCard}>
+        <h4>TC 2</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tcMarca2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tcSeries2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tcTipo2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tcRelacion2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tcClase2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tcVa2 || 'No especificado'}</strong>
+        </div>
+      </div>
+      
+      <div className={styles.transformadorCard}>
+        <h4>TC 3</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tcMarca3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tcSeries3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tcTipo3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tcRelacion3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tcClase3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tcVa3 || 'No especificado'}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Transformadores de Potencia */}
+  <div className={styles.subsection}>
+    <h3 className={styles.subsectionTitle}>⚡ Transformadores de Potencia (TP's)</h3>
+    <div className={styles.transformadoresGrid}>
+      <div className={styles.transformadorCard}>
+        <h4>TP 1</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tpMarca1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tpSeries1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tpTipo1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tpRelacion1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tpClase1 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tpVa1 || 'No especificado'}</strong>
+        </div>
+      </div>
+      
+      <div className={styles.transformadorCard}>
+        <h4>TP 2</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tpMarca2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tpSeries2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tpTipo2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tpRelacion2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tpClase2 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tpVa2 || 'No especificado'}</strong>
+        </div>
+      </div>
+      
+      <div className={styles.transformadorCard}>
+        <h4>TP 3</h4>
+        <div className={styles.transformadorItem}>
+          <span>Marca:</span>
+          <strong>{data.tpMarca3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Series:</span>
+          <strong>{data.tpSeries3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Tipo:</span>
+          <strong>{data.tpTipo3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Relación:</span>
+          <strong>{data.tpRelacion3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>Clase:</span>
+          <strong>{data.tpClase3 || 'No especificado'}</strong>
+        </div>
+        <div className={styles.transformadorItem}>
+          <span>VA:</span>
+          <strong>{data.tpVa3 || 'No especificado'}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Sección: Evidencias e Informe */}
+<div className={styles.section}>
+  <h2 className={styles.sectionTitle}>📋 Evidencias e Informe</h2>
+  <div className={styles.evidenciasGrid}>
+    <div className={styles.evidenciaItem}>
+      <span className={styles.evidenciaLabel}>Códigos Irregularidades:</span>
+      <span className={styles.evidenciaValue}>{data.codigosIrregularidades || 'No especificado'}</span>
+    </div>
+    <div className={styles.evidenciaItem}>
+      <span className={styles.evidenciaLabel}>Tipo de Evidencia:</span>
+      <span className={styles.evidenciaValue}>
+        {data.tipoEvidencia === 'foto' ? '📷 Fotos' : 
+         data.tipoEvidencia === 'video' ? '🎥 Video' : 'No especificado'}
+      </span>
+    </div>
+    <div className={styles.evidenciaItem}>
+      <span className={styles.evidenciaLabel}>Irregularidad Corrida:</span>
+      <span className={`${styles.evidenciaValue} ${data.irregularidadCorrida === 'si' ? styles.si : styles.no}`}>
+        {data.irregularidadCorrida === 'si' ? '✅ Sí' : data.irregularidadCorrida === 'no' ? '❌ No' : 'No especificado'}
+      </span>
+    </div>
+    <div className={styles.evidenciaItem}>
+      <span className={styles.evidenciaLabel}>Medidor Retirado:</span>
+      <span className={`${styles.evidenciaValue} ${data.medidorRetirado === 'si' ? styles.si : styles.no}`}>
+        {data.medidorRetirado === 'si' ? '✅ Sí' : data.medidorRetirado === 'no' ? '❌ No' : 'No especificado'}
+      </span>
+    </div>
+    <div className={styles.evidenciaItem}>
+      <span className={styles.evidenciaLabel}>Tipo de Informe:</span>
+      <span className={styles.evidenciaValue}>
+        {data.tipoInforme === 'visita_sitio' ? '🏢 Visita al sitio' :
+         data.tipoInforme === 'instalacion_completada' ? '🔧 Instalación completada' :
+         data.tipoInforme === 'medicion_realizada' ? '📊 Medición realizada' :
+         data.tipoInforme === 'pruebas_completadas' ? '🧪 Pruebas completadas' :
+         data.tipoInforme === 'documentacion_entregada' ? '📄 Documentación entregada' :
+         data.tipoInforme === 'otro' ? `📝 ${data.tipoInformeOtro || 'Otro'}` : 'No especificado'}
+      </span>
     </div>
   </div>
 </div>

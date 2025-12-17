@@ -38,7 +38,7 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
   });
 
   const [factorData, setFactorData] = useState(data.factorData || {
-    factorSiec: '', factorEncontrado: '', errorFactor: '', factorFinal: ''
+    factorSiec: '', factorEncontrado: '', errorFactor: '', factorFinal: '' ,equipoPatron: ''
   });
 
   const [observaciones, setObservaciones] = useState(data.observaciones || {
@@ -382,6 +382,10 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
           <div className="form-group">
             <label>Factor Final</label>
             <input type="number" step="0.001" value={factorData.factorFinal} onChange={(e) => handleFactorChange('factorFinal', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Equipo Patron</label>
+            <input type="number" step="0.001" value={factorData.patron} onChange={(e) => handleFactorChange('equipoPatron', e.target.value)} />
           </div>
         </div>
       </div>
