@@ -1,13 +1,27 @@
+/* HelpPanel.module.css - Armonizado con DiagramSelectionStep */
+
 .helpPanel {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 1000;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
+  justify-content: flex-end;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.helpContent {
+  width: 520px;
+  max-width: 90vw;
+  height: 100%;
+  background: #f8f9fa;
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .helpOverlay {
@@ -16,125 +30,601 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
 }
 
-.helpContent {
-  position: relative;
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  z-index: 2001;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
+/* ===== HEADER (Armonizado con DiagramSelectionStep) ===== */
 .helpHeader {
+  padding: 20px;
+  background: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid #007bff;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #f0f3ff;
+  align-items: flex-start;
+  position: relative;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  flex: 1;
+}
+
+.helpIcon {
+  font-size: 28px;
+  margin-top: 4px;
+  color: #007bff;
 }
 
 .helpHeader h2 {
   margin: 0;
-  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.stepIndicator {
+  margin: 8px 0 0 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
 }
 
 .closeHelp {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #666;
-  padding: 0.25rem;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .closeHelp:hover {
-  color: #333;
+  border-color: #007bff;
+  color: #007bff;
+  transform: rotate(90deg);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
 }
 
+/* ===== TABS (Armonizado con botones del sistema) ===== */
 .tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
+  background: white;
+  border-bottom: 1px solid #e1e5e9;
+  padding: 0 20px;
 }
 
 .tab {
-  padding: 0.75rem 1.5rem;
+  flex: 1;
+  padding: 16px 20px;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
+  color: #6c757d;
+  font-weight: 600;
   cursor: pointer;
-  color: #666;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .tab:hover {
-  color: #333ff0;
+  color: #007bff;
+  background-color: #f8f9fa;
 }
 
 .tabActive {
-  color: #333ff0 !important;
-  border-bottom-color: #333ff0 !important;
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: #f0f8ff;
 }
 
+/* ===== CONTENIDO PRINCIPAL ===== */
 .tabContent {
-  line-height: 1.6;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  margin: 20px 20px 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
 }
 
-.tabContent h3 {
-  color: #333;
-  margin-top: 0;
+/* ===== CONTENIDO DEL PASO ACTUAL ===== */
+.stepContent {
+  animation: fadeIn 0.3s ease;
 }
 
-.tabContent h4 {
-  color: #333ff0;
-  margin: 1rem 0 0.5rem 0;
+.stepHeader {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e1e5e9;
 }
 
-.formGuide {
+.stepHeader h3 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.stepDescription {
+  margin: 0;
+  color: #6c757d;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.stepsList {
+  margin-bottom: 25px;
+}
+
+.stepItem {
+  display: flex;
+  gap: 15px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f3f5;
+  align-items: flex-start;
+}
+
+.stepItem:last-child {
+  border-bottom: none;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  background: #007bff;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.stepInfo h4 {
+  margin: 0 0 6px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stepInfo p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ===== SECCIÓN DE TIPS (Armonizado con estado buttons) ===== */
+.tipsSection {
+  background: #e8f4fd;
+  border-left: 4px solid #007bff;
+  padding: 16px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 20px;
+}
+
+.tipsSection h4 {
+  margin: 0 0 12px 0;
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tipsIcon {
+  font-size: 1.1rem;
+}
+
+.tipsList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.tipIcon {
+  color: #28a745;
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+/* ===== TODOS LOS PASOS (Armonizado con diagram cards) ===== */
+.allSteps {
+  animation: fadeIn 0.3s ease;
+}
+
+.allSteps h3 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.allSteps > p {
+  margin: 0 0 20px 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.formSteps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.formStep {
+  background: white;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.formStep:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.currentStep {
+  border-color: #007bff;
+  background-color: #f0fff4;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.stepHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stepBadge {
+  background: #007bff;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stepIcon {
+  color: #007bff;
+  font-size: 1.2rem;
+}
+
+.formStep h4 {
+  margin: 0 0 8px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stepSummary {
+  margin: 0 0 12px 0;
+  color: #6c757d;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  min-height: 40px;
+}
+
+.stepFeatures {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 8px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #495057;
+  font-size: 0.85rem;
+  padding: 4px 0;
+}
+
+.feature svg {
+  color: #007bff;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* ===== CONTACTO/SOPORTE ===== */
+.contactContent {
+  animation: fadeIn 0.3s ease;
+}
+
+.contactContent h3 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.contactContent > p {
+  margin: 0 0 20px 0;
+  color: #6c757d;
+  font-size: 0.95rem;
 }
 
 .contactInfo {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e1e5e9;
+}
+
+.contactItem {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e1e5e9;
 }
 
-.contactInfo p {
+.contactItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.contactIcon {
+  color: #007bff;
+  font-size: 1.2rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.contactItem strong {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.contactItem p {
   margin: 0;
-  padding: 0.5rem 0;
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
-/* Responsive */
+/* ===== CONTACTO DE EMERGENCIA (Armonizado con estado malo) ===== */
+.emergencyContact {
+  background: #fff5f5;
+  border: 2px solid #fee2e2;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.emergencyContact h4 {
+  margin: 0 0 8px 0;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.emergencyContact > p {
+  margin: 0 0 12px 0;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+.emergencyInfo {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #fee2e2;
+}
+
+.emergencyInfo p {
+  margin: 4px 0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+/* ===== FAQ (Preguntas frecuentes) ===== */
+.faqSection {
+  border-top: 2px solid #e1e5e9;
+  padding-top: 20px;
+}
+
+.faqSection h4 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.faqItem {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.faqItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.faqItem strong {
+  display: block;
+  color: #495057;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+
+.faqItem p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SCROLLBAR PERSONALIZADA ===== */
+.tabContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tabContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.tabContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.tabContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .helpContent {
-    margin: 1rem;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .helpHeader {
+    padding: 16px;
+  }
+  
+  .helpHeader h2 {
+    font-size: 1.3rem;
   }
   
   .tabs {
+    padding: 0 16px;
     flex-direction: column;
-    gap: 0.25rem;
   }
   
   .tab {
-    text-align: left;
-    border-bottom: none;
-    border-left: 3px solid transparent;
+    padding: 14px;
+    border-bottom: 1px solid #e1e5e9;
+    border-right: none;
+    justify-content: flex-start;
   }
   
   .tabActive {
-    border-left-color: #333ff0 !important;
+    border-bottom: 2px solid #007bff;
+    border-right: none;
+  }
+  
+  .tabContent {
+    margin: 16px 16px 0 16px;
+    padding: 16px;
+  }
+  
+  .formSteps {
+    grid-template-columns: 1fr;
+  }
+  
+  .stepItem {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .stepNumber {
+    align-self: flex-start;
+  }
+  
+  .contactInfo {
+    padding: 16px;
+  }
+  
+  .contactItem {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerTitle {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .helpIcon {
+    align-self: center;
+  }
+  
+  .stepIndicator {
+    font-size: 0.85rem;
+  }
+  
+  .stepHeader h3 {
+    font-size: 1.1rem;
+  }
+  
+  .formStep {
+    padding: 16px;
+  }
+  
+  .stepBadge {
+    font-size: 0.75rem;
+  }
+  
+  .stepFeatures {
+    font-size: 0.8rem;
   }
 }

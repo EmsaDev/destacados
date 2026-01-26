@@ -14,7 +14,68 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
   const opcionesAcometida = ['ÁREA', 'SUBTERRÁNEA'];
   const opcionesConfiguracion = ['2 ELEM', '3 ELEM'];
   const opcionesTipoMedida = ['DIRECTA', 'SEMIINDIRECTA', 'INDIRECTA'];
+  const [marcas, setMarcas] = useState([]);
+  const [tiposPorMarca, setTiposPorMarca] = useState({});
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState(""); 
   
+
+  useEffect(() => {
+  fetch("http://localhost:5000/marcas")
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Marcas recibidas:", data);
+      setMarcas(Array.isArray(data) ? data : []);
+    })
+    .catch((err) => {
+      console.error("Error cargando marcas", err);
+      setMarcas([]);
+    });
+}, []);
+
+  useEffect(() => {
+    const marcasIds = [
+      data.marcaActiva1,
+      data.marcaActiva2,
+      data.marcaReactiva1,
+      data.marcaReactiva2,
+      data.marcaActivaIns1,
+      data.marcaActivaIns2,
+      data.marcaReactivaIns1,
+      data.marcaReactivaIns2
+    ].filter(Boolean);
+
+    marcasIds.forEach((marcaId) => {
+      if (tiposPorMarca[marcaId]) return;
+
+      console.log("Cargando tipos para marca:", marcaId);
+
+      fetch(`http://localhost:5000/tipos/${marcaId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setTiposPorMarca((prev) => ({
+            ...prev,
+            [marcaId]: Array.isArray(data) ? data : []
+          }));
+        })
+        .catch(() => {
+          setTiposPorMarca((prev) => ({
+            ...prev,
+            [marcaId]: []
+          }));
+        });
+    });
+  }, [
+    data.marcaActiva1,
+    data.marcaActiva2,
+    data.marcaReactiva1,
+    data.marcaReactiva2,
+    data.marcaActivaIns1,
+    data.marcaActivaIns2,
+    data.marcaReactivaIns1,
+    data.marcaReactivaIns2
+
+  ]);
+
   return (
     <div className={styles.container}>
       <div className={styles.formSection}>
@@ -551,27 +612,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   />
                 </td>
                 <td>
-                  <select 
+                  <select
                     name="marcaActiva1"
                     value={data.marcaActiva1 || ''}
                     onChange={handleChange}
-                    className={styles.select}
+                    className={styles.tableSelect}
                   >
-                    <option value="">Seleccionar marca...</option>
-                    <option value="elster">Elster</option>
-                    <option value="actaris">Actaris</option>
-                    <option value="landys">Landys</option>
-                    <option value="microstar">Microstar</option>
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <select
                     name="tipoActiva1"
                     value={data.tipoActiva1 || ''}
                     onChange={handleChange}
-                    className={styles.tableInput}
-                  />
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva1}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva1] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <input
@@ -660,27 +730,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   />
                 </td>
                 <td>
-                  <select 
+                  <select
                     name="marcaActiva2"
                     value={data.marcaActiva2 || ''}
                     onChange={handleChange}
-                    className={styles.select}
+                    className={styles.tableSelect}
                   >
-                    <option value="">Seleccionar marca...</option>
-                    <option value="elster">Elster</option>
-                    <option value="actaris">Actaris</option>
-                    <option value="landys">Landys</option>
-                    <option value="microstar">Microstar</option>
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <select
                     name="tipoActiva2"
                     value={data.tipoActiva2 || ''}
                     onChange={handleChange}
-                    className={styles.tableInput}
-                  />
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva2}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva2] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <input
@@ -769,27 +848,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   />
                 </td>
                 <td>
-                  <select 
+                  <select
                     name="marcaReactiva1"
                     value={data.marcaReactiva1 || ''}
                     onChange={handleChange}
-                    className={styles.select}
+                    className={styles.tableSelect}
                   >
-                    <option value="">Seleccionar marca...</option>
-                    <option value="elster">Elster</option>
-                    <option value="actaris">Actaris</option>
-                    <option value="landys">Landys</option>
-                    <option value="microstar">Microstar</option>
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <select
                     name="tipoReactiva1"
                     value={data.tipoReactiva1 || ''}
                     onChange={handleChange}
-                    className={styles.tableInput}
-                  />
+                    className={styles.tableSelect}
+                    disabled={!data.marcaReactiva1}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaReactiva1] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <input
@@ -877,27 +965,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                   />
                 </td>
                 <td>
-                  <select 
+                  <select
                     name="marcaReactiva2"
                     value={data.marcaReactiva2 || ''}
                     onChange={handleChange}
-                    className={styles.select}
+                    className={styles.tableSelect}
                   >
-                    <option value="">Seleccionar marca...</option>
-                    <option value="elster">Elster</option>
-                    <option value="actaris">Actaris</option>
-                    <option value="landys">Landys</option>
-                    <option value="microstar">Microstar</option>
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <select
                     name="tipoReactiva2"
                     value={data.tipoReactiva2 || ''}
                     onChange={handleChange}
-                    className={styles.tableInput}
-                  />
+                    className={styles.tableSelect}
+                    disabled={!data.marcaReactiva2}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaReactiva2] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <input
@@ -1008,28 +1105,37 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
               className={styles.tableInput}
             />
           </td>
-          <td>
-            <select 
+          <td>{/*"marcaActivaIns1"*/}
+            <select
               name="marcaActivaIns1"
               value={data.marcaActivaIns1 || ''}
               onChange={handleChange}
-              className={styles.select}
+              className={styles.tableSelect}
             >
-              <option value="">Seleccionar marca...</option>
-              <option value="elster">Elster</option>
-              <option value="actaris">Actaris</option>
-              <option value="landys">Landys</option>
-              <option value="microstar">Microstar</option>
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
             </select>
           </td>
           <td>
-            <input
-              type="text"
+            <select
               name="tipoActivaIns1"
               value={data.tipoActivaIns1 || ''}
               onChange={handleChange}
-              className={styles.tableInput}
-            />
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns1}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns1] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
           </td>
           <td>
             <input
@@ -1118,27 +1224,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             />
           </td>
           <td>
-            <select 
+            <select
               name="marcaActivaIns2"
               value={data.marcaActivaIns2 || ''}
               onChange={handleChange}
-              className={styles.select}
+              className={styles.tableSelect}
             >
-              <option value="">Seleccionar marca...</option>
-              <option value="elster">Elster</option>
-              <option value="actaris">Actaris</option>
-              <option value="landys">Landys</option>
-              <option value="microstar">Microstar</option>
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
             </select>
           </td>
           <td>
-            <input
-              type="text"
+            <select
               name="tipoActivaIns2"
               value={data.tipoActivaIns2 || ''}
               onChange={handleChange}
-              className={styles.tableInput}
-            />
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns2}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns2] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
           </td>
           <td>
             <input
@@ -1227,27 +1342,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             />
           </td>
           <td>
-            <select 
+            <select
               name="marcaReactivaIns1"
               value={data.marcaReactivaIns1 || ''}
               onChange={handleChange}
-              className={styles.select}
+              className={styles.tableSelect}
             >
-              <option value="">Seleccionar marca...</option>
-              <option value="elster">Elster</option>
-              <option value="actaris">Actaris</option>
-              <option value="landys">Landys</option>
-              <option value="microstar">Microstar</option>
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
             </select>
           </td>
           <td>
-            <input
-              type="text"
+            <select
               name="tipoReactivaIns1"
               value={data.tipoReactivaIns1 || ''}
               onChange={handleChange}
-              className={styles.tableInput}
-            />
+              className={styles.tableSelect}
+              disabled={!data.marcaReactivaIns1}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaReactivaIns1] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
           </td>
           <td>
             <input
@@ -1335,27 +1459,36 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
               />
             </td>
             <td>
-              <select 
-                name="marcaReactivaIns2"
-                    value={data.marcaReactivaIns2 || ''}
-                    onChange={handleChange}
-                    className={styles.select}
-                  >
-                    <option value="">Seleccionar marca...</option>
-                    <option value="elster">Elster</option>
-                    <option value="actaris">Actaris</option>
-                    <option value="landys">Landys</option>
-                    <option value="microstar">Microstar</option>
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    name="tipoReactivaIns2"
-                    value={data.tipoReactivaIns2 || ''}
-                    onChange={handleChange}
-                    className={styles.tableInput}
-                  />
+              <select
+              name="marcaReactivaIns2"
+              value={data.marcaReactivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <select
+              name="tipoReactivaIns2"
+              value={data.tipoReactivaIns2 || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+              disabled={!data.marcaReactivaIns2}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaReactivaIns2] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
                 </td>
                 <td>
                   <input

@@ -408,3 +408,37 @@
     padding: 6px 8px;
   }
 }
+.tableSelect {
+  width: 100%;
+  min-width: 100px;
+  padding: 6px 6px ;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  background: #f8f9fa;
+  color: #212529;
+
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  /* Evita que el texto se corte */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
+.tableSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+  background: white;
+}
+
+/* Opciones del select */
+.tableSelect option {
+  font-size: 0.8rem;
+  color: #212529;
+  background: #ffffff;
+}

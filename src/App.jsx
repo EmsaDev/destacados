@@ -223,7 +223,7 @@ function App() {
                     onClick={() => goToStep(1)}
                   >
                     <FiFileText className="nav-icon" />
-                    Formulario 1 - Datos Básicos
+                    Datos Iniciales del Acta
                     {completedSteps.step1 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
@@ -233,7 +233,7 @@ function App() {
                     disabled={!isStepAvailable(2)}
                   >
                     <FiFileText className="nav-icon" />
-                    Formulario 2 - Información Adicional
+                    Datos Técnicos de Instalación
                     {completedSteps.step2 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
@@ -243,7 +243,7 @@ function App() {
                     disabled={!isStepAvailable(3)}
                   >
                     <FiFileText className="nav-icon" />
-                    Formulario 3 - Detalles Finales
+                    Pruebas y Mediciones Técnicas
                     {completedSteps.step3 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
@@ -263,7 +263,7 @@ function App() {
                     disabled={!isStepAvailable(5)}
                   >
                     <FiEdit3 className="nav-icon" />
-                    Firma Digital
+                    Firmas
                     {completedSteps.step5 && <FiCheckCircle className="nav-completed" />}
                   </button>
                   
@@ -272,7 +272,7 @@ function App() {
                     onClick={() => goToStep(6)}
                     disabled={!isStepAvailable(6)}
                   >
-                    <FiClipboard/> Resumen Final
+                    <FiClipboard/> Resumen 
                   </button>
               </div>
 
@@ -300,9 +300,12 @@ function App() {
         </>
       )}
 
-      {/* Panel de Ayuda - Solo cuando user existe */}
-      {user && showHelp && <HelpPanel onClose={toggleHelp} />}
-
+      {user && showHelp && (
+        <HelpPanel 
+          onClose={toggleHelp} 
+          currentStep={step}
+        />
+      )}
       {/* Contenido Principal */}
       <main className="app-main">
         <div className="form-container">

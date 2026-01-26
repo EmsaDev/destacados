@@ -887,7 +887,7 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
                   value={data.tipoInforme || ''}
                 >
                   <option value="">Seleccione una opción</option>
-                  <option value="Se realizó visita al sitio">Se realizó visita al sitio</option>
+                  <option value="visita_sitio">Se realizó visita al sitio encontrando etc ...</option>
                   <option value="instalacion_completada">Instalación completada</option>
                   <option value="medicion_realizada">Medición realizada</option>
                   <option value="pruebas_completadas">Pruebas completadas</option>
@@ -915,10 +915,10 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
 
         <div className={styles.formNavigation}>
           <button type="button" onClick={prevStep} className={styles.backButton}>
-            Anterior
+            ← Anterior
           </button>
           <button type="submit" className={styles.nextButton} onClick={nextStep}>
-            Siguiente
+            Continuar →
           </button>
         </div>
     </div>

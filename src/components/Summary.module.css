@@ -1,3 +1,4 @@
+/* Estilos Generales del Resumen */
 .container {
   max-width: 1200px;
   margin: 2rem auto;
@@ -20,7 +21,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0069d9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -32,12 +33,15 @@
   font-weight: 400;
 }
 
+/* Grid Principal */
 .summaryGrid {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
   margin-bottom: 3rem;
 }
 
+/* Secciones */
 .section {
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
   border-radius: 12px;
@@ -45,16 +49,16 @@
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .section:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #c3dafe;
 }
 
 .sectionTitle {
-  color: #333ff0;
+  color: #007bff;
   font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
@@ -65,19 +69,42 @@
   gap: 0.5rem;
 }
 
-.sectionContent {
-  display: grid;
-  gap: 1rem;
+.sectionSubtitle {
+  font-weight: 600;
+  color: #0069d9;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e0e7ff;
 }
 
-.summaryItem {
+/* Sistema de 3 Columnas */
+.threeColumns {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Items de Resumen */
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   padding: 0.75rem;
   background: white;
   border-radius: 8px;
   border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.summaryItem:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .label {
@@ -90,170 +117,176 @@
   color: #1e293b;
   font-weight: 500;
   word-break: break-word;
+  padding: 0.25rem 0;
+  border-bottom: 1px dotted #e2e8f0;
 }
 
-/* Estilos específicos para valores */
-.value.SI {
+/* Valores Especiales */
+.value.SI, .value.ok, .value.bueno {
   color: #059669;
   font-weight: 600;
 }
 
-.value.NO {
+.value.NO, .value.malo {
   color: #dc2626;
   font-weight: 600;
 }
 
-.generatedText {
+.value.regular {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* Secciones de Total */
+.totalesSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #e0e7ff;
+  background: #f8faff;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* Diagramas */
+.diagramSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.diagramItem {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.diagramItem:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.diagramTitle {
+  color: #007bff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e0e7ff;
+}
+
+.diagramDetails p {
+  margin: 0.5rem 0;
+  color: #374151;
+}
+
+.diagramImageContainer {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.diagramImage {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.diagramMissing {
+  text-align: center;
+  padding: 2rem;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.missingText {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Texto Generado */
+.fullWidthSection {
+  width: 100%;
+}
+
+.generatedText, .informeContent {
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   line-height: 1.6;
   color: #374151;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #007bff #f1f5f9;
 }
 
-.generatedText p {
+.generatedText p, .informeContent p {
   margin: 0;
   text-align: justify;
 }
 
 .generatedText strong {
-  color: #333ff0;
+  color: #007bff;
   font-weight: 600;
 }
 
-.buttonGroup {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  padding-top: 2rem;
-  border-top: 2px solid #f0f4ff;
-}
-
-.primaryButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #333ff0 0%, #2938d6 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(51, 63, 240, 0.3);
-}
-
-.primaryButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(51, 63, 240, 0.4);
-}
-
-.secondaryButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: white;
-  color: #333ff0;
-  border: 2px solid #333ff0;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.secondaryButton:hover {
-  background: #f0f4ff;
-  transform: translateY(-2px);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .container {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-  
-  .title {
-    font-size: 2rem;
-  }
-  
-  .summaryItem {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  .buttonGroup {
-    flex-direction: column;
-  }
-  
-  .section {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .title {
-    font-size: 1.7rem;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-  
-  .sectionTitle {
-    font-size: 1.2rem;
-  }
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.section {
-  animation: fadeIn 0.6s ease-out;
-}
-
-/* Scroll suave para texto largo */
-.generatedText {
-  max-height: 400px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #333ff0 #f1f5f9;
-}
-
-.generatedText::-webkit-scrollbar {
+/* Scrollbars */
+.generatedText::-webkit-scrollbar,
+.informeContent::-webkit-scrollbar {
   width: 6px;
 }
 
-.generatedText::-webkit-scrollbar-track {
+.generatedText::-webkit-scrollbar-track,
+.informeContent::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 3px;
 }
 
-.generatedText::-webkit-scrollbar-thumb {
-  background: #333ff0;
+.generatedText::-webkit-scrollbar-thumb,
+.informeContent::-webkit-scrollbar-thumb {
+  background: #007bff;
   border-radius: 3px;
 }
 
-.generatedText::-webkit-scrollbar-thumb:hover {
-  background: #2938d6;
+.generatedText::-webkit-scrollbar-thumb:hover,
+.informeContent::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
 }
 
+/* Adecuaciones */
+.adecuacionesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-/* Estilos para los botones */
+.adecuacionItem {
+  padding: 0.75rem;
+  background: #e8f4fd;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+  color: #2c3e50;
+  transition: all 0.2s ease;
+}
+
+.adecuacionItem:hover {
+  background: #dbeafe;
+  transform: translateX(5px);
+}
+
+/* === BOTONES (MANTENIDOS TAL CUAL) === */
 .buttonGroup {
   display: flex;
   gap: 15px;
@@ -273,12 +306,12 @@
 }
 
 .primaryButton {
-  background-color: #27ae60;
+  background-color: #007bff;
   color: white;
 }
 
 .primaryButton:hover {
-  background-color: #219653;
+  background-color: #0069d9;
   transform: translateY(-2px);
 }
 
@@ -315,7 +348,7 @@
   transform: translateY(-2px);
 }
 
-/* Estilos para el modal de vista previa - Versión Sin Header */
+/* Modal */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -332,11 +365,6 @@
   animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .modal {
   background: white;
   border-radius: 16px;
@@ -346,23 +374,10 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-  transform: scale(0.95);
   animation: modalSlideIn 0.3s ease-out forwards;
   position: relative;
 }
 
-@keyframes modalSlideIn {
-  from { 
-    transform: scale(0.95) translateY(20px);
-    opacity: 0;
-  }
-  to { 
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Botón de cerrar flotante */
 .closeButton {
   position: absolute;
   top: 10px;
@@ -416,7 +431,7 @@
   border-top: 1px solid #e9ecef;
 }
 
-/* Botones modernizados */
+/* Botones del Modal */
 .printButton, .pdfButton {
   padding: 14px 28px;
   border: none;
@@ -465,7 +480,7 @@
   box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
 }
 
-/* Efecto de ripple en botones */
+/* Efecto de ripple en botones del modal */
 .printButton::after, .pdfButton::after {
   content: '';
   position: absolute;
@@ -484,107 +499,7 @@
   height: 300px;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .modal {
-    width: 95%;
-    height: 92%;
-    border-radius: 14px;
-  }
-  
-  .closeButton {
-    top: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
-    font-size: 20px;
-  }
-  
-  .modalButtons {
-    flex-direction: column;
-    padding: 16px;
-    gap: 12px;
-  }
-  
-  .printButton, .pdfButton {
-    width: 100%;
-    justify-content: center;
-    padding: 12px 20px;
-  }
-}
-
-/* Efecto de cierre del modal */
-.modal.closing {
-  animation: modalSlideOut 0.2s ease-in forwards;
-}
-
-@keyframes modalSlideOut {
-  from { 
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-  to { 
-    transform: scale(0.95) translateY(20px);
-    opacity: 0;
-  }
-}
-
-/* Título integrado en el contenido opcional */
-.modalTitle {
-  text-align: center;
-  padding: 20px 20px 10px;
-  margin: 0;
-  color: #2c3e50;
-  font-size: 18px;
-  font-weight: 600;
-  background: white;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.printButton {
-  padding: 10px 20px;
-  background-color: #16a085;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.printButton:hover {
-  background-color: #1abc9c;
-  transform: translateY(-2px);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .buttonGroup {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .primaryButton, .secondaryButton, .pdfButton, .previewButton {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .modal {
-    width: 95%;
-    height: 95%;
-  }
-  
-  .modalButtons {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .printButton, .pdfButton {
-    width: 100%;
-    max-width: 200px;
-  }
-}
-
-/* Contenedor de firmas */
+/* Firmas */
 .signaturesContainer {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -624,11 +539,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.signatureDetails p {
-  margin: 8px 0;
-  color: #34495e;
-}
-
 .signatureImageContainer {
   text-align: center;
   margin-top: 15px;
@@ -645,44 +555,32 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.signatureDate {
-  margin-top: 10px;
-  font-size: 12px;
-  color: #7f8c8d;
-  font-style: italic;
-}
-
 .signatureMissing {
   text-align: center;
   padding: 30px;
-  background-color: #f8d7da;
+  background: #fee;
   border-radius: 8px;
-  border: 1px dashed #e74c3c;
+  border: 1px dashed #f44336;
 }
 
-.missingText {
-  color: #c0392b;
-  font-weight: 600;
+/* Observaciones */
+.observacionesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .signaturesContainer {
-    grid-template-columns: 1fr;
-  }
-  
-  .signatureItem {
-    padding: 15px;
-  }
-}
-
-/* Estilos para las nuevas secciones */
-.diagramSummary {
+.observacionItem {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #333ff0;
 }
 
+/* Tablas de Pruebas */
 .testSummary {
   overflow-x: auto;
   margin-top: 15px;
@@ -698,12 +596,12 @@
 }
 
 .summaryTable th {
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #e9ecef;
+  color: #333ff0;
+  border-bottom: 2px solid #e0e7ff;
 }
 
 .summaryTable td {
@@ -712,145 +610,143 @@
 }
 
 .highlightRow {
-  background: #f8f9fa;
+  background: #f0f4ff;
   font-weight: 600;
 }
 
 .highlightRow .label {
-  text-align: right;
-  padding-right: 15px;
+  color: #333ff0;
 }
 
+/* Factor Grid */
 .factorGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
 }
 
-.observacionesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 12px;
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.observacionItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 4px solid #3498db;
+@keyframes modalSlideIn {
+  from { 
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+  to { 
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
-.observacionItem .bueno {
-  color: #27ae60;
-  font-weight: 600;
+@keyframes modalSlideOut {
+  from { 
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to { 
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
 }
 
-.observacionItem .regular {
-  color: #f39c12;
-  font-weight: 600;
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .threeColumns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .totalesSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.observacionItem .malo {
-  color: #e74c3c;
-  font-weight: 600;
-}
-
-.adecuacionesList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.adecuacionItem {
-  padding: 8px 12px;
-  background: #e8f4fd;
-  border-radius: 6px;
-  border-left: 4px solid #3498db;
-}
-
-.informeContent {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.informeContent p {
-  margin: 0;
-  line-height: 1.6;
-  color: #2c3e50;
-}
-
-/* Estilos para Diagramas (similares a firmas) */
-.diagramSummary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.diagramItem {
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 1.5rem;
-  background: #f8f9fa;
-}
-
-.diagramTitle {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 0.5rem;
-}
-
-.diagramDetails {
-  margin-bottom: 1rem;
-}
-
-.diagramDetails p {
-  margin: 0.5rem 0;
-  color: #34495e;
-}
-
-.diagramImageContainer {
-  text-align: center;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-}
-
-.diagramImage {
-  max-width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  border: 1px solid #eee;
-  border-radius: 4px;
-}
-
-.diagramMissing {
-  text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border: 1px dashed #ddd;
-  border-radius: 6px;
-  margin-top: 1rem;
-}
-
-.missingText {
-  color: #7f8c8d;
-  font-style: italic;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .threeColumns {
+    grid-template-columns: 1fr;
+  }
+  
+  .summaryItem {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .buttonGroup {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .primaryButton, .secondaryButton, .pdfButton, .previewButton {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .section {
+    padding: 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+  
+  .modal {
+    width: 95%;
+    height: 95%;
+  }
+  
+  .modalButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .printButton, .pdfButton {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .signaturesContainer,
   .diagramSummary {
     grid-template-columns: 1fr;
+  }
+  
+  .observacionesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .totalesSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.7rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.1rem;
   }
   
   .diagramImage {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './DiagramSelectionStep.css';
+import styles from './DiagramSelectionStep.module.css';
 // Importar imágenes de diagramas (ajusta las rutas según tu estructura)
 //unifilar
 import unifilar1 from '../assets/images/unifilar/unifilar.png';
@@ -71,6 +71,7 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
   });
 
   const [informe, setInforme] = useState(data.informe || '');
+  const [informeTexto, setInformeTexto] = useState(data.informeTexto || '');
 
   // Opciones para selects
   const opcionesFrontera = ['MCM', 'RGP', 'NRP', 'NRO', 'REGO', 'SNT', 'CAMB COM'];
@@ -170,33 +171,36 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       factorData,
       observaciones,
       adecuaciones,
-      informe
+      informe,
+      informeTexto
     });
     nextStep();
   };
 
   return (
-    <div className="diagram-selection-container">
-      <h2>Información Técnica y Diagramas</h2>
-      <p className="subtitle">Complete toda la información técnica requerida</p>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2>Información Técnica y Diagramas</h2>
+        <p className={styles.subtitle}>Complete toda la información técnica requerida</p>
+      </div>
 
       {/* Sección 1: Línea Dedicada y Tipo de Frontera */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Configuración de Línea</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>¿Línea Dedicada?</label>
-            <div className="button-group">
+        <div className={`${styles.formRow} ${styles.twoColumns}`}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>¿Línea Dedicada?</label>
+            <div className={styles.buttonGroup}>
               <button 
                 type="button" 
-                className={lineaDedicada === 'SI' ? 'btn-selected' : 'btn-option'}
+                className={`${styles.btnOption} ${lineaDedicada === 'SI' ? styles.btnSelected : ''}`}
                 onClick={() => setLineaDedicada('SI')}
               >
                 Sí
               </button>
               <button 
                 type="button" 
-                className={lineaDedicada === 'NO' ? 'btn-selected' : 'btn-option'}
+                className={`${styles.btnOption} ${lineaDedicada === 'NO' ? styles.btnSelected : ''}`}
                 onClick={() => setLineaDedicada('NO')}
               >
                 No
@@ -204,12 +208,12 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Tipo de Frontera</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tipo de Frontera</label>
             <select 
               value={tipoFrontera} 
               onChange={(e) => setTipoFrontera(e.target.value)}
-              className="form-select"
+              className={styles.formSelect}
             >
               <option value="">Seleccionar...</option>
               {opcionesFrontera.map(opcion => (
@@ -221,52 +225,52 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       {/* Sección 2: Diagramas */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Selección de Diagramas</h3>
         
-        <div className="diagram-section">
+        <div className={styles.diagramSection}>
           <h4>Diagrama Unifilar</h4>
-          <div className="diagram-grid">
+          <div className={styles.diagramGrid}>
             {diagramOptions.unifilar.map(diagram => (
               <div 
                 key={diagram.id}
-                className={`diagram-card ${selectedDiagrams.unifilar === diagram.id ? 'selected' : ''}`}
+                className={`${styles.diagramCard} ${selectedDiagrams.unifilar === diagram.id ? styles.selected : ''}`}
                 onClick={() => handleDiagramSelect('unifilar', diagram.id, diagram.image)}
               >
-                <img src={diagram.image} alt={diagram.name} />
-                <p>{diagram.name}</p>
+                <img src={diagram.image} alt={diagram.name} className={styles.diagramImage} />
+                <p className={styles.diagramName}>{diagram.name}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="diagram-section">
+        <div className={styles.diagramSection}>
           <h4>Diagrama Fasorial</h4>
-          <div className="diagram-grid">
+          <div className={styles.diagramGrid}>
             {diagramOptions.fasorial.map(diagram => (
               <div 
                 key={diagram.id}
-                className={`diagram-card ${selectedDiagrams.fasorial === diagram.id ? 'selected' : ''}`}
+                className={`${styles.diagramCard} ${selectedDiagrams.fasorial === diagram.id ? styles.selected : ''}`}
                 onClick={() => handleDiagramSelect('fasorial', diagram.id, diagram.image)}
               >
-                <img src={diagram.image} alt={diagram.name} />
-                <p>{diagram.name}</p>
+                <img src={diagram.image} alt={diagram.name} className={styles.diagramImage} />
+                <p className={styles.diagramName}>{diagram.name}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="diagram-section">
+        <div className={styles.diagramSection}>
           <h4>Diagrama de Conexiones</h4>
-          <div className="diagram-grid">
+          <div className={styles.diagramGrid}>
             {diagramOptions.conexiones.map(diagram => (
               <div 
                 key={diagram.id}
-                className={`diagram-card ${selectedDiagrams.conexiones === diagram.id ? 'selected' : ''}`}
+                className={`${styles.diagramCard} ${selectedDiagrams.conexiones === diagram.id ? styles.selected : ''}`}
                 onClick={() => handleDiagramSelect('conexiones', diagram.id, diagram.image)}
               >
-                <img src={diagram.image} alt={diagram.name} />
-                <p>{diagram.name}</p>
+                <img src={diagram.image} alt={diagram.name} className={styles.diagramImage} />
+                <p className={styles.diagramName}>{diagram.name}</p>
               </div>
             ))}
           </div>
@@ -274,10 +278,10 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       {/* Sección 3: Prueba de Transformadores de Potencial (TP's) */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Prueba de Transformadores de Potencial (TP's)</h3>
-        <div className="test-table">
-          <table>
+        <div className={styles.testTable}>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th>Voltaje</th>
@@ -290,28 +294,28 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
             <tbody>
               <tr>
                 <td>V_R</td>
-                <td><input type="number" value={tpData.vRPrimario} onChange={(e) => handleTpChange('vRPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vRSecundario} onChange={(e) => handleTpChange('vRSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vRRtp} onChange={(e) => handleTpChange('vRRtp', e.target.value)} /></td>
-                <td><input type="number" value={tpData.errorVR} onChange={(e) => handleTpChange('errorVR', e.target.value)} /></td>
+                <td><input type="number" value={tpData.vRPrimario || ''} onChange={(e) => handleTpChange('vRPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vRSecundario || ''} onChange={(e) => handleTpChange('vRSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vRRtp || ''} onChange={(e) => handleTpChange('vRRtp', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.errorVR || ''} onChange={(e) => handleTpChange('errorVR', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
                 <td>V_S</td>
-                <td><input type="number" value={tpData.vSPrimario} onChange={(e) => handleTpChange('vSPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vSSecundario} onChange={(e) => handleTpChange('vSSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vSRtp} onChange={(e) => handleTpChange('vSRtp', e.target.value)} /></td>
-                <td><input type="number" value={tpData.errorVS} onChange={(e) => handleTpChange('errorVS', e.target.value)} /></td>
+                <td><input type="number" value={tpData.vSPrimario || ''} onChange={(e) => handleTpChange('vSPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vSSecundario || ''} onChange={(e) => handleTpChange('vSSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vSRtp || ''} onChange={(e) => handleTpChange('vSRtp', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.errorVS || ''} onChange={(e) => handleTpChange('errorVS', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
                 <td>V_T</td>
-                <td><input type="number" value={tpData.vTPrimario} onChange={(e) => handleTpChange('vTPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vTSecundario} onChange={(e) => handleTpChange('vTSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tpData.vTRtp} onChange={(e) => handleTpChange('vTRtp', e.target.value)} /></td>
-                <td><input type="number" value={tpData.errorVT} onChange={(e) => handleTpChange('errorVT', e.target.value)} /></td>
+                <td><input type="number" value={tpData.vTPrimario || ''} onChange={(e) => handleTpChange('vTPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vTSecundario || ''} onChange={(e) => handleTpChange('vTSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.vTRtp || ''} onChange={(e) => handleTpChange('vTRtp', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tpData.errorVT || ''} onChange={(e) => handleTpChange('errorVT', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
-                <td colSpan="4" style={{textAlign: 'right', fontWeight: 'bold'}}>%PROMEDIO:</td>
-                <td><input type="number" value={tpData.errorPromedio} readOnly className="readonly-input" /></td>
+                <td colSpan="4" className={styles.promedioLabel}>%PROMEDIO:</td>
+                <td><input type="number" value={tpData.errorPromedio || ''} readOnly className={styles.readonlyInput} /></td>
               </tr>
             </tbody>
           </table>
@@ -319,10 +323,10 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       {/* Sección 4: Prueba de Transformadores de Corriente (TC's) */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Prueba de Transformadores de Corriente (TC's)</h3>
-        <div className="test-table">
-          <table>
+        <div className={styles.testTable}>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th>Parámetro</th>
@@ -335,28 +339,28 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
             <tbody>
               <tr>
                 <td>I_R</td>
-                <td><input type="number" value={tcData.vRPrimario} onChange={(e) => handleTcChange('vRPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vRSecundario} onChange={(e) => handleTcChange('vRSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vRRtc} onChange={(e) => handleTcChange('vRRtc', e.target.value)} /></td>
-                <td><input type="number" value={tcData.errorVR} onChange={(e) => handleTcChange('errorVR', e.target.value)} /></td>
+                <td><input type="number" value={tcData.vRPrimario || ''} onChange={(e) => handleTcChange('vRPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vRSecundario || ''} onChange={(e) => handleTcChange('vRSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vRRtc || ''} onChange={(e) => handleTcChange('vRRtc', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.errorVR || ''} onChange={(e) => handleTcChange('errorVR', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
                 <td>I_S</td>
-                <td><input type="number" value={tcData.vSPrimario} onChange={(e) => handleTcChange('vSPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vSSecundario} onChange={(e) => handleTcChange('vSSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vSRtc} onChange={(e) => handleTcChange('vSRtc', e.target.value)} /></td>
-                <td><input type="number" value={tcData.errorVS} onChange={(e) => handleTcChange('errorVS', e.target.value)} /></td>
+                <td><input type="number" value={tcData.vSPrimario || ''} onChange={(e) => handleTcChange('vSPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vSSecundario || ''} onChange={(e) => handleTcChange('vSSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vSRtc || ''} onChange={(e) => handleTcChange('vSRtc', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.errorVS || ''} onChange={(e) => handleTcChange('errorVS', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
                 <td>I_T</td>
-                <td><input type="number" value={tcData.vTPrimario} onChange={(e) => handleTcChange('vTPrimario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vTSecundario} onChange={(e) => handleTcChange('vTSecundario', e.target.value)} /></td>
-                <td><input type="number" value={tcData.vTRtc} onChange={(e) => handleTcChange('vTRtc', e.target.value)} /></td>
-                <td><input type="number" value={tcData.errorVT} onChange={(e) => handleTcChange('errorVT', e.target.value)} /></td>
+                <td><input type="number" value={tcData.vTPrimario || ''} onChange={(e) => handleTcChange('vTPrimario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vTSecundario || ''} onChange={(e) => handleTcChange('vTSecundario', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.vTRtc || ''} onChange={(e) => handleTcChange('vTRtc', e.target.value)} className={styles.numberInput} /></td>
+                <td><input type="number" value={tcData.errorVT || ''} onChange={(e) => handleTcChange('errorVT', e.target.value)} className={styles.numberInput} /></td>
               </tr>
               <tr>
-                <td colSpan="4" style={{textAlign: 'right', fontWeight: 'bold'}}>% ERROR PROMEDIO:</td>
-                <td><input type="number" value={tcData.errorPromedio} readOnly className="readonly-input" /></td>
+                <td colSpan="4" className={styles.promedioLabel}>% ERROR PROMEDIO:</td>
+                <td><input type="number" value={tcData.errorPromedio || ''} readOnly className={styles.readonlyInput} /></td>
               </tr>
             </tbody>
           </table>
@@ -364,36 +368,36 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       {/* Sección 5: Factor SIEC */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Factor SIEC</h3>
-        <div className="factor-grid">
-          <div className="form-group">
-            <label>Factor SIEC</label>
-            <input type="number" step="0.001" value={factorData.factorSiec} onChange={(e) => handleFactorChange('factorSiec', e.target.value)} />
+        <div className={styles.factorGrid}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Factor SIEC</label>
+            <input type="number" step="0.001" value={factorData.factorSiec || ''} onChange={(e) => handleFactorChange('factorSiec', e.target.value)} className={styles.numberInput} />
           </div>
-          <div className="form-group">
-            <label>Factor Encontrado</label>
-            <input type="number" step="0.001" value={factorData.factorEncontrado} onChange={(e) => handleFactorChange('factorEncontrado', e.target.value)} />
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Factor Encontrado</label>
+            <input type="number" step="0.001" value={factorData.factorEncontrado || ''} onChange={(e) => handleFactorChange('factorEncontrado', e.target.value)} className={styles.numberInput} />
           </div>
-          <div className="form-group">
-            <label>% Error de Factor</label>
-            <input type="number" step="0.001" value={factorData.errorFactor} onChange={(e) => handleFactorChange('errorFactor', e.target.value)} />
+          <div className={styles.formGroup}>
+            <label className={styles.label}>% Error de Factor</label>
+            <input type="number" step="0.001" value={factorData.errorFactor || ''} onChange={(e) => handleFactorChange('errorFactor', e.target.value)} className={styles.numberInput} />
           </div>
-          <div className="form-group">
-            <label>Factor Final</label>
-            <input type="number" step="0.001" value={factorData.factorFinal} onChange={(e) => handleFactorChange('factorFinal', e.target.value)} />
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Factor Final</label>
+            <input type="number" step="0.001" value={factorData.factorFinal || ''} onChange={(e) => handleFactorChange('factorFinal', e.target.value)} className={styles.numberInput} />
           </div>
-          <div className="form-group">
-            <label>Equipo Patron</label>
-            <input type="number" step="0.001" value={factorData.patron} onChange={(e) => handleFactorChange('equipoPatron', e.target.value)} />
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Equipo Patron</label>
+            <input type="number" step="0.001" value={factorData.equipoPatron || ''} onChange={(e) => handleFactorChange('equipoPatron', e.target.value)} className={styles.numberInput} />
           </div>
         </div>
       </div>
 
      {/* Sección 6: Observaciones Generales */}
-<div className="form-section">
+<div className={styles.formSection}>
   <h3>Observaciones Generales</h3>
-  <div className="observaciones-grid">
+  <div className={styles.observacionesGrid}>
     {[
       { key: 'redMT', label: 'Red MT ( ) BT ( )' },
       { key: 'crucetas', label: 'Crucetas' },
@@ -410,12 +414,12 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
       { key: 'modem', label: 'Modem' },
       { key: 'cableSenal', label: 'Cable de Señal' }
     ].map(equipo => (
-      <div key={equipo.key} className="observacion-item">
-        <label className="observacion-label">{equipo.label}</label>
-        <div className="estado-buttons">
+      <div key={equipo.key} className={styles.observacionItem}>
+        <label className={styles.observacionLabel}>{equipo.label}</label>
+        <div className={styles.estadoButtons}>
           <button
             type="button"
-            className={`estado-btn ${observaciones[equipo.key] === 'Bueno' ? 'estado-btn-bueno selected' : 'estado-btn-bueno'}`}
+            className={`${styles.estadoBtn} ${styles.estadoBtnBueno} ${observaciones[equipo.key] === 'Bueno' ? styles.selected : ''}`}
             onClick={() => handleObservacionChange(equipo.key, 'Bueno')}
             title="Bueno"
           >
@@ -423,7 +427,7 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
           </button>
           <button
             type="button"
-            className={`estado-btn ${observaciones[equipo.key] === 'Regular' ? 'estado-btn-regular selected' : 'estado-btn-regular'}`}
+            className={`${styles.estadoBtn} ${styles.estadoBtnRegular} ${observaciones[equipo.key] === 'Regular' ? styles.selected : ''}`}
             onClick={() => handleObservacionChange(equipo.key, 'Regular')}
             title="Regular"
           >
@@ -431,16 +435,16 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
           </button>
           <button
             type="button"
-            className={`estado-btn ${observaciones[equipo.key] === 'Malo' ? 'estado-btn-malo selected' : 'estado-btn-malo'}`}
+            className={`${styles.estadoBtn} ${styles.estadoBtnMalo} ${observaciones[equipo.key] === 'Malo' ? styles.selected : ''}`}
             onClick={() => handleObservacionChange(equipo.key, 'Malo')}
             title="Malo"
           >
             M
           </button>
         </div>
-        <div className="estado-indicator">
+        <div className={styles.estadoIndicator}>
           {observaciones[equipo.key] && (
-            <span className={`estado-text ${observaciones[equipo.key].toLowerCase()}`}>
+            <span className={`${styles.estadoText} ${styles[observaciones[equipo.key].toLowerCase()]}`}>
               {observaciones[equipo.key].charAt(0)}
             </span>
           )}
@@ -451,9 +455,9 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
 </div>
 
       {/* Sección 7: Adecuaciones y Mejoras */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Adecuaciones y Mejoras</h3>
-        <div className="adecuaciones-grid">
+        <div className={styles.adecuacionesGrid}>
           {[
             { id: 'cambiaroInstalarMedidor', label: 'Cambiar o Instalar medidor' },
             { id: 'cambiaroInstalarCaja', label: 'Cambiar o Instalar caja para el medidor' },
@@ -469,52 +473,74 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
             {id:'cambiaroInstalarDuctosCableSeñal', label:'Cambiar o Instalar ductos para cable de señal'},
             { id: 'otros', label: 'Otros' }
           ].map(item => (
-            <div key={item.id} className="checkbox-group">
-              <label>
+            <div key={item.id} className={styles.checkboxGroup}>
+              <label className={styles.checkboxLabel}>
                 <input 
                   type="checkbox" 
                   checked={adecuaciones[item.id] || false} 
                   onChange={(e) => handleAdecuacionChange(item.id, e.target.checked)} 
+                  className={styles.checkboxInput}
                 />
-                {item.label}
+                <span className={styles.checkboxText}>{item.label}</span>
               </label>
             </div>
           ))}
         </div>
 
         {adecuaciones.otros && (
-          <div className="form-group">
-            <label>Especifique otros:</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Especifique otros:</label>
             <input 
               type="text" 
               value={adecuaciones.otrosTexto || ''} 
               onChange={(e) => setAdecuaciones(prev => ({ ...prev, otrosTexto: e.target.value }))} 
               placeholder="Describa las otras adecuaciones necesarias"
+              className={styles.textInput}
             />
           </div>
         )}
       </div>
 
       {/* Sección 8: Informe */}
-      <div className="form-section">
+      <div className={styles.formSection}>
         <h3>Informe</h3>
-        <div className="form-group">
-          <textarea 
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Tipo de Informe</label>
+          <select 
             value={informe} 
-            onChange={(e) => setInforme(e.target.value)} 
-            placeholder="Escriba aquí el informe completo..."
-            rows="6"
-            className="informe-textarea"
+            onChange={(e) => setInforme(e.target.value)}
+            className={styles.formSelect}
+          >
+            <option value="">Seleccionar tipo de informe...</option>
+            <option value="instalacion_correcta">Instalación Correcta</option>
+            <option value="instalacion_incorrecta">Instalación Incorrecta</option>
+            <option value="medidor_incorrecto">Medidor Incorrecto</option>
+            <option value="frontera_incorrecta">Frontera Incorrecta</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+  
+      {/* Mostrar textarea solo si se selecciona "Otros" */}
+      {informe === 'otros' && (
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Especifique el informe:</label>
+          <textarea 
+            value={informeTexto || ''} 
+            onChange={(e) => setInformeTexto(e.target.value)} 
+            placeholder="Describa el informe..."
+            rows="4"
+            className={styles.informeTextarea}
           />
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Botones de navegación */}
-      <div className="navigation-buttons">
-        <button className="btn-back" onClick={prevStep}>
+      <div className={styles.navigationButtons}>
+        <button className={styles.btnBack} onClick={prevStep}>
           ← Anterior
         </button>
-        <button className="btn-primary" onClick={handleContinue}>
+        <button className={styles.btnPrimary} onClick={handleContinue}>
           Continuar a Firmas →
         </button>
       </div>

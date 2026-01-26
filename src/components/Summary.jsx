@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import styles from './Summary.module.css';
 import logo from '../assets/images/logo-4@3x.png';
@@ -12,12 +12,17 @@ import fasorial3 from '../assets/images/fasorial/fasorial3.png';
 import conexiones1 from '../assets/images/conexiones/conexiones.png';
 import conexiones2 from '../assets/images/conexiones/conexiones2.png';
 import conexiones3 from '../assets/images/conexiones/conexiones3.png';
-import { FiEye, FiDownload, FiPrinter, FiSend, FiX, FiArrowLeft  } from 'react-icons/fi';
+import { FiEye, FiDownload, FiPrinter, FiSend, FiX, FiArrowLeft,FiLoader  } from 'react-icons/fi';
+import toast from "react-hot-toast";
 
 function Summary({ data, prevStep }) {
   const [showPreview, setShowPreview] = useState(false);
   const [pdfHtml, setPdfHtml] = useState('');
   const [base64Logo, setBase64Logo] = useState('');
+  const [marcas, setMarcas] = useState([]);
+  const [tiposPorMarca, setTiposPorMarca] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
   const [signatures, setSignatures] = useState({
   firmaFuncionario: localStorage.getItem('firmaFuncionario') || '',
   firmaSuscriptor: localStorage.getItem('firmaSuscriptor') || '',
@@ -42,6 +47,7 @@ const [diagramImages, setDiagramImages] = useState({
     if (!text) return '';
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   };
+  
 
    // Convertir imagen a base64
   const convertImageToBase64 = (url) => {
@@ -93,6 +99,7 @@ const [diagramImages, setDiagramImages] = useState({
     observaciones,
     adecuaciones,
     informe,
+    informeTexto
   } = data;
 
   // Función para obtener el nombre del diagrama
@@ -144,6 +151,241 @@ const [diagramImages, setDiagramImages] = useState({
         return labels[key] || key;
       });
   };
+
+  useEffect(() => {
+    fetch("http://localhost:5000/marcas")
+      .then((res) => res.json())
+      .then((data) => setMarcas(Array.isArray(data) ? data : []))
+      .catch(() => setMarcas([]));
+  }, []);
+
+  useEffect(() => {
+    const marcasIds = [
+      data.marcaActiva1,
+      data.marcaActiva2,
+      data.marcaReactiva1,
+      data.marcaReactiva2,
+      data.marcaActivaIns1,
+      data.marcaActivaIns2,
+      data.marcaReactivaIns1,
+      data.marcaReactivaIns2
+    ].filter(Boolean);
+
+    marcasIds.forEach((marcaId) => {
+      if (tiposPorMarca[marcaId]) return;
+
+      fetch(`http://localhost:5000/tipos/${marcaId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setTiposPorMarca((prev) => ({
+            ...prev,
+            [marcaId]: Array.isArray(data) ? data : []
+          }));
+        })
+        .catch(() => {
+          setTiposPorMarca((prev) => ({
+            ...prev,
+            [marcaId]: []
+          }));
+        });
+    });
+  }, [
+    data.marcaActiva1,
+    data.marcaActiva2,
+    data.marcaReactiva1,
+    data.marcaReactiva2,
+    data.marcaActivaIns1,
+    data.marcaActivaIns2,
+    data.marcaReactivaIns1,
+    data.marcaReactivaIns2
+  ]);
+    const getMarcaNombre = (id) => {
+      return marcas.find((m) => m.id === Number(id))?.nombre || '';
+    };
+
+    const getTipoNombre = (marcaId, tipoId) =>
+    tiposPorMarca[marcaId]
+      ?.find((t) => t.id === Number(tipoId))
+      ?.nombre || '';
+
+    const resumen = {
+      //encontrado
+      marcaActiva1: getMarcaNombre(data.marcaActiva1),
+      tipoActiva1: getTipoNombre(data.marcaActiva1, data.tipoActiva1),
+    
+
+      marcaActiva2: getMarcaNombre(data.marcaActiva2),
+      tipoActiva2: getTipoNombre(data.marcaActiva2, data.tipoActiva2),
+
+      marcaReactiva1: getMarcaNombre(data.marcaReactiva1),
+      tipoReactiva1: getTipoNombre(data.marcaReactiva1, data.tipoReactiva1),
+
+      marcaReactiva2: getMarcaNombre(data.marcaReactiva2),
+      tipoReactiva2: getTipoNombre(data.marcaReactiva2, data.tipoReactiva2),
+
+      //Instalado
+      marcaActivaIns1: getMarcaNombre(data.marcaActivaIns1),
+      tipoActivaIns1: getTipoNombre(data.marcaActivaIns1, data.tipoActivaIns1),
+
+      marcaActivaIns2: getMarcaNombre(data.marcaActivaIns2),
+      tipoActivaIns2: getTipoNombre(data.marcaActivaIns2, data.tipoActivaIns2),
+
+      marcaReactivaIns1: getMarcaNombre(data.marcaReactivaIns1),
+      tipoReactivaIns1: getTipoNombre(data.marcaReactivaIns1, data.tipoReactivaIns1),
+
+      marcaReactivaIns2: getMarcaNombre(data.marcaReactivaIns2),
+      tipoReactivaIns2: getTipoNombre(data.marcaReactivaIns2, data.tipoReactivaIns2),
+    };
+
+    const TIPO_INFORME_MAP = {
+      visita_sitio: 'Se realizó visita al sitio encontrando etc ...',
+      instalacion_completada: 'Instalación completada',
+      medicion_realizada: 'Medición realizada',
+      pruebas_completadas: 'Pruebas completadas',
+      documentacion_entregada: 'Documentación entregada',
+      otro: 'Otro'
+    };
+
+    // Función para obtener el texto legible
+    const getTipoInformeText = () => {
+      // Si es "otro" y hay texto personalizado, mostrar ese
+      if (data.tipoInforme === 'otro' && data.tipoInformeOtro) {
+        return data.tipoInformeOtro;
+      }
+      
+      // Para cualquier valor, buscar en el mapa
+      return TIPO_INFORME_MAP[data.tipoInforme] || data.tipoInforme || 'No especificado';
+    };
+
+
+    const INFORME_MAP = {
+      instalacion_correcta: 'Instalación Correcta',
+      instalacion_incorrecta: 'Instalación Incorrecta',
+      medidor_incorrecto: 'Medidor Incorrecto',
+      frontera_incorrecta: 'Frontera Incorrecta',
+      otros: 'otros'
+    };
+
+    const getInformeDisplayText = () => {
+      if (informe === 'otros' && informeTexto) {
+        return informeTexto;
+    }
+    return INFORME_MAP[informe] || informe || 'No especificado';
+    };
+  
+  
+    const handleFinalizar = async () => {
+      setLoading(true);
+      setMessage(null);
+
+      const token = localStorage.getItem("token");
+      
+      // Preparar los datos para enviar
+      const reviewData = {
+        // Información principal
+        numero_acta: data.numero_acta || generarNumeroActa(),
+        ciudad: data.ciudad,
+        resultado: data.resultado,
+        codigo_suscriptor: data.codigo,
+        codigo_asic: data.asic,
+        solicitud_numero: data.solicitudNo,
+        revision_numero: data.revisionNo,
+        
+        // Cliente
+        nombre: data.nombre,
+        direccion: data.direccion,
+        
+        // Representantes
+        otroRepresentante: data.otroRepresentante,
+        ccOtroRepresentante: data.ccOtroRepresentante,
+        usuarioVisita: data.usuarioVisita,
+        documentoVisitante: data.documentoVisitante,
+        tipoUsuario: data.tipoUsuario,
+        derecho: data.derecho,
+        
+        // Configuración
+        dependencia: data.dependencia,
+        contratista: data.contratista,
+        
+        // Irregularidades
+        codigosIrregularidades: data.codigosIrregularidades,
+        irregularidadCorrida: data.irregularidadCorrida,
+        medidorRetirado: data.medidorRetirado,
+        tipoEvidencia: data.tipoEvidencia,
+        tipoInforme: data.tipoInforme,
+        tipoInformeOtro: data.tipoInformeOtro,
+        
+        // User data
+        userId: userData.id,
+        representante_emsa: userData.name,
+        cc_representante_emsa: userData.cc
+      };
+
+      // Usar toast.promise para manejar la promesa
+      toast.promise(
+        // La promesa que queremos manejar
+        (async () => {
+          console.log('token:', token);
+          console.log('Enviando datos:', reviewData);
+          
+          const response = await fetch('http://localhost:5000/reviews', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(reviewData),
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Error al guardar el acta');
+          }
+          
+          return result; // Esto se pasará a .then() del toast
+        })(),
+        
+        // Estados del toast
+        {
+          loading: 'Guardando acta...',
+          success: (result) => {
+            // Redirigir después de un tiempo
+            setTimeout(() => {
+              window.location.reload();
+            }, 4000);
+            
+            return `¡Acta ${result.data.numero_acta} guardada exitosamente!`;
+          },
+          error: (err) => {
+            // También puedes mantener el setMessage si lo necesitas para otros componentes
+            setMessage({
+              type: 'error',
+              text: err.message
+            });
+            return `Error: ${err.message}`;
+          },
+        },
+        
+        // Opciones adicionales (opcional)
+        {
+          duration: 3000,
+          position: 'bottom-center',
+          style: {
+            minWidth: '300px',
+          },
+          // Para que el toast de éxito dure más
+          success: {
+            duration: 4000,
+          },
+          error: {
+            duration: 4000,
+          },
+        }
+      ).finally(() => {
+        setLoading(false);
+      });
+    };
 
   // Generar HTML para el PDF
   const generatePDFHtml = () => {
@@ -625,6 +867,65 @@ const [diagramImages, setDiagramImages] = useState({
   font-style: italic;
   font-size: 14px;
 }
+  .firma-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.firma-table td {
+  padding: 8px;
+  vertical-align: middle;
+}
+
+/* Encabezados */
+.firma-header {
+  text-align: left;
+  font-weight: bold;
+  background-color: #e9ecef;
+}
+
+/* Filas con label + valor */
+.firma-row {
+  display: flex;
+  align-items: center;
+}
+
+/* Etiqueta (NOMBRE, FIRMA, CC...) */
+.firma-text {
+  font-weight: bold;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+/* Valor centrado */
+.firma-value {
+  flex: 1;
+  text-align: center;
+  font-size: 12px; 
+}
+
+/* Contenedor de la firma */
+.firma-imagen {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Imagen de la firma */
+.firma-imagen img {
+  width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  border: none;
+}
+
+/* Texto cuando no hay firma */
+.firma-faltante {
+  font-style: italic;
+  color: #6c757d;
+  text-align: center;
+}
   </style>
 </head>
 <body>
@@ -634,7 +935,7 @@ const [diagramImages, setDiagramImages] = useState({
         <table class="header-table">
             <tr>
                 <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                    <img src="${base64Logo}" alt="Logo" style="height:80px;"/>
+                    <img src="${base64Logo}" alt="Logo" style="height: 60px;"/>
                 </td>
                 <td style="width: 30%; padding: 0; ">
                     <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
@@ -969,8 +1270,8 @@ const [diagramImages, setDiagramImages] = useState({
             <td class="vertical-header" rowspan="4">ENCONTRADO</td>
             <td>Activa1</td>
             <td>${data.numeroActiva1 || ''}</td>
-            <td>${data.marcaActiva1 ? data.marcaActiva1.toUpperCase() : ''}</td>
-            <td>${data.tipoActiva1 || ''}</td>
+            <td>${resumen.marcaActiva1}</td>
+            <td>${resumen.tipoActiva1 || ''}</td>
             <td>${data.capacidadActiva1 || ''}</td>
             <td>${data.tensionActiva1 || ''}</td>
             <td>${data.claseActiva1 || ''}</td>
@@ -984,8 +1285,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Activa 2</td>
             <td>${data.numeroActiva2 || ''}</td>
-            <td>${data.marcaActiva2 ? data.marcaActiva2.toUpperCase() : ''}</td>
-            <td>${data.tipoActiva2 || ''}</td>
+            <td>${resumen.marcaActiva2}</td>
+            <td>${resumen.tipoActiva2 || ''}</td>
             <td>${data.capacidadActiva2 || ''}</td>
             <td>${data.tensionActiva2 || ''}</td>
             <td>${data.claseActiva2 || ''}</td>
@@ -999,8 +1300,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Reactiva 1</td>
             <td>${data.numeroReactiva1 || ''}</td>
-            <td>${data.marcaReactiva1 ? data.marcaReactiva1.toUpperCase() : ''}</td>
-            <td>${data.tipoReactiva1 || ''}</td>
+            <td>${resumen.marcaReactiva1 || ''}</td>
+            <td>${resumen.tipoReactiva1 || ''}</td>
             <td>${data.capacidadReactiva1 || ''}</td>
             <td>${data.tensionReactiva1 || ''}</td>
             <td>${data.claseReactiva1 || ''}</td>
@@ -1014,8 +1315,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Reactiva 2</td>
             <td>${data.numeroReactiva2 || ''}</td>
-            <td>${data.marcaReactiva2 ? data.marcaReactiva2.toUpperCase() : ''}</td>
-            <td>${data.tipoReactiva2 || ''}</td>
+            <td>${resumen.marcaReactiva2 }</td>
+            <td>${resumen.tipoReactiva2 || ''}</td>
             <td>${data.capacidadReactiva2 || ''}</td>
             <td>${data.tensionReactiva2 || ''}</td>
             <td>${data.claseReactiva2 || ''}</td>
@@ -1030,8 +1331,8 @@ const [diagramImages, setDiagramImages] = useState({
             <td class="vertical-header" rowspan="4">INSTALADO</td>
             <td>Activa 1</td>
             <td>${data.numeroActivaIns1 || ''}</td>
-            <td>${data.marcaActivaIns1 ? data.marcaActivaIns1.toUpperCase() : ''}</td>
-            <td>${data.tipoActivaIns1 || ''}</td>
+            <td>${resumen.marcaActivaIns1 || ''}</td>
+            <td>${resumen.tipoActivaIns1 || ''}</td>
             <td>${data.capacidadActivaIns1 || ''}</td>
             <td>${data.tensionActivaIns1 || ''}</td>
             <td>${data.claseActivaIns1 || ''}</td>
@@ -1045,8 +1346,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Activa 2</td>
             <td>${data.numeroActivaIns2 || ''}</td>
-            <td>${data.marcaActivaIns2 ? data.marcaActivaIns2.toUpperCase() : ''}</td>
-            <td>${data.tipoActivaIns2 || ''}</td>
+            <td>${resumen.marcaActivaIns2 || ''}</td>
+            <td>${resumen.tipoActivaIns2 || ''}</td>
             <td>${data.capacidadActivaIns2 || ''}</td>
             <td>${data.tensionActivaIns2 || ''}</td>
             <td>${data.claseActivaIns2 || ''}</td>
@@ -1060,8 +1361,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Reactiva 1</td>
             <td>${data.numeroReactivaIns1 || ''}</td>
-            <td>${data.marcaReactivaIns1 ? data.marcaReactivaIns1.toUpperCase() : ''}</td>
-            <td>${data.tipoReactivaIns1 || ''}</td>
+            <td>${resumen.marcaReactivaIns1 || ''}</td>
+            <td>${resumen.tipoReactivaIns1 || ''}</td>
             <td>${data.capacidadReactivaIns1 || ''}</td>
             <td>${data.tensionReactivaIns1 || ''}</td>
             <td>${data.claseReactivaIns1 || ''}</td>
@@ -1075,8 +1376,8 @@ const [diagramImages, setDiagramImages] = useState({
         <tr>
             <td>Reactiva 2</td>
             <td>${data.numeroReactivaIns2 || ''}</td>
-            <td>${data.marcaReactivaIns2 ? data.marcaReactivaIns2.toUpperCase() : ''}</td>
-            <td>${data.tipoReactivaIns2 || ''}</td>
+            <td>${resumen.marcaReactivaIns2 || ''}</td>
+            <td>${resumen.tipoReactivaIns2 || ''}</td>
             <td>${data.capacidadReactivaIns2 || ''}</td>
             <td>${data.tensionReactivaIns2 || ''}</td>
             <td>${data.claseReactivaIns2 || ''}</td>
@@ -1884,7 +2185,7 @@ const [diagramImages, setDiagramImages] = useState({
         <td colspan="7" class="text-justify" style="border: 1px solid #34495e; padding: 8px; font-size: 10px; line-height: 1.4; background-color: #f8f9fa;">
             <p style="margin: 0;">
                 Informe: <strong>
-                ${data.tipoInforme === 'otro' ? data.tipoInformeOtro ||'' : data.tipoInforme || ''}
+                ${getTipoInformeText()}
                 </strong>
             </p>
         </td>
@@ -1903,48 +2204,93 @@ const [diagramImages, setDiagramImages] = useState({
     <!-- TABLA DE FIRMAS (3 COLUMNAS) -->
     <table class="firma-table">
         <tr>
-            <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-            <td style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
-            <td style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
+            <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
+            <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
+            <td class="firma-header" style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
         </tr>
         <tr>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${userData.name || 'No especificado'}</td>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
-            <td class="firma-label" style="text-align: left; width: 33.34%;">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${userData.name || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${data.usuarioVisita || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${data.otroRepresentante || 'No especificado'}</div>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaFuncionario
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaFuncionario}" alt="Firma Funcionario">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaSuscriptor
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaSupervisor
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaSupervisor}" alt="Firma Supervisor">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
         </tr>
         <tr>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">
-                <div class="firma-container" style="justify-content: flex-start;">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaFuncionario ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" style="max-width: 100px; max-height: 100px;"/></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">
-                <div class="firma-container" style="justify-content: flex-start;">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaSuscriptor ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" style="max-width: 100px; max-height: 40px;"/></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-            <td class="firma-label" style="text-align: left; width: 33.34%;">
-                <div class="firma-container" style="justify-content: flex-start;">
-                    <span class="firma-text">FIRMA:</span>
-                    ${signatures.firmaSupervisor ? 
-                        `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" style="max-width: 100px; max-height: 40px;"/></div>` : 
-                        '<span class="firma-faltante">No disponible</span>'
-                    }
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
-            <td class="firma-label" style="text-align: left; width: 33.33%;">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
-            <td class="firma-label" style="text-align: left; width: 33.34%;">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${userData.cc || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${data.documentoVisitante || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div>
+            </div>
+          </td>
         </tr>
     </table>
 </div>
@@ -1957,7 +2303,7 @@ const [diagramImages, setDiagramImages] = useState({
       <table class="header-table">
         <tr>
           <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-            <img src="${base64Logo}" alt="Logo" class="logo-img"/>
+            <img src="${base64Logo}" alt="Logo" style="height: 60px;"/>
           </td>
           <td style="width: 30%; padding: 0;">
             <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
@@ -2262,57 +2608,107 @@ const [diagramImages, setDiagramImages] = useState({
       </tr>
       <tr>
         <td style="text-align: justify; padding: 8px; font-size: 12px">
-          ${data.informe || 'LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.'}
+          ${getInformeDisplayText()}
+        </td>
+      </tr>
+      <tr>
+        <td style="text-align: justify; padding: 8px; font-size: 12px">
+          LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.
         </td>
       </tr>
     </table>
 
     <!-- Firmas hoja 2 -->
     <table class="firma-table">
-      <tr>
-        <td>FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-        <td>SUPERVISOR Y/O INTERVENTOR</td>
-        <td>SUSCRIPTOR O USUARIO</td>
-      </tr>
-      <tr>
-        <td class="firma-label">NOMBRE: ${userData.name || 'No especificado'}</td>
-        <td class="firma-label">NOMBRE: ${data.otroRepresentante || 'No especificado'}</td>
-        <td class="firma-label">NOMBRE: ${data.usuarioVisita || 'No especificado'}</td>
-      </tr>
-      <tr>
-        <td class="firma-label">
-          <div class="firma-container">
-            <span class="firma-text">FIRMA:</span>
-            ${signatures.firmaFuncionario ? 
-              `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario" /></div>` : 
-              '<span class="firma-faltante">No disponible</span>'
-            }
-          </div>
-        </td>
-        <td class="firma-label">
-          <div class="firma-container">
-            <span class="firma-text">FIRMA:</span>
-            ${signatures.firmaSupervisor ? 
-              `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor" /></div>` : 
-              '<span class="firma-faltante">No disponible</span>'
-            }
-          </div>
-        </td>
-        <td class="firma-label">
-          <div class="firma-container">
-            <span class="firma-text">FIRMA:</span>
-            ${signatures.firmaSuscriptor ? 
-              `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor" /></div>` : 
-              '<span class="firma-faltante">No disponible</span>'
-            }
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="firma-label">CC/TP/MP/CODIGO: ${userData.cc || 'No especificado'}</td>
-        <td class="firma-label">C.C/TP/MP/CODIGO: ${data.ccOtroRepresentante || 'No especificado'}</td>
-        <td class="firma-label">C.C/TP/MP/CODIGO: ${data.documentoVisitante || 'No especificado'}</td>
-      </tr>
+        <tr>
+            <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
+            <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
+            <td class="firma-header" style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUPERVISOR Y/O INTERVENTOR</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${userData.name || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${data.usuarioVisita || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">NOMBRE:</span>
+              <div class="firma-value">${data.otroRepresentante || 'No especificado'}</div>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaFuncionario
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaFuncionario}" alt="Firma Funcionario">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaSuscriptor
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">FIRMA:</span>
+              <div class="firma-value">
+                ${signatures.firmaSupervisor
+                  ? `<div class="firma-imagen">
+                      <img src="${signatures.firmaSupervisor}" alt="Firma Supervisor">
+                    </div>`
+                  : '<span class="firma-faltante">No disponible</span>'
+                }
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${userData.cc || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${data.documentoVisitante || 'No especificado'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="firma-row">
+              <span class="firma-text">C.C/TP/MP/CODIGO:</span>
+              <div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div>
+            </div>
+          </td>
+        </tr>
     </table>
   </div>
 </body>
@@ -2406,13 +2802,16 @@ const handleCloseModal = () => {
       </div>
 
       <div className={styles.summaryGrid}>
-        {/* Sección: Información Principal */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>📋 Información Principal</h2>
-          <div className={styles.sectionContent}>
+      {/* Sección: Información Principal */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📋 Información Principal</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Número de Acta:</span>
-              <span className={styles.value}>{data.numero_acta || '1001'}</span>
+              <span className={styles.value}>{data.numero_acta || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Ciudad:</span>
@@ -2422,13 +2821,14 @@ const handleCloseModal = () => {
               <span className={styles.label}>Resultado:</span>
               <span className={styles.value}>{data.resultado || 'No especificado'}</span>
             </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Solicitud No:</span>
+              <span className={styles.value}>{data.solicitudNo || 'No especificado'}</span>
+            </div>
           </div>
-        </div>
-
-        {/* Sección: Códigos y Solicitud */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>🔢 Códigos y Números</h2>
-          <div className={styles.sectionContent}>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Código Suscriptor:</span>
               <span className={styles.value}>{data.codigo || 'No ingresado'}</span>
@@ -2438,39 +2838,76 @@ const handleCloseModal = () => {
               <span className={styles.value}>{data.asic || 'No ingresado'}</span>
             </div>
             <div className={styles.summaryItem}>
-              <span className={styles.label}>Solicitud No:</span>
-              <span className={styles.value}>{data.solicitudNo || 'No especificado'}</span>
-            </div>
-            <div className={styles.summaryItem}>
               <span className={styles.label}>Revisión No:</span>
               <span className={styles.value}>{data.revisionNo || 'No especificado'}</span>
             </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Dependencia:</span>
+              <span className={styles.value}>{data.dependencia || 'No especificada'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Contratista:</span>
+              <span className={styles.value}>{data.contratista || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Item Pago 1:</span>
+              <span className={styles.value}>{data.itemPago || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Item Pago 2:</span>
+              <span className={styles.value}>{data.itemPago2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Item Pago 3:</span>
+              <span className={styles.value}>{data.itemPago3 || 'No especificado'}</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Sección: Dirección */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>📍 Ubicación</h2>
-          <div className={styles.sectionContent}>
+      {/* Sección: Datos del Cliente */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🏢 Datos del Cliente</h2>
+        
+        <div className={styles.threeColumns}>
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Nombre del cliente:</span>
-              <span className={styles.value}>{data.nombre || ''}</span>
+              <span className={styles.value}>{data.nombre || 'No especificado'}</span>
+            </div>
+          </div>
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
               <span className={styles.label}>Dirección:</span>
               <span className={styles.value}>{data.direccion || 'No especificada'}</span>
             </div>
           </div>
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Uso de Derecho:</span>
+              <span className={styles.value}>{data.derecho || 'No especificado'}</span>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Sección: Representantes */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>👥 Representantes</h2>
-          <div className={styles.sectionContent}>
+      {/* Sección: Representantes y Usuarios */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>👥 Representantes y Usuarios</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Representantes EMSA */}
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Representante EMSA:</span>
               <span className={styles.value}>{userData.name || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
-              <span className={styles.label}>CC Representante EMSA:</span>
+              <span className={styles.label}>C.C. EMSA:</span>
               <span className={styles.value}>{userData.cc || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
@@ -2478,1978 +2915,1334 @@ const handleCloseModal = () => {
               <span className={styles.value}>{data.otroRepresentante || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
-              <span className={styles.label}>CC Otro Representante:</span>
+              <span className={styles.label}>Doc. Representante:</span>
               <span className={styles.value}>{data.ccOtroRepresentante || 'No especificado'}</span>
             </div>
           </div>
-        </div>
-
-        {/* Sección: Visita */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>👤 Información de Visita</h2>
-          <div className={styles.sectionContent}>
+          
+          {/* Columna 2 - Usuario Visitado */}
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Usuario que recibe:</span>
               <span className={styles.value}>{data.usuarioVisita || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
-              <span className={styles.label}>Documento Visitante:</span>
+              <span className={styles.label}>Doc. Visitante:</span>
               <span className={styles.value}>{data.documentoVisitante || 'No especificado'}</span>
             </div>
             <div className={styles.summaryItem}>
               <span className={styles.label}>Tipo de Usuario:</span>
-              <span className={styles.value}>
-                {data.tipoUsuario ? capitalize(data.tipoUsuario) : 'No especificado'}
-              </span>
+              <span className={styles.value}>{data.tipoUsuario || 'No especificado'}</span>
             </div>
           </div>
-        </div>
-
-        {/* Sección: Derecho */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>⚖️ Derecho del Usuario</h2>
-          <div className={styles.sectionContent}>
+          
+          {/* Columna 3 - Fecha y Hora (generados automáticamente) */}
+          <div className={styles.column}>
             <div className={styles.summaryItem}>
-              <span className={styles.label}>Hace uso de su derecho:</span>
-              <span className={`${styles.value} ${data.derecho ? styles[data.derecho] : ''}`}>
-                {data.derecho === 'SI' ? '✅ Sí' : data.derecho === 'NO' ? '❌ No' : 'No especificado'}
-              </span>
+              <span className={styles.label}>Fecha:</span>
+              <span className={styles.value}>{new Date().toLocaleDateString('es-ES', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              })}</span>
             </div>
-          </div>
-        </div>
-
-
-        {/* Sección: Texto Generado */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>📄 Texto Generado</h2>
-          <div className={styles.generatedText}>
-            <p>
-              A los <strong>{new Date().getDate()}</strong> días del mes de <strong>{new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del <strong>{new Date().getFullYear()}</strong>, 
-              siendo las <strong>{new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</strong> se hacen presentes en el inmueble 
-              de la dirección <strong>{data.direccion || '______'}</strong> los representantes de EMSA ESP <strong>{userData.name || '______'}</strong> con C.C: <strong>{userData.cc || '______'}</strong> y <strong>{data.otroRepresentante || '______'}</strong> con
-              C.C: <strong>{data.ccOtroRepresentante || '______'}</strong> en presencia del señor(a) <strong>{data.usuarioVisita || '______'}</strong> con <strong>{data.documentoVisitante || '______'}</strong> calidad de <strong>{data.tipoUsuario ? capitalize(data.tipoUsuario) : '______'}</strong> con el fin de efectuar 
-              una revisión de los equipos de medida e instalaciones del inmueble con el código indicado.
-              Habiéndose identificado los empleados y/o contratistas informan al usuario que de acuerdo 
-              al Contrato de Servicios Públicos con Condiciones Uniformes vigente su derecho a solicitar 
-              asesoría y/o participación de un técnico particular, o de cualquier persona para que sirva 
-              de testigo en el proceso de revisión. Sin embargo, si transcurre un plazo máximo de 15 minutos 
-              sin hacerse presente se hará la revisión sin su presencia. El cliente/usuario hace uso de su derecho: <strong>SÍ ({data.derecho === 'SI' ? 'X' : ' '})</strong> <strong>NO ({data.derecho === 'NO' ? 'X' : ' '})</strong>. Transcurrido ese tiempo, se procede a hacer la revisión.
-            </p>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Hora:</span>
+              <span className={styles.value}>{new Date().toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Mes:</span>
+              <span className={styles.value}>{new Date().toLocaleString('es-ES', { month: 'long' })}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Año:</span>
+              <span className={styles.value}>{new Date().getFullYear()}</span>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Sección: Texto Generado (OCUPA TODO EL ANCHO) */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📝 Texto Generado</h2>
+        
+        <div className={styles.fullWidthSection}>
+          <div className={styles.generatedText}>
+                <p>
+                  A los <strong>{new Date().getDate()}</strong> días del mes de <strong>{new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del <strong>{new Date().getFullYear()}</strong>, 
+                  siendo las <strong>{new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</strong> se hacen presentes en el inmueble 
+                  de la dirección <strong>{data.direccion || '______'}</strong> los representantes de EMSA ESP <strong>{userData.name || '______'}</strong> con C.C: <strong>{userData.cc || '______'}</strong> y <strong>{data.otroRepresentante || '______'}</strong> con
+                  C.C: <strong>{data.ccOtroRepresentante || '______'}</strong> en presencia del señor(a) <strong>{data.usuarioVisita || '______'}</strong> con <strong>{data.documentoVisitante || '______'}</strong> calidad de <strong>{data.tipoUsuario ? capitalize(data.tipoUsuario) : '______'}</strong> con el fin de efectuar 
+                  una revisión de los equipos de medida e instalaciones del inmueble con el código indicado.
+                  Habiéndose identificado los empleados y/o contratistas informan al usuario que de acuerdo 
+                  al Contrato de Servicios Públicos con Condiciones Uniformes vigente su derecho a solicitar 
+                  asesoría y/o participación de un técnico particular, o de cualquier persona para que sirva 
+                  de testigo en el proceso de revisión. Sin embargo, si transcurre un plazo máximo de 15 minutos 
+                  sin hacerse presente se hará la revisión sin su presencia. El cliente/usuario hace uso de su derecho: <strong>SÍ ({data.derecho === 'SI' ? 'X' : ' '})</strong> <strong>NO ({data.derecho === 'NO' ? 'X' : ' '})</strong>. Transcurrido ese tiempo, se procede a hacer la revisión.
+                </p>
+          </div>
+        </div>
+      </div>
+    </div>
 
       {/* Sección: Información General del Cliente */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>👤 Información del Cliente</h2>
-  <div className={styles.sectionContent}>
-    <div className={styles.summaryGrid}>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Nombre:</span>
-        <span className={styles.value}>{data.nombre || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Dirección:</span>
-        <span className={styles.value}>{data.direccion || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Teléfono:</span>
-        <span className={styles.value}>{data.telefono || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Ubicación:</span>
-        <span className={styles.value}>{data.ubicacion || 'No especificado'}</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Características Técnicas */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>⚡ Características Técnicas</h2>
-  <div className={styles.sectionContent}>
-    <div className={styles.summaryGrid}>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Uso del Servicio:</span>
-        <span className={styles.value}>
-          {data.uso === 'R' ? '🏠 Residencial' : 
-           data.uso === 'C' ? '🏢 Comercial' : 
-           data.uso === 'I' ? '🏭 Industrial' : 
-           data.uso === 'O' ? '🏛️ Oficial' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Nivel de Tensión:</span>
-        <span className={styles.value}>{data.nivelTension || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Carga (Kw):</span>
-        <span className={styles.value}>{data.cargaKw || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>N° Familias:</span>
-        <span className={styles.value}>{data.familias || 'No especificado'}</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Configuración Eléctrica */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🔌 Configuración Eléctrica</h2>
-  <div className={styles.sectionContent}>
-    <div className={styles.summaryGrid}>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Protección General:</span>
-        <span className={styles.value}>{data.proteccionGeneral || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Tipo de Acometida:</span>
-        <span className={styles.value}>{data.acometidaTipo || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Longitud Acometida:</span>
-        <span className={styles.value}>
-          {data.acometidaLongitud ? `${data.acometidaLongitud} metros` : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Calibre Acometida:</span>
-        <span className={styles.value}>{data.acometidaCalibre || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>#F #H:</span>
-        <span className={styles.value}>{data.hf || 'No especificado'}</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Equipos de Medida */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>📊 Equipos de Medida</h2>
-  
-  {/* Medidor Encontrado */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔍 Medidor Encontrado</h3>
-    <div className={styles.medidoresGrid}>
-      
-      {/* Activa 1 */}
-      {(data.numeroActivaIns1 || data.marcaActiva1 || data.lecturaActiva1) && (
-        <div className={styles.medidorCard}>
-          <h4 className={styles.medidorType}>Activa 1</h4>
-          <div className={styles.medidorDetails}>
-            <div className={styles.medidorItem}>
-              <span>Número:</span>
-              <strong>{data.numeroActivaIns1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Marca:</span>
-              <strong>{data.marcaActiva1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Lectura:</span>
-              <strong>{data.lecturaActiva1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Capacidad:</span>
-              <strong>{data.capacidadActiva1 || '-'}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Activa 2 */}
-      {(data.numeroActiva2 || data.marcaActiva2 || data.lecturaActiva2) && (
-        <div className={styles.medidorCard}>
-          <h4 className={styles.medidorType}>Activa 2</h4>
-          <div className={styles.medidorDetails}>
-            <div className={styles.medidorItem}>
-              <span>Número:</span>
-              <strong>{data.numeroActiva2 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Marca:</span>
-              <strong>{data.marcaActiva2 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Lectura:</span>
-              <strong>{data.lecturaActiva2 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Capacidad:</span>
-              <strong>{data.capacidadActiva2 || '-'}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Reactiva */}
-      {(data.numeroReactiva || data.marcaReactiva1 || data.lecturaReactiva) && (
-        <div className={styles.medidorCard}>
-          <h4 className={styles.medidorType}>Reactiva</h4>
-          <div className={styles.medidorDetails}>
-            <div className={styles.medidorItem}>
-              <span>Número:</span>
-              <strong>{data.numeroReactiva || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Marca:</span>
-              <strong>{data.marcaReactiva1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Lectura:</span>
-              <strong>{data.lecturaReactiva || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Capacidad:</span>
-              <strong>{data.capacidadReactiva || '-'}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-
-  {/* Medidor Instalado */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔄 Medidor Instalado</h3>
-    <div className={styles.medidoresGrid}>
-      
-      {/* Activa 1 Instalado */}
-      {(data.numeroActivaIns1 || data.marcaActivaIns1 || data.lecturaActivaIns1) && (
-        <div className={styles.medidorCard}>
-          <h4 className={styles.medidorType}>Activa 1</h4>
-          <div className={styles.medidorDetails}>
-            <div className={styles.medidorItem}>
-              <span>Número:</span>
-              <strong>{data.numeroActivaIns1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Marca:</span>
-              <strong>{data.marcaActivaIns1 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Lectura:</span>
-              <strong>{data.lecturaActivaIns1 || '-'}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Activa 2 Instalado */}
-      {(data.numeroActivaIns2 || data.marcaActivaIns2 || data.lecturaActivaIns2) && (
-        <div className={styles.medidorCard}>
-          <h4 className={styles.medidorType}>Activa 2</h4>
-          <div className={styles.medidorDetails}>
-            <div className={styles.medidorItem}>
-              <span>Número:</span>
-              <strong>{data.numeroActivaIns2 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Marca:</span>
-              <strong>{data.marcaActivaIns2 || '-'}</strong>
-            </div>
-            <div className={styles.medidorItem}>
-              <span>Lectura:</span>
-              <strong>{data.lecturaActivaIns2 || '-'}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-
-{/* Sección: Sellos de Medición */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🔐 Sellos de Medición</h2>
-  
-  {/* Medición Activa - Tapa Principal */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>⚡ Medición Activa - Tapa Principal</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.medActivaTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.medActivaNum1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.medActivaE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.medActivaR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.medActivaTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.medActivaNum2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.medActivaE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.medActivaR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.medActivaTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.medActivaNum3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.medActivaE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.medActivaR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.medActivaInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.medActivaInstNum1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.medActivaInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.medActivaInstNum2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.medActivaInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.medActivaInstNum3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Medición Activa - Tapa Bornera */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔩 Medición Activa - Tapa Bornera</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.tapaBorneraActivaTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tapaBorneraActivaNum1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.tapaBorneraActivaE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.tapaBorneraActivaR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.tapaBorneraActivaTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tapaBorneraActivaNum2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.tapaBorneraActivaE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.tapaBorneraActivaR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.tapaBorneraActivaTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tapaBorneraActivaNum3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.tapaBorneraActivaE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.tapaBorneraActivaR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.tapaBorneraActivaInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tapaBorneraActivaInstNum1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.tapaBorneraActivaInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tapaBorneraActivaInstNum2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.tapaBorneraActivaInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tapaBorneraActivaInstNum3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Medición Reactiva - Tapa Principal */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔄 Medición Reactiva - Tapa Principal</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.medReactivaTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.medReactivaNum1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.medReactivaE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.medReactivaR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.medReactivaTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.medReactivaNum2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.medReactivaE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.medReactivaR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.medReactivaTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.medReactivaNum3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.medReactivaE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.medReactivaR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.medReactivaInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.medReactivaInstNum1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.medReactivaInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.medReactivaInstNum2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.medReactivaInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.medReactivaInstNum3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Medición Reactiva - Tapa Bornera */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔩 Medición Reactiva - Tapa Bornera</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.tapaBorneraReactivaTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tapaBorneraReactivaNum1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.tapaBorneraReactivaE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.tapaBorneraReactivaR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.tapaBorneraReactivaTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tapaBorneraReactivaNum2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.tapaBorneraReactivaE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.tapaBorneraReactivaR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.tapaBorneraReactivaTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tapaBorneraReactivaNum3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.tapaBorneraReactivaE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.tapaBorneraReactivaR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.tapaBorneraReactivaInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tapaBorneraReactivaInstNum1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.tapaBorneraReactivaInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tapaBorneraReactivaInstNum2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.tapaBorneraReactivaInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tapaBorneraReactivaInstNum3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Bloque de Pruebas */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🧪 Bloque de Pruebas</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.bloquePruebasTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.bloquePruebasNum1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.bloquePruebasE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.bloquePruebasR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.bloquePruebasTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.bloquePruebasNum2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.bloquePruebasE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.bloquePruebasR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.bloquePruebasInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.bloquePruebasInstNum1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.bloquePruebasInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.bloquePruebasInstNum2 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Transformadores y Celdas */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🏗️ Transformadores y Celdas</h2>
-  
-  {/* TC's */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔌 TC's</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.tcsTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tcsNumero1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.tcsE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.tcsR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.tcsTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tcsNumero2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.tcsE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.tcsR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.tcsTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tcsNumero3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.tcsE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.tcsR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.tcsInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tcsInstNumero1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.tcsInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tcsInstNumero2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.tcsInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tcsInstNumero3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* TP's */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>⚡ TP's</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.tpsTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tpsNumero1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.tpsE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.tpsR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.tpsTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tpsNumero2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.tpsE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.tpsR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.tpsTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tpsNumero3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.tpsE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.tpsR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.tpsInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.tpsInstNumero1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.tpsInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.tpsInstNumero2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.tpsInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.tpsInstNumero3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Celda de Medida */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>📊 Celda de Medida</h3>
-    <div className={styles.sellosGrid}>
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔍 Encontrados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 1:</span>
-            <strong>{data.celdaTipoCol1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.celdaNumero1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 1:</span>
-            <strong>{data.celdaE1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 1:</span>
-            <strong>{data.celdaR1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 2:</span>
-            <strong>{data.celdaTipoCol2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.celdaNumero2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 2:</span>
-            <strong>{data.celdaE2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 2:</span>
-            <strong>{data.celdaR2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Col 3:</span>
-            <strong>{data.celdaTipoCol3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.celdaNumero3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>E 3:</span>
-            <strong>{data.celdaE3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>R 3:</span>
-            <strong>{data.celdaR3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-      
-      <div className={styles.sellosGroup}>
-        <h5 className={styles.sellosSubtitle}>🔄 Instalados</h5>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 1:</span>
-            <strong>{data.celdaInstTipoColor1 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 1:</span>
-            <strong>{data.celdaInstNumero1 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 2:</span>
-            <strong>{data.celdaInstTipoColor2 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 2:</span>
-            <strong>{data.celdaInstNumero2 || 'No especificado'}</strong>
-          </div>
-        </div>
-        <div className={styles.selloTable}>
-          <div className={styles.selloRow}>
-            <span>Tipo/Color 3:</span>
-            <strong>{data.celdaInstTipoColor3 || 'No especificado'}</strong>
-          </div>
-          <div className={styles.selloRow}>
-            <span>Número 3:</span>
-            <strong>{data.celdaInstNumero3 || 'No especificado'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Cálculos de Error */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>📈 Cálculos de Error</h2>
-  
-  {/* Medidor Activa */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>⚡ Medidor Activa</h3>
-    <div className={styles.calculosGrid}>
-      <div className={styles.calculoFase}>
-        <h4>🔴 Fase R</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.activaTensionR || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.activaCorrienteR || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.activaPinstR || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoFase}>
-        <h4>🟡 Fase S</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.activaTensionS || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.activaCorrienteS || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.activaPinstS || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoFase}>
-        <h4>🔵 Fase T</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.activaTensionT || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.activaCorrienteT || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.activaPinstT || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoTotal}>
-        <h4>📊 Total (L-L)</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión Total:</span>
-          <strong>{data.activaTensionTotal || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente Total:</span>
-          <strong>{data.activaCorrienteTotal || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst. Total:</span>
-          <strong>{data.activaPinstTotal || 'No especificado'} W</strong>
-        </div>
-      </div>
-    </div>
-    
-    <div className={styles.calculosResultados}>
-      <div className={styles.resultadoItem}>
-        <span>% Error:</span>
-        <strong className={styles.errorValue}>{data.activaPorcentajeError || 'No especificado'}%</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Giros:</span>
-        <strong>{data.activaGiros || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Tiempo:</span>
-        <strong>{data.activaTiempo || 'No especificado'} S</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Horas:</span>
-        <strong>{data.activaHoras || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Factor de Potencia:</span>
-        <strong>{data.activaFp || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Secuencia RST:</span>
-        <strong>{data.activaRst || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Secuencia RTS:</span>
-        <strong>{data.activaRts || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>W:</span>
-        <strong>{data.activaW || 'No especificado'}</strong>
-      </div>
-    </div>
-  </div>
-
-  {/* Medidor Reactiva */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔄 Medidor Reactiva</h3>
-    <div className={styles.calculosGrid}>
-      <div className={styles.calculoFase}>
-        <h4>🔴 Fase R</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.reactivaTensionR || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.reactivaCorrienteR || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.reactivaPinstR || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoFase}>
-        <h4>🟡 Fase S</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.reactivaTensionS || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.reactivaCorrienteS || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.reactivaPinstS || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoFase}>
-        <h4>🔵 Fase T</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión:</span>
-          <strong>{data.reactivaTensionT || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente:</span>
-          <strong>{data.reactivaCorrienteT || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst.:</span>
-          <strong>{data.reactivaPinstT || 'No especificado'} W</strong>
-        </div>
-      </div>
-      
-      <div className={styles.calculoTotal}>
-        <h4>📊 Total (L-L)</h4>
-        <div className={styles.calculoItem}>
-          <span>Tensión Total:</span>
-          <strong>{data.reactivaTensionTotal || 'No especificado'} V</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>Corriente Total:</span>
-          <strong>{data.reactivaCorrienteTotal || 'No especificado'} A</strong>
-        </div>
-        <div className={styles.calculoItem}>
-          <span>P. Inst. Total:</span>
-          <strong>{data.reactivaPinstTotal || 'No especificado'} W</strong>
-        </div>
-      </div>
-    </div>
-    
-    <div className={styles.calculosResultados}>
-      <div className={styles.resultadoItem}>
-        <span>% Error:</span>
-        <strong className={styles.errorValue}>{data.reactivaPorcentajeError || 'No especificado'}%</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Giros:</span>
-        <strong>{data.reactivaGiros || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Tiempo:</span>
-        <strong>{data.reactivaTiempo || 'No especificado'} S</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Horas:</span>
-        <strong>{data.reactivaHoras || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Factor de Potencia:</span>
-        <strong>{data.reactivaFp || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Secuencia RST:</span>
-        <strong>{data.reactivaRst || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>Secuencia RTS:</span>
-        <strong>{data.reactivaRts || 'No especificado'}</strong>
-      </div>
-      <div className={styles.resultadoItem}>
-        <span>W:</span>
-        <strong>{data.reactivaW || 'No especificado'}</strong>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Pruebas de Funcionamiento */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🧪 Pruebas de Funcionamiento</h2>
-  
-  {/* Medidor Activa */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>⚡ Medidor Activa</h3>
-    <div className={styles.pruebasGrid}>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Conexiones:</span>
-        <span className={`${styles.pruebaValue} ${data.activaConexiones === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.activaConexiones === 'si' ? '✅ Conforme' : data.activaConexiones === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Continuidad:</span>
-        <span className={`${styles.pruebaValue} ${data.activaContinuidad === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.activaContinuidad === 'si' ? '✅ Conforme' : data.activaContinuidad === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Prueba de Puentes:</span>
-        <span className={`${styles.pruebaValue} ${data.activaPuentes === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.activaPuentes === 'si' ? '✅ Conforme' : data.activaPuentes === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Giro en Vacío:</span>
-        <span className={styles.pruebaValue}>
-          {data.activaGiroVacio === 'si' ? '✅ Sí' : data.activaGiroVacio === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Registra:</span>
-        <span className={styles.pruebaValue}>
-          {data.activaRegistra === 'si' ? '✅ Sí' : data.activaRegistra === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Medidor se Frena:</span>
-        <span className={styles.pruebaValue}>
-          {data.activaSeFrena === 'si' ? '✅ Sí' : data.activaSeFrena === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-    </div>
-    
-    {/* Prueba de Integración - Activa */}
-    <div className={styles.integracionSection}>
-      <h4 className={styles.integracionTitle}>📊 Prueba de Integración</h4>
-      <div className={styles.integracionGrid}>
-        <div className={styles.integracionItem}>
-          <span>Lectura Inicial:</span>
-          <strong>{data.activaLecturaInicial || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Lectura Final:</span>
-          <strong>{data.activaLecturaFinal || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Diferencia:</span>
-          <strong>{data.activaDiferencia || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Patrón:</span>
-          <strong>{data.activaPatron || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>% Error Pruebas:</span>
-          <strong className={styles.errorValue}>{data.activaPorcentajeErrorPruebas || 'No especificado'}%</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Medidor Reactiva */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔄 Medidor Reactiva</h3>
-    <div className={styles.pruebasGrid}>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Conexiones:</span>
-        <span className={`${styles.pruebaValue} ${data.reactivaConexiones === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.reactivaConexiones === 'si' ? '✅ Conforme' : data.reactivaConexiones === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Continuidad:</span>
-        <span className={`${styles.pruebaValue} ${data.reactivaContinuidad === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.reactivaContinuidad === 'si' ? '✅ Conforme' : data.reactivaContinuidad === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Prueba de Puentes:</span>
-        <span className={`${styles.pruebaValue} ${data.reactivaPuentes === 'si' ? styles.conforme : styles.noConforme}`}>
-          {data.reactivaPuentes === 'si' ? '✅ Conforme' : data.reactivaPuentes === 'no' ? '❌ No Conforme' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Giro en Vacío:</span>
-        <span className={styles.pruebaValue}>
-          {data.reactivaGiroVacio === 'si' ? '✅ Sí' : data.reactivaGiroVacio === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Registra:</span>
-        <span className={styles.pruebaValue}>
-          {data.reactivaRegistra === 'si' ? '✅ Sí' : data.reactivaRegistra === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-      <div className={styles.pruebaItem}>
-        <span className={styles.pruebaLabel}>Medidor se Frena:</span>
-        <span className={styles.pruebaValue}>
-          {data.reactivaSeFrena === 'si' ? '✅ Sí' : data.reactivaSeFrena === 'no' ? '❌ No' : 'No especificado'}
-        </span>
-      </div>
-    </div>
-    
-    {/* Prueba de Integración - Reactiva */}
-    <div className={styles.integracionSection}>
-      <h4 className={styles.integracionTitle}>📊 Prueba de Integración</h4>
-      <div className={styles.integracionGrid}>
-        <div className={styles.integracionItem}>
-          <span>Lectura Inicial:</span>
-          <strong>{data.reactivaLecturaInicial || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Lectura Final:</span>
-          <strong>{data.reactivaLecturaFinal || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Diferencia:</span>
-          <strong>{data.reactivaDiferencia || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>Patrón:</span>
-          <strong>{data.reactivaPatron || 'No especificado'}</strong>
-        </div>
-        <div className={styles.integracionItem}>
-          <span>% Error Pruebas:</span>
-          <strong className={styles.errorValue}>{data.reactivaPorcentajeErrorPruebas || 'No especificado'}%</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Transformadores */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🔋 Transformadores</h2>
-  
-  {/* Transformadores de Corriente */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>🔌 Transformadores de Corriente (TC's)</h3>
-    <div className={styles.transformadoresGrid}>
-      <div className={styles.transformadorCard}>
-        <h4>TC 1</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tcMarca1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tcSeries1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tcTipo1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tcRelacion1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tcClase1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tcVa1 || 'No especificado'}</strong>
-        </div>
-      </div>
-      
-      <div className={styles.transformadorCard}>
-        <h4>TC 2</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tcMarca2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tcSeries2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tcTipo2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tcRelacion2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tcClase2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tcVa2 || 'No especificado'}</strong>
-        </div>
-      </div>
-      
-      <div className={styles.transformadorCard}>
-        <h4>TC 3</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tcMarca3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tcSeries3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tcTipo3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tcRelacion3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tcClase3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tcVa3 || 'No especificado'}</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Transformadores de Potencia */}
-  <div className={styles.subsection}>
-    <h3 className={styles.subsectionTitle}>⚡ Transformadores de Potencia (TP's)</h3>
-    <div className={styles.transformadoresGrid}>
-      <div className={styles.transformadorCard}>
-        <h4>TP 1</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tpMarca1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tpSeries1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tpTipo1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tpRelacion1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tpClase1 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tpVa1 || 'No especificado'}</strong>
-        </div>
-      </div>
-      
-      <div className={styles.transformadorCard}>
-        <h4>TP 2</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tpMarca2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tpSeries2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tpTipo2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tpRelacion2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tpClase2 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tpVa2 || 'No especificado'}</strong>
-        </div>
-      </div>
-      
-      <div className={styles.transformadorCard}>
-        <h4>TP 3</h4>
-        <div className={styles.transformadorItem}>
-          <span>Marca:</span>
-          <strong>{data.tpMarca3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Series:</span>
-          <strong>{data.tpSeries3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Tipo:</span>
-          <strong>{data.tpTipo3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Relación:</span>
-          <strong>{data.tpRelacion3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>Clase:</span>
-          <strong>{data.tpClase3 || 'No especificado'}</strong>
-        </div>
-        <div className={styles.transformadorItem}>
-          <span>VA:</span>
-          <strong>{data.tpVa3 || 'No especificado'}</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Evidencias e Informe */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>📋 Evidencias e Informe</h2>
-  <div className={styles.evidenciasGrid}>
-    <div className={styles.evidenciaItem}>
-      <span className={styles.evidenciaLabel}>Códigos Irregularidades:</span>
-      <span className={styles.evidenciaValue}>{data.codigosIrregularidades || 'No especificado'}</span>
-    </div>
-    <div className={styles.evidenciaItem}>
-      <span className={styles.evidenciaLabel}>Tipo de Evidencia:</span>
-      <span className={styles.evidenciaValue}>
-        {data.tipoEvidencia === 'foto' ? '📷 Fotos' : 
-         data.tipoEvidencia === 'video' ? '🎥 Video' : 'No especificado'}
-      </span>
-    </div>
-    <div className={styles.evidenciaItem}>
-      <span className={styles.evidenciaLabel}>Irregularidad Corrida:</span>
-      <span className={`${styles.evidenciaValue} ${data.irregularidadCorrida === 'si' ? styles.si : styles.no}`}>
-        {data.irregularidadCorrida === 'si' ? '✅ Sí' : data.irregularidadCorrida === 'no' ? '❌ No' : 'No especificado'}
-      </span>
-    </div>
-    <div className={styles.evidenciaItem}>
-      <span className={styles.evidenciaLabel}>Medidor Retirado:</span>
-      <span className={`${styles.evidenciaValue} ${data.medidorRetirado === 'si' ? styles.si : styles.no}`}>
-        {data.medidorRetirado === 'si' ? '✅ Sí' : data.medidorRetirado === 'no' ? '❌ No' : 'No especificado'}
-      </span>
-    </div>
-    <div className={styles.evidenciaItem}>
-      <span className={styles.evidenciaLabel}>Tipo de Informe:</span>
-      <span className={styles.evidenciaValue}>
-        {data.tipoInforme === 'visita_sitio' ? '🏢 Visita al sitio' :
-         data.tipoInforme === 'instalacion_completada' ? '🔧 Instalación completada' :
-         data.tipoInforme === 'medicion_realizada' ? '📊 Medición realizada' :
-         data.tipoInforme === 'pruebas_completadas' ? '🧪 Pruebas completadas' :
-         data.tipoInforme === 'documentacion_entregada' ? '📄 Documentación entregada' :
-         data.tipoInforme === 'otro' ? `📝 ${data.tipoInformeOtro || 'Otro'}` : 'No especificado'}
-      </span>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Transformador y Configuración */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>🏗️ Transformador y Configuración</h2>
-  <div className={styles.sectionContent}>
-    
-    {/* Transformador de Potencia */}
-    {(data.transformadorPoNumero || data.transformadorPoMarca || data.transformadorPoKva) && (
-      <div className={styles.subsection}>
-        <h3 className={styles.subsectionTitle}>🔋 Transformador de Potencia</h3>
-        <div className={styles.summaryGrid}>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Número:</span>
-            <span className={styles.value}>{data.transformadorPoNumero || 'No especificado'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Marca:</span>
-            <span className={styles.value}>{data.transformadorPoMarca || 'No especificado'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>kVA:</span>
-            <span className={styles.value}>{data.transformadorPoKva || 'No especificado'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Propietario:</span>
-            <span className={styles.value}>{data.transformadorPoPropietario || 'No especificado'}</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Configuración del Sistema */}
-    <div className={styles.subsection}>
-      <h3 className={styles.subsectionTitle}>⚙️ Configuración del Sistema</h3>
       <div className={styles.summaryGrid}>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Tipo de Medidor:</span>
-          <span className={styles.value}>{data.tipoMedidor || 'No especificado'}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Ubicación Medidor:</span>
-          <span className={styles.value}>{data.ubicacionMedidor || 'No especificado'}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Configuración Medida:</span>
-          <span className={styles.value}>{data.configuracionMedida || 'No especificado'}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Tipo de Medida:</span>
-          <span className={styles.value}>{data.tipoMedida || 'No especificado'}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Ubicación Modem:</span>
-          <span className={styles.value}>{data.modemUbicacion || 'No especificado'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección: Información Adicional */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>📋 Información Adicional</h2>
-  <div className={styles.sectionContent}>
-    <div className={styles.summaryGrid}>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Ciclo:</span>
-        <span className={styles.value}>{data.ciclo || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Factores:</span>
-        <span className={styles.value}>
-          {[data.factor1, data.factor2, data.factor3].filter(Boolean).join(' / ') || 'No especificados'}
-        </span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Macromedidor:</span>
-        <span className={styles.value}>{data.macromedidor || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Nodo Trafo:</span>
-        <span className={styles.value}>{data.nodoTrafo || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Comercializador:</span>
-        <span className={styles.value}>{data.comercializador || 'No especificado'}</span>
-      </div>
-      <div className={styles.summaryItem}>
-        <span className={styles.label}>Bloques de Prueba:</span>
-        <span className={styles.value}>{data.bloquesPrueba || 'No especificado'}</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Sección de Diagramas */}
-<div className={styles.section}>
-  <h2 className={styles.sectionTitle}>📊 Diagramas Seleccionados</h2>
-  <div className={styles.diagramSummary}>
-    
-    {/* Diagrama Unifilar */}
-    <div className={styles.diagramItem}>
-      <h3 className={styles.diagramTitle}>Diagrama Unifilar</h3>
-      <div className={styles.diagramDetails}>
-        <p><strong>Selección:</strong> {diagramaUnifilar ? getDiagramName(diagramaUnifilar) : 'No seleccionado'}</p>
-      </div>
-      {diagramImages.diagramaUnifilar ? (
-        <div className={styles.diagramImageContainer}>
-          <img 
-            src={diagramImages.diagramaUnifilar} 
-            alt="Diagrama Unifilar" 
-            className={styles.diagramImage}
-          />
-        </div>
-      ) : (
-        <div className={styles.diagramMissing}>
-          <span className={styles.missingText}>Diagrama no disponible</span>
-        </div>
-      )}
-    </div>
-
-    {/* Diagrama Fasorial */}
-    <div className={styles.diagramItem}>
-      <h3 className={styles.diagramTitle}>Diagrama Fasorial</h3>
-      <div className={styles.diagramDetails}>
-        <p><strong>Selección:</strong> {diagramaFasorial ? getDiagramName(diagramaFasorial) : 'No seleccionado'}</p>
-      </div>
-      {diagramImages.diagramaFasorial ? (
-        <div className={styles.diagramImageContainer}>
-          <img 
-            src={diagramImages.diagramaFasorial} 
-            alt="Diagrama Fasorial" 
-            className={styles.diagramImage}
-          />
-        </div>
-      ) : (
-        <div className={styles.diagramMissing}>
-          <span className={styles.missingText}>Diagrama no disponible</span>
-        </div>
-      )}
-    </div>
-
-    {/* Diagrama de Conexiones */}
-    <div className={styles.diagramItem}>
-      <h3 className={styles.diagramTitle}>Diagrama de Conexiones</h3>
-          <div className={styles.diagramDetails}>
-            <p><strong>Selección:</strong> {diagramaConexiones ? getDiagramName(diagramaConexiones) : 'No seleccionado'}</p>
-          </div>
-          {diagramImages.diagramaConexiones ? (
-            <div className={styles.diagramImageContainer}>
-              <img 
-                src={diagramImages.diagramaConexiones} 
-                alt="Diagrama de Conexiones" 
-                className={styles.diagramImage}
-              />
+      {/* Sección: Datos Generales */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📊 Datos Generales</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Nombre:</span>
+              <span className={styles.value}>{data.nombre || 'No especificado'}</span>
             </div>
-          ) : (
-            <div className={styles.diagramMissing}>
-              <span className={styles.missingText}>Diagrama no disponible</span>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Dirección:</span>
+              <span className={styles.value}>{data.direccion || 'No especificada'}</span>
             </div>
-          )}
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Carga Kw:</span>
+              <span className={styles.value}>{data.cargaKw || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Ciclo:</span>
+              <span className={styles.value}>{data.ciclo || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Factor 1:</span>
+              <span className={styles.value}>{data.factor1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Factor 2:</span>
+              <span className={styles.value}>{data.factor2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Factor 3:</span>
+              <span className={styles.value}>{data.factor3 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Teléfono:</span>
+              <span className={styles.value}>{data.telefono || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Macromedidor:</span>
+              <span className={styles.value}>{data.macromedidor || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Nodo Trafo:</span>
+              <span className={styles.value}>{data.nodoTrafo || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Comercializador:</span>
+              <span className={styles.value}>{data.comercializador || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Longitud:</span>
+              <span className={styles.value}>{data.longitud || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Latitud:</span>
+              <span className={styles.value}>{data.latitud || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Uso:</span>
+              <span className={styles.value}>{data.uso || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Ubicación:</span>
+              <span className={styles.value}>{data.ubicacion || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Familias:</span>
+              <span className={styles.value}>{data.familias || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Nivel Tensión:</span>
+              <span className={styles.value}>{data.nivelTension || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Bloques Prueba:</span>
+              <span className={styles.value}>{data.bloquesPrueba || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo Medidor:</span>
+              <span className={styles.value}>{data.tipoMedidor || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo Instalación:</span>
+              <span className={styles.value}>{data.tipoInstalacion || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Ubicación Medidor:</span>
+              <span className={styles.value}>{data.ubicacionMedidor || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Protección General:</span>
+              <span className={styles.value}>{data.proteccionGeneral || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo Acometida:</span>
+              <span className={styles.value}>{data.acometidaTipo || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>#F #H:</span>
+              <span className={styles.value}>{data.fh || 'No especificado'}</span>
+            </div>
+          </div>
         </div>
+      </div>
 
+      {/* Sección: Acometida y Medidor */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔌 Acometida y Medidor</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Longitud Acometida:</span>
+              <span className={styles.value}>{data.acometidaLongitud || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Calibre Acometida:</span>
+              <span className={styles.value}>{data.acometidaCalibre || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Ubicación Modem:</span>
+              <span className={styles.value}>{data.modemUbicacion || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Configuración Medida:</span>
+              <span className={styles.value}>{data.configuracionMedida || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo de Medida:</span>
+              <span className={styles.value}>{data.tipoMedida || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca Modem:</span>
+              <span className={styles.value}>{data.marcaModem || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca Modem (Otro):</span>
+              <span className={styles.value}>{data.marcaModemOtro || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Serie Modem:</span>
+              <span className={styles.value}>{data.serieModem || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>IP Modem:</span>
+              <span className={styles.value}>{data.ipModem || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca Cable:</span>
+              <span className={styles.value}>{data.marcaCable || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca Celda Medida:</span>
+              <span className={styles.value}>{data.marcaCeldaMedida || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Activa1:</span>
+              <span className={styles.value}>{data.numeroActiva1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Activa1:</span>
+              <span className={styles.value}>{data.lecturaActiva1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Activa2:</span>
+              <span className={styles.value}>{data.numeroActiva2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Activa2:</span>
+              <span className={styles.value}>{data.lecturaActiva2 || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Medidores Reactivos */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>⚡ Medidores Reactivos</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Reactiva1:</span>
+              <span className={styles.value}>{data.numeroReactiva1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Reactiva1:</span>
+              <span className={styles.value}>{data.lecturaReactiva1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Reactiva2:</span>
+              <span className={styles.value}>{data.numeroReactiva2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Reactiva2:</span>
+              <span className={styles.value}>{data.lecturaReactiva2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número ActivaIns1:</span>
+              <span className={styles.value}>{data.numeroActivaIns1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura ActivaIns1:</span>
+              <span className={styles.value}>{data.lecturaActivaIns1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número ActivaIns2:</span>
+              <span className={styles.value}>{data.numeroActivaIns2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura ActivaIns2:</span>
+              <span className={styles.value}>{data.lecturaActivaIns2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número ReactivaIns1:</span>
+              <span className={styles.value}>{data.numeroReactivaIns1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura ReactivaIns1:</span>
+              <span className={styles.value}>{data.lecturaReactivaIns1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número ReactivaIns2:</span>
+              <span className={styles.value}>{data.numeroReactivaIns2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura ReactivaIns2:</span>
+              <span className={styles.value}>{data.lecturaReactivaIns2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Transformador:</span>
+              <span className={styles.value}>{data.transformadorPoNumero || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca Transformador:</span>
+              <span className={styles.value}>{data.transformadorPoMarca || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>kVA Transformador:</span>
+              <span className={styles.value}>{data.transformadorPoKva || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Transformador */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔋 Transformador de Potencia</h2>
+        
+        <div className={styles.threeColumns}>
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Año Transformador:</span>
+              <span className={styles.value}>{data.transformadorPoAno || 'No especificado'}</span>
+            </div>
+          </div>
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>V1/V2:</span>
+              <span className={styles.value}>{data.transformadorPoV1V2 || 'No especificado'}</span>
+            </div>
+          </div>
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Propietario:</span>
+              <span className={styles.value}>{data.transformadorPoPropietario || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Circuito:</span>
+              <span className={styles.value}>{data.transformadorPoCircuito || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-      {/* Sección de Configuración de Línea */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>⚡ Configuración de Línea</h2>
-        <div className={styles.sectionContent}>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Línea Dedicada:</span>
-            <span className={styles.value}>{lineaDedicada || 'No especificado'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Tipo de Frontera:</span>
-            <span className={styles.value}>{tipoFrontera || 'No especificado'}</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Sección de Pruebas TP's */}
+          <div className={styles.summaryGrid}>
+      {/* Sección: Medición Activa */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🔌 Prueba de Transformadores de Potencial (TP's)</h2>
-        <div className={styles.testSummary}>
-          <table className={styles.summaryTable}>
-            <thead>
-              <tr>
-                <th>Voltaje</th>
-                <th>Primario (V)</th>
-                <th>Secundario (V)</th>
-                <th>RTP</th>
-                <th>% Error</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>V_R</td>
-                <td>{tpData.vRPrimario || '-'}</td>
-                <td>{tpData.vRSecundario || '-'}</td>
-                <td>{tpData.rtp || '-'}</td>
-                <td>{tpData.errorVR || '-'}</td>
-              </tr>
-              <tr>
-                <td>V_S</td>
-                <td>{tpData.vSPrimario || '-'}</td>
-                <td>{tpData.vSSecundario || '-'}</td>
-                <td>{tpData.rtp || '-'}</td>
-                <td>{tpData.errorVS || '-'}</td>
-              </tr>
-              <tr>
-                <td>V_T</td>
-                <td>{tpData.vTPrimario || '-'}</td>
-                <td>{tpData.vTSecundario || '-'}</td>
-                <td>{tpData.rtp || '-'}</td>
-                <td>{tpData.errorVT || '-'}</td>
-              </tr>
-              <tr className={styles.highlightRow}>
-                <td colSpan="4" className={styles.label}>% Error Promedio:</td>
-                <td className={styles.value}>{tpData.errorPromedio || '-'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Sección de Pruebas TC's */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>⚡ Prueba de Transformadores de Corriente (TC's)</h2>
-        <div className={styles.testSummary}>
-          <table className={styles.summaryTable}>
-            <thead>
-              <tr>
-                <th>Parámetro</th>
-                <th>Primario (A)</th>
-                <th>Secundario (A)</th>
-                <th>RTC</th>
-                <th>% Error</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>I_R</td>
-                <td>{tcData.vRPrimario || '-'}</td>
-                <td>{tcData.vRSecundario || '-'}</td>
-                <td>{tcData.rtc || '-'}</td>
-                <td>{tcData.errorVR || '-'}</td>
-              </tr>
-              <tr>
-                <td>I_S</td>
-                <td>{tcData.vSPrimario || '-'}</td>
-                <td>{tcData.vSSecundario || '-'}</td>
-                <td>{tcData.rtc || '-'}</td>
-                <td>{tcData.errorVS || '-'}</td>
-              </tr>
-              <tr>
-                <td>I_T</td>
-                <td>{tcData.vTPrimario || '-'}</td>
-                <td>{tcData.vTSecundario || '-'}</td>
-                <td>{tcData.rtc || '-'}</td>
-                <td>{tcData.errorVT || '-'}</td>
-              </tr>
-              <tr className={styles.highlightRow}>
-                <td colSpan="4" className={styles.label}>% Error Promedio:</td>
-                <td className={styles.value}>{tcData.errorPromedio || '-'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Sección de Factor SIEC */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>📈 Factor SIEC</h2>
-        <div className={styles.factorGrid}>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Factor SIEC:</span>
-            <span className={styles.value}>{factorData.factorSiec || '-'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Factor Encontrado:</span>
-            <span className={styles.value}>{factorData.factorEncontrado || '-'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>% Error de Factor:</span>
-            <span className={styles.value}>{factorData.errorFactor || '-'}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.label}>Factor Final:</span>
-            <span className={styles.value}>{factorData.factorFinal || '-'}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Sección de Observaciones */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>👀 Observaciones Generales</h2>
-        <div className={styles.observacionesGrid}>
-          {Object.entries(observaciones).map(([equipo, estado]) => (
-            estado && (
-              <div key={equipo} className={styles.observacionItem}>
-                <span className={styles.label}>{equipo}:</span>
-                <span className={`${styles.value} ${styles[estado.toLowerCase()]}`}>
-                  {estado}
-                </span>
-              </div>
-            )
-          ))}
-        </div>
-      </div>
-
-      {/* Sección de Adecuaciones */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🔧 Adecuaciones y Mejoras</h2>
-        <div className={styles.adecuacionesList}>
-          {getAdecuacionesSeleccionadas().map((adecuacion, index) => (
-            <div key={index} className={styles.adecuacionItem}>
-              • {adecuacion}
+        <h2 className={styles.sectionTitle}>⚡ Medición Activa</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Tapa Principal Encontrados */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Principal (Encontrados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.medActivaTipoCol1 || 'No especificado'}</span>
             </div>
-          ))}
-          {adecuaciones.otros && adecuaciones.otrosTexto && (
-            <div className={styles.adecuacionItem}>
-              • Otros: {adecuaciones.otrosTexto}
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.medActivaNum1 || 'No especificado'}</span>
             </div>
-          )}
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.medActivaE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.medActivaR1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - Tapa Principal Instalados */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Principal (Instalados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Color 1:</span>
+              <span className={styles.value}>{data.medActivaInstTipoColor1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Inst 1:</span>
+              <span className={styles.value}>{data.medActivaInstNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 2:</span>
+              <span className={styles.value}>{data.medActivaTipoCol2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 2:</span>
+              <span className={styles.value}>{data.medActivaNum2 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Tapa Bornera */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Bornera Activa</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.tapaBorneraActivaTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.tapaBorneraActivaNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.tapaBorneraActivaE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.tapaBorneraActivaR1 || 'No especificado'}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Sección de Informe */}
-      {informe && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>📝 Informe</h2>
-          <div className={styles.informeContent}>
-            <p>{informe}</p>
+      {/* Sección: Medición Reactiva */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔋 Medición Reactiva</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Tapa Principal Reactiva */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Principal (Encontrados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.medReactivaTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.medReactivaNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.medReactivaE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.medReactivaR1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - Tapa Principal Instalados Reactiva */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Principal (Instalados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Color 1:</span>
+              <span className={styles.value}>{data.medReactivaInstTipoColor1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Inst 1:</span>
+              <span className={styles.value}>{data.medReactivaInstNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 2:</span>
+              <span className={styles.value}>{data.medReactivaTipoCol2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 2:</span>
+              <span className={styles.value}>{data.medReactivaNum2 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Tapa Bornera Reactiva */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Tapa Bornera Reactiva</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.tapaBorneraReactivaTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.tapaBorneraReactivaNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.tapaBorneraReactivaE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.tapaBorneraReactivaR1 || 'No especificado'}</span>
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Sección: Bloque de Pruebas */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔬 Bloque de Pruebas</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.bloquePruebasTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.bloquePruebasNum1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.bloquePruebasE1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.bloquePruebasR1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Color Inst 1:</span>
+              <span className={styles.value}>{data.bloquePruebasInstTipoColor1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número Inst 1:</span>
+              <span className={styles.value}>{data.bloquePruebasInstNum1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 2:</span>
+              <span className={styles.value}>{data.bloquePruebasTipoCol2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 2:</span>
+              <span className={styles.value}>{data.bloquePruebasNum2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E2:</span>
+              <span className={styles.value}>{data.bloquePruebasE2 || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: TC's, TP's y Celda */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔩 TC's, TP's y Celda</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - TC's */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>TC's</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.tcsTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.tcsNumero1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.tcsE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.tcsR1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - TP's */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>TP's</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.tpsTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.tpsNumero1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.tpsE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.tpsR1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Celda de Medida */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Celda de Medida</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo/Col 1:</span>
+              <span className={styles.value}>{data.celdaTipoCol1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Número 1:</span>
+              <span className={styles.value}>{data.celdaNumero1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>E1:</span>
+              <span className={styles.value}>{data.celdaE1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>R1:</span>
+              <span className={styles.value}>{data.celdaR1 || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Medidor Activa - Cálculos */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📐 Medidor Activa - Cálculos</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Fase R */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase R</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión R (V):</span>
+              <span className={styles.value}>{data.activaTensionR || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente R (A):</span>
+              <span className={styles.value}>{data.activaCorrienteR || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst R (W):</span>
+              <span className={styles.value}>{data.activaPinstR || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - Fase S */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase S</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión S (V):</span>
+              <span className={styles.value}>{data.activaTensionS || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente S (A):</span>
+              <span className={styles.value}>{data.activaCorrienteS || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst S (W):</span>
+              <span className={styles.value}>{data.activaPinstS || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Fase T */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase T</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión T (V):</span>
+              <span className={styles.value}>{data.activaTensionT || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente T (A):</span>
+              <span className={styles.value}>{data.activaCorrienteT || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst T (W):</span>
+              <span className={styles.value}>{data.activaPinstT || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Totales Activa */}
+        <div className={styles.totalesSection}>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Tensión Total (V):</span>
+            <span className={styles.value}>{data.activaTensionTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Corriente Total (A):</span>
+            <span className={styles.value}>{data.activaCorrienteTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>P.Inst Total (W):</span>
+            <span className={styles.value}>{data.activaPinstTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>% Error Activa:</span>
+            <span className={styles.value}>{data.activaPorcentajeError || 'No especificado'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Medidor Reactiva - Cálculos */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📏 Medidor Reactiva - Cálculos</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Fase R */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase R</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión R (V):</span>
+              <span className={styles.value}>{data.reactivaTensionR || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente R (A):</span>
+              <span className={styles.value}>{data.reactivaCorrienteR || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst R (W):</span>
+              <span className={styles.value}>{data.reactivaPinstR || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - Fase S */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase S</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión S (V):</span>
+              <span className={styles.value}>{data.reactivaTensionS || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente S (A):</span>
+              <span className={styles.value}>{data.reactivaCorrienteS || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst S (W):</span>
+              <span className={styles.value}>{data.reactivaPinstS || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Fase T */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Fase T</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tensión T (V):</span>
+              <span className={styles.value}>{data.reactivaTensionT || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Corriente T (A):</span>
+              <span className={styles.value}>{data.reactivaCorrienteT || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>P.Inst T (W):</span>
+              <span className={styles.value}>{data.reactivaPinstT || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Totales Reactiva */}
+        <div className={styles.totalesSection}>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Tensión Total (V):</span>
+            <span className={styles.value}>{data.reactivaTensionTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Corriente Total (A):</span>
+            <span className={styles.value}>{data.reactivaCorrienteTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>P.Inst Total (W):</span>
+            <span className={styles.value}>{data.reactivaPinstTotal || 'No especificado'}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>% Error Reactiva:</span>
+            <span className={styles.value}>{data.reactivaPorcentajeError || 'No especificado'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Pruebas de Funcionamiento */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>✅ Pruebas de Funcionamiento</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - Activa */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Medidor Activa</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Conexiones:</span>
+              <span className={styles.value}>{data.activaConexiones || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Continuidad:</span>
+              <span className={styles.value}>{data.activaContinuidad || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Puentes:</span>
+              <span className={styles.value}>{data.activaPuentes || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Giro en vacío:</span>
+              <span className={styles.value}>{data.activaGiroVacio || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - Reactiva */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Medidor Reactiva</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Conexiones:</span>
+              <span className={styles.value}>{data.reactivaConexiones || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Continuidad:</span>
+              <span className={styles.value}>{data.reactivaContinuidad || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Puentes:</span>
+              <span className={styles.value}>{data.reactivaPuentes || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Giro en vacío:</span>
+              <span className={styles.value}>{data.reactivaGiroVacio || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Pruebas Integración */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Pruebas de Integración</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Inicial Activa:</span>
+              <span className={styles.value}>{data.activaLecturaInicial || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Final Activa:</span>
+              <span className={styles.value}>{data.activaLecturaFinal || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>% Error Pruebas Activa:</span>
+              <span className={styles.value}>{data.activaPorcentajeErrorPruebas || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Inicial Reactiva:</span>
+              <span className={styles.value}>{data.reactivaLecturaInicial || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Lectura Final Reactiva:</span>
+              <span className={styles.value}>{data.reactivaLecturaFinal || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>% Error Pruebas Reactiva:</span>
+              <span className={styles.value}>{data.reactivaPorcentajeErrorPruebas || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Transformadores */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔌 Transformadores</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 - TC's */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>TC's (Encontrados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca 1:</span>
+              <span className={styles.value}>{data.tcMarca1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Series 1:</span>
+              <span className={styles.value}>{data.tcSeries1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Relación 1:</span>
+              <span className={styles.value}>{data.tcRelacion1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Clase 1:</span>
+              <span className={styles.value}>{data.tcClase1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 - TP's */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>TP's (Encontrados)</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca 1:</span>
+              <span className={styles.value}>{data.tpMarca1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Series 1:</span>
+              <span className={styles.value}>{data.tpSeries1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Relación 1:</span>
+              <span className={styles.value}>{data.tpRelacion1 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Clase 1:</span>
+              <span className={styles.value}>{data.tpClase1 || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 3 - Especificaciones Adicionales */}
+          <div className={styles.column}>
+            <div className={styles.sectionSubtitle}>Especificaciones</div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca TC 2:</span>
+              <span className={styles.value}>{data.tcMarca2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca TP 2:</span>
+              <span className={styles.value}>{data.tpMarca2 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca TC 3:</span>
+              <span className={styles.value}>{data.tcMarca3 || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Marca TP 3:</span>
+              <span className={styles.value}>{data.tpMarca3 || 'No especificado'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección: Evidencias e Informe */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📋 Evidencias e Informe</h2>
+        
+        <div className={styles.threeColumns}>
+          {/* Columna 1 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Códigos Irregularidades:</span>
+              <span className={styles.value}>{data.codigosIrregularidades || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo de Evidencia:</span>
+              <span className={styles.value}>{data.tipoEvidencia || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Irregularidad Corregida:</span>
+              <span className={styles.value}>{data.irregularidadCorrida || 'No especificado'}</span>
+            </div>
+          </div>
+          
+          {/* Columna 2 */}
+          <div className={styles.column}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Medidor Retirado:</span>
+              <span className={styles.value}>{data.medidorRetirado || 'No especificado'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>Tipo de Informe:</span>
+              <span className={styles.value}>{getTipoInformeText()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+        
       
+      {/* Sección de Diagramas y Configuración */}
+      <div className={styles.summaryGrid}>
+        
+        {/* Diagramas */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>📊 Diagramas Seleccionados</h2>
+          
+          <div className={styles.threeColumns}>
+            {/* Columna 1 - Diagrama Unifilar */}
+            <div className={styles.column}>
+              <div className={styles.diagramItem}>
+                <h3 className={styles.diagramTitle}>Diagrama Unifilar</h3>
+                <div className={styles.summaryItem}>
+                  <span className={styles.label}>Selección:</span>
+                  <span className={styles.value}>{diagramaUnifilar ? getDiagramName(diagramaUnifilar) : 'No seleccionado'}</span>
+                </div>
+                {diagramImages.diagramaUnifilar ? (
+                  <div className={styles.diagramImageContainer}>
+                    <img 
+                      src={diagramImages.diagramaUnifilar} 
+                      alt="Diagrama Unifilar" 
+                      className={styles.diagramImage}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.diagramMissing}>
+                    <span className={styles.missingText}>Diagrama no disponible</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Columna 2 - Diagrama Fasorial */}
+            <div className={styles.column}>
+              <div className={styles.diagramItem}>
+                <h3 className={styles.diagramTitle}>Diagrama Fasorial</h3>
+                <div className={styles.summaryItem}>
+                  <span className={styles.label}>Selección:</span>
+                  <span className={styles.value}>{diagramaFasorial ? getDiagramName(diagramaFasorial) : 'No seleccionado'}</span>
+                </div>
+                {diagramImages.diagramaFasorial ? (
+                  <div className={styles.diagramImageContainer}>
+                    <img 
+                      src={diagramImages.diagramaFasorial} 
+                      alt="Diagrama Fasorial" 
+                      className={styles.diagramImage}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.diagramMissing}>
+                    <span className={styles.missingText}>Diagrama no disponible</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Columna 3 - Diagrama de Conexiones */}
+            <div className={styles.column}>
+              <div className={styles.diagramItem}>
+                <h3 className={styles.diagramTitle}>Diagrama de Conexiones</h3>
+                <div className={styles.summaryItem}>
+                  <span className={styles.label}>Selección:</span>
+                  <span className={styles.value}>{diagramaConexiones ? getDiagramName(diagramaConexiones) : 'No seleccionado'}</span>
+                </div>
+                {diagramImages.diagramaConexiones ? (
+                  <div className={styles.diagramImageContainer}>
+                    <img 
+                      src={diagramImages.diagramaConexiones} 
+                      alt="Diagrama de Conexiones" 
+                      className={styles.diagramImage}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.diagramMissing}>
+                    <span className={styles.missingText}>Diagrama no disponible</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Configuración de Línea */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>⚡ Configuración de Línea</h2>
+          
+          <div className={styles.threeColumns}>
+            <div className={styles.column}>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Línea Dedicada:</span>
+                <span className={styles.value}>{lineaDedicada || 'No especificado'}</span>
+              </div>
+            </div>
+            <div className={styles.column}>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Tipo de Frontera:</span>
+                <span className={styles.value}>{tipoFrontera || 'No especificado'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pruebas TP's */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>🔌 Pruebas TP's</h2>
+          
+          <div className={styles.threeColumns}>
+            {/* Columna 1 - V_R */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Voltaje R</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (V):</span>
+                <span className={styles.value}>{tpData.vRPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (V):</span>
+                <span className={styles.value}>{tpData.vRSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tpData.errorVR || '-'}</span>
+              </div>
+            </div>
+            
+            {/* Columna 2 - V_S */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Voltaje S</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (V):</span>
+                <span className={styles.value}>{tpData.vSPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (V):</span>
+                <span className={styles.value}>{tpData.vSSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tpData.errorVS || '-'}</span>
+              </div>
+            </div>
+            
+            {/* Columna 3 - V_T */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Voltaje T</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (V):</span>
+                <span className={styles.value}>{tpData.vTPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (V):</span>
+                <span className={styles.value}>{tpData.vTSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tpData.errorVT || '-'}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Totales TP's */}
+          <div className={styles.totalesSection}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>RTP:</span>
+              <span className={styles.value}>{tpData.rtp || '-'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>% Error Promedio:</span>
+              <span className={styles.value}>{tpData.errorPromedio || '-'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pruebas TC's */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>⚡ Pruebas TC's</h2>
+          
+          <div className={styles.threeColumns}>
+            {/* Columna 1 - I_R */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Corriente R</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (A):</span>
+                <span className={styles.value}>{tcData.vRPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (A):</span>
+                <span className={styles.value}>{tcData.vRSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tcData.errorVR || '-'}</span>
+              </div>
+            </div>
+            
+            {/* Columna 2 - I_S */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Corriente S</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (A):</span>
+                <span className={styles.value}>{tcData.vSPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (A):</span>
+                <span className={styles.value}>{tcData.vSSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tcData.errorVS || '-'}</span>
+              </div>
+            </div>
+            
+            {/* Columna 3 - I_T */}
+            <div className={styles.column}>
+              <div className={styles.sectionSubtitle}>Corriente T</div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Primario (A):</span>
+                <span className={styles.value}>{tcData.vTPrimario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Secundario (A):</span>
+                <span className={styles.value}>{tcData.vTSecundario || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error:</span>
+                <span className={styles.value}>{tcData.errorVT || '-'}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Totales TC's */}
+          <div className={styles.totalesSection}>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>RTC:</span>
+              <span className={styles.value}>{tcData.rtc || '-'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.label}>% Error Promedio:</span>
+              <span className={styles.value}>{tcData.errorPromedio || '-'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Factor SIEC */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>📈 Factor SIEC</h2>
+          
+          <div className={styles.threeColumns}>
+            <div className={styles.column}>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Factor SIEC:</span>
+                <span className={styles.value}>{factorData.factorSiec || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Factor Encontrado:</span>
+                <span className={styles.value}>{factorData.factorEncontrado || '-'}</span>
+              </div>
+            </div>
+            
+            <div className={styles.column}>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>% Error de Factor:</span>
+                <span className={styles.value}>{factorData.errorFactor || '-'}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.label}>Factor Final:</span>
+                <span className={styles.value}>{factorData.factorFinal || '-'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Observaciones */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>👀 Observaciones</h2>
+          
+          <div className={styles.threeColumns}>
+            {/* Organizar las observaciones en 3 columnas */}
+            {(() => {
+              const entries = Object.entries(observaciones).filter(([_, estado]) => estado);
+              const columnCount = 3;
+              const itemsPerColumn = Math.ceil(entries.length / columnCount);
+              
+              return Array.from({ length: columnCount }).map((_, colIndex) => (
+                <div key={colIndex} className={styles.column}>
+                  {entries
+                    .slice(colIndex * itemsPerColumn, (colIndex + 1) * itemsPerColumn)
+                    .map(([equipo, estado]) => (
+                      <div key={equipo} className={styles.summaryItem}>
+                        <span className={styles.label}>{equipo}:</span>
+                        <span className={`${styles.value} ${styles[estado.toLowerCase()]}`}>
+                          {estado}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+
+        {/* Adecuaciones */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>🔧 Adecuaciones</h2>
+          
+          <div className={styles.threeColumns}>
+            {/* Organizar las adecuaciones en 3 columnas */}
+            {(() => {
+              const adecuacionesList = getAdecuacionesSeleccionadas();
+              if (adecuaciones.otros && adecuaciones.otrosTexto) {
+                adecuacionesList.push(`Otros: ${adecuaciones.otrosTexto}`);
+              }
+              
+              const columnCount = 3;
+              const itemsPerColumn = Math.ceil(adecuacionesList.length / columnCount);
+              
+              return Array.from({ length: columnCount }).map((_, colIndex) => (
+                <div key={colIndex} className={styles.column}>
+                  {adecuacionesList
+                    .slice(colIndex * itemsPerColumn, (colIndex + 1) * itemsPerColumn)
+                    .map((adecuacion, index) => (
+                      <div key={index} className={styles.adecuacionItem}>
+                        • {adecuacion}
+                      </div>
+                    ))}
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+
+        {/* Informe */}
+        {informe && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>📝 Informe</h2>
+            <div className={styles.fullWidthSection}>
+              <div className={styles.informeContent}>
+                <p>{getInformeDisplayText()}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>  
 
       {/* Firmas actas*/}
       <div className={styles.section}>
@@ -4545,10 +4338,19 @@ const handleCloseModal = () => {
         
         <button 
           type="button" 
-          onClick={() => console.log('Enviando datos:', data)}
+          onClick={handleFinalizar}
           className={styles.primaryButton}
+          disabled={loading}
         >
-          <FiSend /> Finalizar y Enviar
+          {loading ? (
+            <>
+              <FiLoader className={styles.spinner} /> Guardando...
+            </>
+          ) : (
+            <>
+              <FiSend /> Finalizar y Guardar
+            </>
+          )}
         </button>
       </div>
 

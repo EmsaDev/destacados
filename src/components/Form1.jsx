@@ -414,10 +414,10 @@ function Form1({ data, handleChange, nextStep }) {
                 className={`${styles.select} ${errors.tipoUsuario ? styles.errorSelect : ''}`}
               >
                 <option value="">👤 Seleccione una opción</option>
-                <option value="usuario">👥 Usuario</option>
-                <option value="cliente">💼 Cliente</option>
-                <option value="tecnico">🔧 Técnico</option>
-                <option value="administrador">⚙️ Administrador</option>
+                <option value="Usuario">👥 Usuario</option>
+                <option value="Cliente">💼 Cliente</option>
+                <option value="Tecnico">🔧 Técnico</option>
+                <option value="Administrador">⚙️ Administrador</option>
               </select>
             </div>
           </div>
