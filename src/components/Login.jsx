@@ -28,7 +28,7 @@ export default function Login({ onLogin }) {
   setError("");
   
   try {
-    const res = await axios.post("http://172.18.24.57:5000/login", form);
+    const res = await axios.post("http://localhost:5000/login", form);
     console.log("Respuesta completa del servidor:", res.data);
     console.log("Campos recibidos:", {
       token: !!res.data.token,

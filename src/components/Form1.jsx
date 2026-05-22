@@ -6,7 +6,7 @@ function Form1({ data, handleChange, nextStep }) {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [searchField, setSearchField] = useState('');
-  const [userData, setUserData] = useState({ name: '', cc: '' });
+  const [userData, setUserData] = useState({ name: '', cc: '', correo: '' });
   const [reviewNumber, setReviewNumber] = useState('1000'); // Estado para el número de acta
   
 // Efecto para obtener el número de acta al cargar el componente
@@ -21,7 +21,7 @@ function Form1({ data, handleChange, nextStep }) {
         }
         
         console.log('🔄 Solicitando próximo número de acta...');
-        const response = await axios.get('http://172.18.24.57:5000/api/next-review-number', {
+        const response = await axios.get('http://localhost:5000/api/next-review-number', {
           headers: {
             'Authorization': `Bearer ${token}`
           },
@@ -54,12 +54,12 @@ function Form1({ data, handleChange, nextStep }) {
       const valorBusqueda = data.codigo || data.asic;
       
       // Solo consultar si hay un valor de búsqueda pero no dirección
-      if (valorBusqueda && !(data.direccion && !data.ciudad && !data.nombre)) {
+      if (valorBusqueda && !(data.direccion && !data.ciudad && !data.nombre && !data.correo)) {
         setIsLoading(true);
         try {
           console.log('Enviando consulta con:', { codigo: data.codigo, asic: data.asic });
           
-          const response = await axios.post('http://172.18.24.57:5000/api/consultar-cliente', {
+          const response = await axios.post('http://localhost:5000/api/consultar-cliente', {
             codigo: data.codigo,
             asic: data.asic
           });
@@ -80,6 +80,11 @@ function Form1({ data, handleChange, nextStep }) {
             // Actualizar nombre si viene en la respuesta y no tenemos
             if (response.data.nombre && !data.nombre) {
               handleChange({ target: { name: 'nombre', value: response.data.nombre } });
+            }
+
+            // Actualizar correo si viene en la respuesta y no tenemos
+            if (response.data.correo && !data.correo) {
+              handleChange({ target: { name: 'correo', value: response.data.correo } });
             }
         }
 
@@ -107,10 +112,10 @@ function Form1({ data, handleChange, nextStep }) {
         const cc = localStorage.getItem('userCC');
         
         if (name && cc) {
-          setUserData({ name, cc });
+          setUserData({ name, cc,});
         } else if (token) {
           // Si no están en localStorage, hacer request al servidor
-          const response = await axios.get('http://172.18.24.57:5000/api/user-data', {
+          const response = await axios.get('http://localhost:5000/api/user-data', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -329,7 +334,8 @@ function Form1({ data, handleChange, nextStep }) {
         {data.direccion && (
           <div className={styles.infoMessage}>
             <strong>Cliente:</strong> {data.nombre} <br/>
-            <strong> Dirección:</strong> {data.direccion}
+            <strong> Dirección:</strong> {data.direccion} <br/>
+            <strong> Correo:</strong> {data.correo}
           </div>
         )}
         

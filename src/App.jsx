@@ -6,6 +6,7 @@ import Form3 from './components/Form3'
 import DiagramSelectionStep from './components/DiagramSelectionStep';
 import SignaturePadStep from './components/SignaturePadStep'
 import Summary from './components/Summary'
+import ActaMateriales  from './components/ActaMateriales'
 import HelpPanel from './components/HelpPanel'
 import './App.css'
 import { Toaster } from "react-hot-toast";
@@ -256,21 +257,29 @@ function App() {
                     Acta de Diagramas
                     {completedSteps.step4 && <FiCheckCircle className="nav-completed" />}
                   </button>
-                  
+                  {
                   <button 
                     className={`nav-item ${step === 5 ? 'nav-item-active' : ''} ${!isStepAvailable(5) ? 'nav-item-disabled' : ''}`}
                     onClick={() => goToStep(5)}
                     disabled={!isStepAvailable(5)}
                   >
-                    <FiEdit3 className="nav-icon" />
-                    Firmas
+                    <FiLayers className="nav-icon" />
+                    Materiales
                     {completedSteps.step5 && <FiCheckCircle className="nav-completed" />}
                   </button>
-                  
+                  }
                   <button 
                     className={`nav-item ${step === 6 ? 'nav-item-active' : ''} ${!isStepAvailable(6) ? 'nav-item-disabled' : ''}`}
                     onClick={() => goToStep(6)}
                     disabled={!isStepAvailable(6)}
+                  >
+                    <FiEdit3/> Firmas 
+                  </button>
+
+                  <button 
+                    className={`nav-item ${step === 7 ? 'nav-item-active' : ''} ${!isStepAvailable(7) ? 'nav-item-disabled' : ''}`}
+                    onClick={() => goToStep(7)}
+                    disabled={!isStepAvailable(7)}
                   >
                     <FiClipboard/> Resumen 
                   </button>
@@ -346,7 +355,18 @@ function App() {
                   prevStep={prevStep} 
                 />
               )}
+              
               {step === 5 && (
+                <ActaMateriales 
+                  data={formData}
+                  updateData={handleFormData} 
+                  handleChange={handleChange}
+                  userData={userData}
+                  nextStep={nextStep}
+                  prevStep={prevStep}
+                />
+              )}
+              {step === 6 && (
                 <SignaturePadStep 
                   data={formData} 
                   handleSignature={handleSignature} 
@@ -354,7 +374,7 @@ function App() {
                   prevStep={prevStep} 
                 />
               )}
-              {step === 6 && (
+              {step === 7 && (
                 <Summary 
                   data={formData} 
                   prevStep={prevStep} 

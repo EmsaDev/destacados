@@ -41,7 +41,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
       data.marcaActivaIns1,
       data.marcaActivaIns2,
       data.marcaReactivaIns1,
-      data.marcaReactivaIns2
+      data.marcaReactivaIns2,
+      data.marcaActiva1Res,
+      data.marcaActiva2Res,
+      data.marcaReactiva1Res,
+      data.marcaReactiva2Res,
+      data.marcaActivaIns1Res,
+      data.marcaActivaIns2Res,
+      data.marcaReactivaIns1Res,
+      data.marcaReactivaIns2Res
     ].filter(Boolean);
 
     marcasIds.forEach((marcaId) => {
@@ -72,7 +80,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
     data.marcaActivaIns1,
     data.marcaActivaIns2,
     data.marcaReactivaIns1,
-    data.marcaReactivaIns2
+    data.marcaReactivaIns2,
+    data.marcaActiva1Res,
+      data.marcaActiva2Res,
+      data.marcaReactiva1Res,
+      data.marcaReactiva2Res,
+      data.marcaActivaIns1Res,
+      data.marcaActivaIns2Res,
+      data.marcaReactivaIns1Res,
+      data.marcaReactivaIns2Res
 
   ]);
 
@@ -533,11 +549,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
               className={styles.input}
             />
           </div>
-        </div>
 
-
-        {/* Fila 3 - Datos técnicos */}
-        <div className={styles.formRow}>
+          {/* IP */}
           <div className={styles.formGroup}>
             <label className={styles.label}>IP</label>
             <input
@@ -549,6 +562,67 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
               className={styles.input}
             />
           </div>
+        </div>
+
+        {/* Fila 3 - Marca modem respaldo */}
+        <div className={styles.formRow}>
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+            <label className={styles.label}>Marca del modem de respaldo </label>
+            <select
+              name="marcaModemRes"
+              value={data.marcaModemRes || ''}
+              onChange={handleChange}
+              className={styles.select}
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="Teltonika">Teltonika</option>
+              <option value="wLink">wLink</option>
+              <option value="OtroRes">Otro</option>
+            </select>
+          </div>
+
+          {data.marcaModemRes === 'OtroRes' && (
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+              <label className={styles.label}>Especifique la marca del modem</label>
+              <input
+                type="text"
+                name="marcaModemOtroRes"
+                value={data.marcaModemOtroRes || ''}
+                onChange={handleChange}
+                placeholder="Ingrese la marca del modem"
+                className={styles.input}
+              />
+            </div>
+          )}
+          {/* Serie */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Serie del modem</label>
+            <input
+              type="text"
+              name="serieModemRes"
+              value={data.serieModemRes || ''}
+              onChange={handleChange}
+              placeholder="Serie del modem"
+              className={styles.input}
+            />
+          </div>
+
+          {/* IP */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>IP</label>
+            <input
+              type="text"
+              name="ipModemRes"
+              value={data.ipModemRes || ''}
+              onChange={handleChange}
+              placeholder="Ej: 192.168.1.1"
+              className={styles.input}
+            />
+          </div>
+        </div>
+
+        {/* Fila 4 - Datos técnicos */}
+        <div className={styles.formRow}>
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Marca del cable</label>
@@ -577,8 +651,9 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
 
       </div>
 
-      {/* Sección 5: Medidor Encontrado y Medidor Instalado */}
+{/* Sección 5: Medidor Encontrado y Medidor Instalado Principal */}
       <div className={styles.formSection}>
+      <h2 >Medidor Principal</h2>
         <h3 className={styles.formSectionTitle}>Medidor Encontrado</h3>
         <div className={styles.tableResponsive}>
           <table className={styles.dataTable}>
@@ -723,16 +798,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="numeroActiva2"
-                    value={data.numeroActiva2 || ''}
+                    name="numeroActiva1"
+                    value={data.numeroActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <select
-                    name="marcaActiva2"
-                    value={data.marcaActiva2 || ''}
+                    name="marcaActiva1"
+                    value={data.marcaActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
                   >
@@ -746,15 +821,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 </td>
                 <td>
                   <select
-                    name="tipoActiva2"
-                    value={data.tipoActiva2 || ''}
+                    name="tipoActiva1"
+                    value={data.tipoActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
-                    disabled={!data.marcaActiva2}
+                    disabled={!data.marcaActiva1}
                   >
                     <option value="">Seleccione un tipo</option>
 
-                    {(tiposPorMarca[data.marcaActiva2] || []).map((t) => (
+                    {(tiposPorMarca[data.marcaActiva1] || []).map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.nombre}
                       </option>
@@ -841,8 +916,8 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="numeroReactiva1"
-                    value={data.numeroReactiva1 || ''}
+                    name="numeroActiva1"
+                    value={data.numeroActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
@@ -850,7 +925,7 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <select
                     name="marcaReactiva1"
-                    value={data.marcaReactiva1 || ''}
+                    value={data.marcaActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
                   >
@@ -864,15 +939,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 </td>
                 <td>
                   <select
-                    name="tipoReactiva1"
-                    value={data.tipoReactiva1 || ''}
+                    name="tipoActiva1"
+                    value={data.tipoActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
-                    disabled={!data.marcaReactiva1}
+                    disabled={!data.marcaActiva1}
                   >
                     <option value="">Seleccione un tipo</option>
 
-                    {(tiposPorMarca[data.marcaReactiva1] || []).map((t) => (
+                    {(tiposPorMarca[data.marcaActiva1] || []).map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.nombre}
                       </option>
@@ -958,16 +1033,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 <td>
                   <input
                     type="text"
-                    name="numeroReactiva2"
-                    value={data.numeroReactiva2 || ''}
+                    name="numeroActiva1"
+                    value={data.numeroActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />
                 </td>
                 <td>
                   <select
-                    name="marcaReactiva2"
-                    value={data.marcaReactiva2 || ''}
+                    name="marcaActiva1"
+                    value={data.marcaActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
                   >
@@ -981,15 +1056,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                 </td>
                 <td>
                   <select
-                    name="tipoReactiva2"
-                    value={data.tipoReactiva2 || ''}
+                    name="tipoActiva1"
+                    value={data.tipoActiva1 || ''}
                     onChange={handleChange}
                     className={styles.tableSelect}
-                    disabled={!data.marcaReactiva2}
+                    disabled={!data.marcaActiva1}
                   >
                     <option value="">Seleccione un tipo</option>
 
-                    {(tiposPorMarca[data.marcaReactiva2] || []).map((t) => (
+                    {(tiposPorMarca[data.marcaActiva1] || []).map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.nombre}
                       </option>
@@ -1217,16 +1292,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="numeroActivaIns2"
-              value={data.numeroActivaIns2 || ''}
+              name="numeroActivaIns1"
+              value={data.numeroActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
           </td>
           <td>
             <select
-              name="marcaActivaIns2"
-              value={data.marcaActivaIns2 || ''}
+              name="marcaActivaIns1"
+              value={data.marcaActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
             >
@@ -1240,15 +1315,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           </td>
           <td>
             <select
-              name="tipoActivaIns2"
-              value={data.tipoActivaIns2 || ''}
+              name="tipoActivaIns1"
+              value={data.tipoActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
-              disabled={!data.marcaActivaIns2}
+              disabled={!data.marcaActivaIns1}
             >
               <option value="">Seleccione un tipo</option>
 
-              {(tiposPorMarca[data.marcaActivaIns2] || []).map((t) => (
+              {(tiposPorMarca[data.marcaActivaIns1] || []).map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.nombre}
                 </option>
@@ -1335,16 +1410,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           <td>
             <input
               type="text"
-              name="numeroReactivaIns1"
-              value={data.numeroReactivaIns1 || ''}
+              name="numeroActivaIns1"
+              value={data.numeroActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableInput}
             />
           </td>
           <td>
             <select
-              name="marcaReactivaIns1"
-              value={data.marcaReactivaIns1 || ''}
+              name="marcaActivaIns1"
+              value={data.marcaActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
             >
@@ -1358,15 +1433,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           </td>
           <td>
             <select
-              name="tipoReactivaIns1"
-              value={data.tipoReactivaIns1 || ''}
+              name="tipoActivaIns1"
+              value={data.tipoActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
-              disabled={!data.marcaReactivaIns1}
+              disabled={!data.marcaActivaIns1}
             >
               <option value="">Seleccione un tipo</option>
 
-              {(tiposPorMarca[data.marcaReactivaIns1] || []).map((t) => (
+              {(tiposPorMarca[data.marcaActivaIns1] || []).map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.nombre}
                 </option>
@@ -1452,16 +1527,16 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
             <td>
               <input
                 type="text"
-                name="numeroReactivaIns2"
-                value={data.numeroReactivaIns2 || ''}
+                name="numeroActivaIns1"
+                value={data.numeroActivaIns1 || ''}
                 onChange={handleChange}
                 className={styles.tableInput}
               />
             </td>
             <td>
               <select
-              name="marcaReactivaIns2"
-              value={data.marcaReactivaIns2 || ''}
+              name="marcaActivaIns1"
+              value={data.marcaActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
             >
@@ -1475,15 +1550,15 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
           </td>
           <td>
             <select
-              name="tipoReactivaIns2"
-              value={data.tipoReactivaIns2 || ''}
+              name="tipoActivaIns1"
+              value={data.tipoActivaIns1 || ''}
               onChange={handleChange}
               className={styles.tableSelect}
-              disabled={!data.marcaReactivaIns2}
+              disabled={!data.marcaActivaIns1}
             >
               <option value="">Seleccione un tipo</option>
 
-              {(tiposPorMarca[data.marcaReactivaIns2] || []).map((t) => (
+              {(tiposPorMarca[data.marcaActivaIns1] || []).map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.nombre}
                 </option>
@@ -1558,6 +1633,998 @@ const Form2 = ({ data, handleChange, nextStep, prevStep }) => {
                     type="text"
                     name="fechaLabReactivaIns2"
                     value={data.fechaLabReactivaIns2 || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />    
+          </td>      
+        </tr>        
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{/* Sección 5: Medidor Encontrado y Medidor Instalado Respaldo */}
+      <div className={styles.formSection}>
+        <h2>Medidor de Respaldo</h2>
+        <h3 className={styles.formSectionTitle}>Medidor Encontrado</h3>
+        <div className={styles.tableResponsive}>
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th>Medida</th>
+                <th>Número</th>
+                <th>Marca</th>
+                <th>Tipo</th>
+                <th>Capac. (A)</th>
+                <th>Tensión (V)</th>
+                <th>Clase</th>
+                <th>Kd (rev/kWh)</th>
+                <th>Kh (kWh/rev)</th>
+                <th>Lectura</th>
+                <th>E/D</th>
+                <th>Fecha Lab</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Fila para Activa1 */}
+              <tr>
+                <td className={styles.measureType}>Activa1</td>
+                <td>
+                  <input
+                    type="text"
+                    name="numeroActiva1Res"
+                    value={data.numeroActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select
+                    name="marcaActiva1Res"
+                    value={data.marcaActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                  >
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    name="tipoActiva1Res"
+                    value={data.tipoActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva1Res}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva1Res] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadActiva1Res"
+                    value={data.capacidadActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionActiva1Res"
+                    value={data.tensionActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseActiva1Res"
+                    value={data.claseActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdActiva1Res"
+                    value={data.kdActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khActiva1Res"
+                    value={data.khActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaActiva1Res"
+                    value={data.lecturaActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edActiva1Res"
+                    value={data.edActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabActiva1Res"
+                    value={data.fechaLabActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+              </tr>
+
+              {/* Fila para Activa2 */}
+              <tr>
+                <td className={styles.measureType}>Activa2</td>
+                <td>
+                  <input
+                    type="text"
+                    name="numeroActiva1Res"
+                    value={data.numeroActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select
+                    name="marcaActiva1Res"
+                    value={data.marcaActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                  >
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    name="tipoActiva1Res"
+                    value={data.tipoActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva1Res}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva1Res] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadActiva2Res"
+                    value={data.capacidadActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionActiva2Res"
+                    value={data.tensionActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseActiva2Res"
+                    value={data.claseActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdActiva2Res"
+                    value={data.kdActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khActiva2Res"
+                    value={data.khActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaActiva2Res"
+                    value={data.lecturaActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edActiva2Res"
+                    value={data.edActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabActiva2Res"
+                    value={data.fechaLabActiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+              </tr>
+
+              {/* Fila para Reactiva */}
+              <tr>
+                <td className={styles.measureType}>Reactiva1</td>
+                <td>
+                  <input
+                    type="text"
+                    name="numeroActiva1Res"
+                    value={data.numeroActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select
+                    name="marcaActiva1"
+                    value={data.marcaActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                  >
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    name="tipoActiva1Res"
+                    value={data.tipoActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva1Res}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva1Res] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadReactiva1Res"
+                    value={data.capacidadReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionReactiva1Res"
+                    value={data.tensionReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseReactiva1Res"
+                    value={data.claseReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdReactiva1Res"
+                    value={data.kdReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khReactiva1Res"
+                    value={data.khReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaReactiva1Res"
+                    value={data.lecturaReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edReactiva1Res"
+                    value={data.edReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabReactiva1Res"
+                    value={data.fechaLabReactiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+              </tr>
+              {/* Fila para Reactiva2 */}
+              <tr>
+                <td className={styles.measureType}>Reactiva2</td>
+                <td>
+                  <input
+                    type="text"
+                    name="numeroActiva1Res"
+                    value={data.numeroActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <select
+                    name="marcaReactiva2Res"
+                    value={data.marcaActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                  >
+                    <option value="">Seleccione una marca</option>
+                    {marcas.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    name="tipoActiva1Res"
+                    value={data.tipoActiva1Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableSelect}
+                    disabled={!data.marcaActiva1Res}
+                  >
+                    <option value="">Seleccione un tipo</option>
+
+                    {(tiposPorMarca[data.marcaActiva1Res] || []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadReactiva2Res"
+                    value={data.capacidadReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionReactiva2Res"
+                    value={data.tensionReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseReactiva2Res"
+                    value={data.claseReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdReactiva2Res"
+                    value={data.kdReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khReactiva2Res"
+                    value={data.khReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaReactiva2Res"
+                    value={data.lecturaReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edReactiva2Res"
+                    value={data.edReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabReactiva2Res"
+                    value={data.fechaLabReactiva2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className={styles.formSectionTitle}>Medidor Instalado</h3>
+        <div className={styles.tableResponsive}>
+        <table className={styles.dataTable}>
+          <thead>
+            <tr>
+              <th>Medida</th>
+              <th>Número</th>
+              <th>Marca</th>
+              <th>Tipo</th>
+              <th>Capac. (A)</th>
+              <th>Tensión (V)</th>
+              <th>Clase</th>
+              <th>Kd (rev/kWh)</th>
+              <th>Kh (kWh/rev)</th>
+              <th>Lectura</th>
+              <th>E/D</th>
+              <th>Fecha Lab</th>
+            </tr>
+      </thead>
+      <tbody>
+        {/* Fila para Activa1 */}
+        <tr>
+          <td className={styles.measureType}>Activa1</td>
+          <td>
+            <input
+              type="text"
+              name="numeroActivaIns1Res"
+              value={data.numeroActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>{/*"marcaActivaIns1"*/}
+            <select
+              name="marcaActivaIns1Res"
+              value={data.marcaActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <select
+              name="tipoActivaIns1Res"
+              value={data.tipoActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns1}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns1Res] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadActivaIns1Res"
+              value={data.capacidadActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionActivaIns1Res"
+              value={data.tensionActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseActivaIns1Res"
+              value={data.claseActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdActivaIns1Res"
+              value={data.kdActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khActivaIns1Res"
+              value={data.khActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaActivaIns1Res"
+              value={data.lecturaActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edActivaIns1Res"
+              value={data.edActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabActivaIns1Res"
+              value={data.fechaLabActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
+
+        {/* Fila para Activa2 */}
+        <tr>
+          <td className={styles.measureType}>Activa2</td>
+          <td>
+            <input
+              type="text"
+              name="numeroActivaIns1Res"
+              value={data.numeroActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <select
+              name="marcaActivaIns1Res"
+              value={data.marcaActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <select
+              name="tipoActivaIns1Res"
+              value={data.tipoActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns1Res}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns1Res] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadActivaIns2Res"
+              value={data.capacidadActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionActivaIns2Res"
+              value={data.tensionActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseActivaIns2Res"
+              value={data.claseActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdActivaIns2Res"
+              value={data.kdActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khActivaIns2Res"
+              value={data.khActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaActivaIns2Res"
+              value={data.lecturaActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edActivaIns2Res"
+              value={data.edActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabActivaIns2Res"
+              value={data.fechaLabActivaIns2Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
+
+        {/* Fila para Reactiva1 */}
+        <tr>
+          <td className={styles.measureType}>Reactiva1</td>
+          <td>
+            <input
+              type="text"
+              name="numeroActivaIns1Res"
+              value={data.numeroActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <select
+              name="marcaActivaIns1Res"
+              value={data.marcaActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <select
+              name="tipoActivaIns1Res"
+              value={data.tipoActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns1Res}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns1Res] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="capacidadReactivaIns1Res"
+              value={data.capacidadReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="tensionReactivaIns1Res"
+              value={data.tensionReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="claseReactivaIns1Res"
+              value={data.claseReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="kdReactivaIns1Res"
+              value={data.kdReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="khReactivaIns1Res"
+              value={data.khReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="lecturaReactivaIns1Res"
+              value={data.lecturaReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="edReactivaIns1Res"
+              value={data.edReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+          <td>
+            <input
+              type="text"
+              name="fechaLabReactivaIns1Res"
+              value={data.fechaLabReactivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableInput}
+            />
+          </td>
+        </tr>
+        {/* Fila para ReactivaIns2 */}
+        <tr>
+          <td className={styles.measureType}>Reactiva2</td>
+            <td>
+              <input
+                type="text"
+                name="numeroActivaIns1Res"
+                value={data.numeroActivaIns1Res || ''}
+                onChange={handleChange}
+                className={styles.tableInput}
+              />
+            </td>
+            <td>
+              <select
+              name="marcaActivaIns1"
+              value={data.marcaActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((m) => (
+                 <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </td>
+          <td>
+            <select
+              name="tipoActivaIns1"
+              value={data.tipoActivaIns1Res || ''}
+              onChange={handleChange}
+              className={styles.tableSelect}
+              disabled={!data.marcaActivaIns1Res}
+            >
+              <option value="">Seleccione un tipo</option>
+
+              {(tiposPorMarca[data.marcaActivaIns1Res] || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="capacidadReactivaIns2Res"
+                    value={data.capacidadReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="tensionReactivaIns2Res"
+                    value={data.tensionReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="claseReactivaIns2Res"
+                    value={data.claseReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="kdReactivaIns2Res"
+                    value={data.kdReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="khReactivaIns2Res"
+                    value={data.khReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="lecturaReactivaIns2Res"
+                    value={data.lecturaReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="edReactivaIns2Res"
+                    value={data.edReactivaIns2Res || ''}
+                    onChange={handleChange}
+                    className={styles.tableInput}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    name="fechaLabReactivaIns2Res"
+                    value={data.fechaLabReactivaIns2Res || ''}
                     onChange={handleChange}
                     className={styles.tableInput}
                   />    

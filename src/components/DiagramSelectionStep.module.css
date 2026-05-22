@@ -196,6 +196,154 @@
   font-size: 0.9rem;
 }
 
+/* ===== EDITOR DE DIAGRAMAS (NUEVO) ===== */
+.editorContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.editorToolbar {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.editorToolbar button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: #495057;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.editorToolbar button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.editorToolbar button:active {
+  transform: translateY(0);
+}
+
+.closeBtn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  color: white !important;
+}
+
+.closeBtn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71d2a 100%) !important;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+}
+
+.stageWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
+  overflow: auto;
+  min-height: 500px;
+}
+
+/* Modal del editor */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalContent {
+  width: 90vw;
+  height: 90vh;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Información de diagrama guardado */
+.savedDiagramInfo {
+  margin-top: 12px;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.savedDiagramInfo span {
+  color: #155724;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.savedDiagramInfo span::before {
+  content: "✅ ";
+}
+
+.savedDiagramInfo button {
+  padding: 6px 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.savedDiagramInfo button:hover {
+  background: #218838;
+  transform: scale(1.02);
+}
+
 /* ===== TABLAS DE PRUEBAS ===== */
 .testTable {
   background: white;
@@ -347,23 +495,22 @@
   background-color: #fff5f5;
 }
 
-.selected {
-  color: white;
-}
-
 .estadoBtnBueno.selected {
   background: #10b981;
   border-color: #10b981;
+  color: white;
 }
 
 .estadoBtnRegular.selected {
   background: #f59e0b;
   border-color: #f59e0b;
+  color: white;
 }
 
 .estadoBtnMalo.selected {
   background: #ef4444;
   border-color: #ef4444;
+  color: white;
 }
 
 .estadoIndicator {
@@ -505,6 +652,158 @@
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
+/* ===== DIAGRAMA FASORIAL INTERACTIVO ===== */
+.fasorialContainer {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #e1e5e9;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.fasorialControls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.fasorialControlRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #007bff;
+}
+
+.fasorialControlRow:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.fasorialControlRow strong {
+  min-width: 30px;
+  font-size: 1.1rem;
+  color: #007bff;
+  font-weight: 700;
+}
+
+.fasorialInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fasorialInputGroup label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.85rem;
+  min-width: 50px;
+}
+
+.angleInput {
+  width: 90px;
+  padding: 8px 10px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  background: white;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.angleInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+  background: white;
+}
+
+.angleInput:hover {
+  border-color: #007bff;
+}
+
+.fasorialInputGroup span {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.typeSelect {
+  padding: 8px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 130px;
+  font-weight: 500;
+}
+
+.typeSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.typeSelect:hover {
+  border-color: #007bff;
+}
+
+.phasorDiagramWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  background: white;
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 2px solid #e1e5e9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.phasorDiagramWrapper:hover {
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.15);
+  border-color: #007bff;
+}
+
+.phasorDiagramWrapper svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.diagramHint {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 16px;
+  padding: 10px;
+  background: #fff3cd;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.diagramHint::before {
+  content: "ℹ️ ";
+  font-style: normal;
+  margin-right: 5px;
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .container {
@@ -561,7 +860,6 @@
     width: 100%;
   }
   
-  /* Responsive para tablas */
   .testTable {
     overflow-x: auto;
   }
@@ -581,6 +879,21 @@
   .readonlyInput {
     padding: 4px 6px;
     font-size: 11px;
+  }
+
+  /* Responsive para el editor */
+  .editorToolbar button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .modalContent {
+    width: 95vw;
+    height: 95vh;
+  }
+  
+  .stageWrapper {
+    padding: 10px;
   }
 }
 
@@ -604,4 +917,220 @@
   .checkboxLabel {
     font-size: 0.85rem;
   }
+
+  .savedDiagramInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  /* Responsive fasorial */
+  .fasorialContainer {
+    padding: 12px;
+  }
+
+  .fasorialControlRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .fasorialControlRow strong {
+    font-size: 1rem;
+  }
+
+  .fasorialInputGroup {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .fasorialInputGroup label {
+    min-width: 45px;
+  }
+
+  .angleInput {
+    width: 80px;
+    padding: 6px 8px;
+  }
+
+  .typeSelect {
+    min-width: 120px;
+    padding: 6px 10px;
+  }
+
+  .phasorDiagramWrapper {
+    padding: 15px 5px;
+  }
+
+  .phasorDiagramWrapper svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .diagramHint {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.phasorDiagramWrapper {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.phasorDiagramWrapper :global(svg) {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.fasorialControlRow[title] {
+  position: relative;
+  cursor: help;
+}
+
+.fasorialControlRow:focus-within {
+  background: #e7f1ff;
+  border-left-color: #0056b3;
+  box-shadow: 0 2px 8px rgba(0, 86, 179, 0.15);
+}
+
+/* Estilos para scrollbar del modal */
+.modalContent::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.modalContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.modalContent::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Controles de magnitud */
+.rangeInput {
+  width: 120px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.magnitudInput {
+  width: 60px;
+  padding: 6px 8px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.magnitudInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+/* Responsive para los nuevos controles */
+@media (max-width: 768px) {
+  .rangeInput {
+    width: 80px;
+  }
+  
+  .magnitudInput {
+    width: 50px;
+    font-size: 0.8rem;
+  }
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+
+  width: 42px;
+  height: 42px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
+
+  z-index: 20;
+}
+
+.modalCloseButton:hover {
+  background: linear-gradient(135deg, #ff4d4f 0%, #d9363e 100%);
+  color: white;
+
+  transform: scale(1.08) rotate(90deg);
+
+  box-shadow:
+    0 8px 20px rgba(255, 77, 79, 0.4);
+}
+
+.modalCloseButton:active {
+  transform: scale(0.95);
+}
+
+.modalCloseButton:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(255, 77, 79, 0.2),
+    0 8px 20px rgba(255, 77, 79, 0.35);
+}
+
+.systemTypeSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 20px;
+  padding: 14px 18px;
+
+  background: white;
+  border-radius: 10px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.systemTypeSelector label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
 }

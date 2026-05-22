@@ -54,15 +54,13 @@
   height: 3px;
   background-color: #007bff;
   z-index: 2;
-  transition: all 0.4s ease;
-  width: 0%;
+  transition: width 0.5s ease-in-out;
 }
 
-/* Animación de la línea de progreso */
-.progressStep.completed ~ .progressStep .progress::after,
-.progressStep.active ~ .progressStep .progress::after {
-  width: calc((100% / (var(--total-steps) - 1)) * var(--completed-steps));
-}
+/* Estados de la línea de progreso */
+.progress[data-progress="0"]::after { width: 0%; }
+.progress[data-progress="1"]::after { width: 50%; }
+.progress[data-progress="2"]::after { width: 100%; }
 
 .progressStep {
   display: flex;
@@ -71,6 +69,16 @@
   position: relative;
   z-index: 3;
   flex: 1;
+  transition: all 0.3s ease;
+}
+
+/* Hacer los steps clickeables cuando tienen firma */
+.progressStep[style*="cursor: pointer"]:hover {
+  transform: translateY(-2px);
+}
+
+.progressStep[style*="cursor: pointer"]:hover .stepNumber {
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
 }
 
 .stepNumber {
@@ -102,7 +110,7 @@
 .progressStep.completed .stepNumber {
   background-color: #007bff;
   color: white;
-  border-color: #007bff;
+  border-color: #2E93FF;
   transform: scale(1.1);
 }
 
@@ -125,6 +133,10 @@
   color: #007bff;
 }
 
+.progressStep.completed .stepTitle {
+  color: #007bff;
+}
+
 .content {
   background-color: white;
   padding: 30px;
@@ -144,10 +156,29 @@
   font-size: 22px;
 }
 
+.signerDetails {
+  margin-top: 10px;
+}
+
 .signerDetails p {
   margin: 10px 0;
   color: #34495e;
   font-size: 15px;
+}
+
+/* Badge de firmado */
+.signerInfo > div {
+  margin-bottom: 15px;
+}
+
+.signerInfo span[style*="background: #4CAF50"] {
+  background: #4CAF50;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
 }
 
 .padContainer {
@@ -169,11 +200,17 @@
   font-weight: 500;
 }
 
+/* Cuando ya está firmado, cambiar color del borde */
+.instructions:has(p:contains("firma registrada")) {
+  border-left-color: #4CAF50;
+  background-color: #f0f9f0;
+}
+
 .canvas {
   border: 2px dashed #007bff;
   border-radius: 8px;
   background-color: white;
-  margin: 0 auto;
+  margin: 20px auto;
   display: block;
   cursor: crosshair;
   transition: all 0.3s ease;
@@ -186,7 +223,8 @@
 
 .actions {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 20px;
 }
 
@@ -225,23 +263,58 @@
   color: white;
 }
 
-.btnPrimary:hover {
+.btnPrimary:hover:not(:disabled) {
   background-color: #0056b3;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btnSecondary {
-  background-color: #dc3545;
+  background-color: #f44336;
   color: white;
   padding: 10px 20px;
   font-size: 15px;
 }
 
 .btnSecondary:hover {
-  background-color: #c82333;
+  background-color: #d32f2f;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Contador de firmantes */
+.firmanteCounter {
+  font-size: 14px;
+  color: #666;
+  align-self: center;
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+}
+
+/* Mensajes de advertencia */
+.warningMessage {
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border-radius: 4px;
+  color: #e65100;
+  font-size: 14px;
+}
+
+/* Etiqueta de "Firmado" debajo del título en progreso */
+.signatureBadge {
+  font-size: 11px;
+  color: #4CAF50;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 /* Responsive */
@@ -251,89 +324,13 @@
   }
   
   .progress {
-  display: flex;
-  justify-content: space-between;
-  margin: 40px 0;
-  position: relative;
-  counter-reset: step;
-}
-
-/* Línea gris de fondo */
-.progress::before {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: #e0e0e0;
-  z-index: 1;
-}
-
-.progress::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 0;
-  height: 3px;
-  background-color: #007bff !important;
-  z-index: 2;
-  transition: width 0.5s ease-in-out;
-}
-
-/* Estados de la línea de progreso */
-.progress[data-progress="0"]::after { width: 0%; }
-.progress[data-progress="1"]::after { width: 25%; }
-.progress[data-progress="2"]::after { width: 50%; }
-.progress[data-progress="3"]::after { width: 75%; }
-.progress[data-progress="4"]::after { width: 100%; }
-
-.progressStep {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 3;
-  flex: 1;
-}
-
-.stepNumber {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-bottom: 10px;
-  transition: all 0.4s ease;
-  border: 3px solid #e0e0e0;
-  font-size: 16px;
-}
-
-/* Paso activo */
-.progressStep.active .stepNumber {
-  background-color: white;
-  color: #007bff;
-  border-color: #007bff;
-  transform: scale(1.15);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
-}
-
-/* Pasos completados */
-.progressStep.completed .stepNumber {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  transform: scale(1.1);
-}
+    margin: 30px 0;
+  }
   
   .stepTitle {
-    text-align: left;
+    text-align: center;
     max-width: none;
-    font-size: 14px;
+    font-size: 11px;
   }
   
   .navigationButtons {
@@ -348,6 +345,7 @@
   .canvas {
     width: 100%;
     max-width: 600px;
+    height: 200px;
   }
   
   .header h2 {
@@ -355,7 +353,17 @@
   }
   
   .signerInfo h3 {
-    font-size: 20px;
+    font-size: 18px;
+  }
+  
+  .actions {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .firmanteCounter {
+    margin-left: 0;
+    text-align: center;
   }
 }
 
@@ -369,17 +377,27 @@
   }
   
   .stepNumber {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     font-size: 14px;
   }
   
+  .stepTitle {
+    font-size: 10px;
+  }
+  
   .canvas {
-    height: 200px;
+    height: 180px;
   }
   
   .btnBack, .btnPrimary, .btnSecondary {
     padding: 12px 20px;
     font-size: 15px;
+  }
+  
+  .signerInfo > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
   }
 }

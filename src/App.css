@@ -504,3 +504,21 @@
 .app-header:has(.header-right:empty) .header-left {
   justify-content: center;
 }
+
+/* Asegurar que los toasts estén por encima de todo */
+.toast-container {
+  z-index: 99999 !important;
+}
+
+.toast {
+  z-index: 99999 !important;
+}
+
+/* Si usas react-hot-toast, estos estilos ayudan */
+.go-toast {
+  z-index: 99999 !important;
+}
+
+.go-tracking {
+  z-index: 99999 !important;
+}

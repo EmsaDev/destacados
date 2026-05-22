@@ -4,6 +4,64 @@ import { FiVideo,FiCamera } from "react-icons/fi";
 
 const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
 
+  const [codigosDisponibles, setCodigosDisponibles] = useState([
+    '10001', '10002', '10003', '10004', '10005'
+  ]);
+
+  const [codigoSeleccionado, setCodigoSeleccionado] = useState('');
+  const [codigosSeleccionados, setCodigosSeleccionados] = useState(() => {
+    // Inicializar con los códigos que ya estén en data
+    if (data.codigosIrregularidades) {
+      try {
+        // Si está guardado como JSON
+        return JSON.parse(data.codigosIrregularidades);
+      } catch {
+        // Si está guardado como string separado por comas
+        return data.codigosIrregularidades.split(',').filter(c => c.trim());
+      }
+    }
+    return [];
+  });
+
+  // Función para agregar un código
+  const handleSelectCodigo = (e) => {
+    const codigo = e.target.value;
+    if (codigo && !codigosSeleccionados.includes(codigo)) {
+      const nuevosSeleccionados = [...codigosSeleccionados, codigo];
+      setCodigosSeleccionados(nuevosSeleccionados);
+      
+      // Actualizar también el data del padre
+      const syntheticEvent = {
+        target: {
+          name: 'codigosIrregularidades',
+          value: JSON.stringify(nuevosSeleccionados)
+        }
+      };
+      handleChange(syntheticEvent);
+      
+      // Remover de disponibles
+      setCodigosDisponibles(codigosDisponibles.filter(c => c !== codigo));
+    }
+  };
+
+    // Función para remover un código
+    const handleRemoverCodigo = (codigo) => {
+      const nuevosSeleccionados = codigosSeleccionados.filter(c => c !== codigo);
+      setCodigosSeleccionados(nuevosSeleccionados);
+      
+      // Actualizar también el data del padre
+      const syntheticEvent = {
+        target: {
+          name: 'codigosIrregularidades',
+          value: nuevosSeleccionados.length > 0 ? JSON.stringify(nuevosSeleccionados) : ''
+        }
+      };
+      handleChange(syntheticEvent);
+      
+      // Agregar de vuelta a disponibles
+      setCodigosDisponibles([...codigosDisponibles, codigo].sort());
+    };
+
   return (
     <div className={styles.form3Container}>
       <h2 className={styles.formSectionTitle}>Medición Activa y Reactiva</h2>
@@ -787,16 +845,102 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
             
             <div className={styles.evidenciasGrid}>
               <div className={styles.formGroup}>
-                <label>Códigos de las Irregularidades</label>
-                <input 
-                  className={styles.informeInput}
-                  type="text" 
-                  name="codigosIrregularidades" 
-                  placeholder='Ingrese códigos' 
-                  onChange={handleChange}
-                  value={data.codigosIrregularidades || ''}
-                />
-              </div>
+              <label>Códigos de las Irregularidades</label>
+              
+              {/* Dropdown sin botón */}
+              <select 
+                className={styles.informeSelect}
+                value=""
+                onChange={handleSelectCodigo}
+                disabled={codigosDisponibles.length === 0}
+                style={{ marginBottom: '12px' }}
+              >
+                <option value="">
+                  {codigosDisponibles.length === 0 
+                    ? 'No hay códigos disponibles' 
+                    : 'Seleccione un código'}
+                </option>
+                {codigosDisponibles.map(codigo => (
+                  <option key={codigo} value={codigo}>
+                    {codigo}
+                  </option>
+                ))}
+              </select>
+
+              {/* Chips de códigos seleccionados */}
+              {codigosSeleccionados.length > 0 && (
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px',
+                  minHeight: '44px',
+                  border: '1px solid #dee2e6'
+                }}>
+                  {codigosSeleccionados.map(codigo => (
+                    <div 
+                      key={codigo} 
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        borderRadius: '16px',
+                        padding: '6px 10px 6px 14px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <span>{codigo}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoverCodigo(codigo)}
+                        style={{
+                          marginLeft: '8px',
+                          background: 'rgba(255,255,255,0.2)',
+                          border: 'none',
+                          color: 'white',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          padding: '0 4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          width: '22px',
+                          height: '22px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f44336';
+                          e.currentTarget.style.borderColor = '#f44336';
+                          e.currentTarget.style.color = 'white';
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+                          e.currentTarget.style.color = 'white';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Campo oculto para mantener la compatibilidad con el formulario */}
+              <input 
+                type="hidden"
+                name="codigosIrregularidades"
+                value={codigosSeleccionados.length > 0 ? JSON.stringify(codigosSeleccionados) : ''}
+              />
+            </div>
               
               <div className={styles.formGroup}>
                 <label>Tipo de Evidencia</label>

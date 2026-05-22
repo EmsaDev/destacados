@@ -99,7 +99,7 @@ export const getUserByUsername = (username) => {
 export const getUserById = (id) => {
   return new Promise((resolve, reject) => {
     db.get(
-      "SELECT username, name, cc FROM users WHERE id = ?",
+      "SELECT username, name, cc, correo FROM users WHERE id = ?",
       [id],
       (err, row) => {
         if (err) reject(err);
