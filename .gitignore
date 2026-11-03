@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Archivos de compilación y distribución
+/release/
+/release.zip
+
+# Copias de bases de datos
+/backend/database.zip

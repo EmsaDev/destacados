@@ -1,22 +1,124 @@
 import { useState } from 'react';
 import styles from './Form3.module.css';
-import { FiVideo,FiCamera } from "react-icons/fi";
+import { FiVideo,FiCamera,FiXCircle  ,FiChevronsDown,FiChevronsUp    } from "react-icons/fi";
 
 const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
 
-  const [codigosDisponibles, setCodigosDisponibles] = useState([
-    '10001', '10002', '10003', '10004', '10005'
-  ]);
+  const irregularidades = [
+    { codigo: '001', descripcion: 'DESOCUPADO DESHABILITADO DEMOLIDO (ESPECIFIQUEN)' },
+    { codigo: '002', descripcion: 'DIRECCION EQUIVOCADA' },
+    { codigo: '003', descripcion: 'INMUEBLE MAL ENRUTADO' },
+    { codigo: '004', descripcion: 'ACOMETIDA ELECTRICA INTERVENIDA (EL MEDIDOR REGISTRA PARCIALMENTE)' },
+    { codigo: '005', descripcion: 'FASE DE ENTRADA DERIVADA EN EL DOBLE FONDO, ESPECIFIQUE FASE Y CARGA' },
+    { codigo: '006', descripcion: 'ACOMETIDA INSTALACIONES ELECTRICAS ANTITECNICAS' },
+    { codigo: '007', descripcion: 'CONEXION DE ENTRADA FASES O NEUTRO MANIPULADOS' },
+    { codigo: '008', descripcion: 'CONEXION INTERNA DEL MEDIDOR ALTERADA' },
+    { codigo: '009', descripcion: 'CONSUMO DE FASE CARGA CONECTADA A OTRO MEDIDOR DE TARIFA DIFERENTE' },
+    { codigo: '010', descripcion: 'INVERTIDA CONEXION NEUTRO-FASE EN MONOFÁSICO' },
+    { codigo: '011', descripcion: 'INVERTIDA CONEXIÓN NEUTRO FASE EN TRIFASICO' },
+    { codigo: '012', descripcion: 'INVERTIDA LA CONEXION ENTRADA-SALIDA DE FASES, ESPECIFIQUE LAS FASES' },
+    { codigo: '013', descripcion: 'DISCO DEL MEDIDOR CON GIRO INVERSO O IRREGULAR' },
+    { codigo: '014', descripcion: 'ELEMENTO EXTRAÑO INTERNO EN EL MEDIDOR' },
+    { codigo: '015', descripcion: 'EQUIPO NO ADECUADO/NO CUMPLE NORMA' },
+    { codigo: '016', descripcion: 'F. CALCULADO EN TERRENO ANORMAL (0.186 FP 1.15)' },
+    { codigo: '017', descripcion: 'ALTERACION DE LA POSICION DEL MEDIDOR' },
+    { codigo: '018', descripcion: 'MEDIDOR DIFERENTE AL MATRICULADO EN SISTEMA COMERCIAL' },
+    { codigo: '019', descripcion: 'MEDIDOR CON DISCO FRENADO, RAYADO (ESPECIFIQUE)' },
+    { codigo: '020', descripcion: 'MEDIDOR CON PLACA DE CARACTERÍSTICAS SUELTAS' },
+    { codigo: '021', descripcion: 'MEDIDOR ENCONTRADO CON PARTES EXTRAÑAS O PLAQUETEADO' },
+    { codigo: '022', descripcion: 'MEDIDOR CON REGISTRADOR AVERIADO' },
+    { codigo: '023', descripcion: 'MEDIDOR CON REGISTRADOR MANIPULADO' },
+    { codigo: '024', descripcion: 'MEDIDOR ELECTRONICO BLOQUEADO (ALARMA ACTIVADA)' },
+    { codigo: '025', descripcion: 'MEDIDOR INTERNO, OBSTACULO PARA LECTURA' },
+    { codigo: '026', descripcion: 'MEDIDOR MONOFASICO DESCONECTADO EN NEUTRO' },
+    { codigo: '027', descripcion: 'MEDIDOR NO REGISTRA CONSUMO' },
+    { codigo: '028', descripcion: 'MEDIDOR OXIDADO DETERIORADO' },
+    { codigo: '029', descripcion: 'MEDIDOR PUENTEADO EN BORNERA DE CONEXION ESPECIFIQUE FASE Y CARGA' },
+    { codigo: '030', descripcion: 'MEDIDOR QUEMADO' },
+    { codigo: '031', descripcion: 'MEDIDOR RETIRADO-TRANSLADADO SIN AUTORIZACION DE EMBA' },
+    { codigo: '032', descripcion: 'MEDIDOR SIN PLACAS DE CARACTERÍSTICAS' },
+    { codigo: '033', descripcion: 'MEDIDOR SIN TAPA BORNERA' },
+    { codigo: '034', descripcion: 'MEDIDOR SOBRECARGADO' },
+    { codigo: '035', descripcion: 'MEDIDOR CON TAPA PRINCIPAL PERFORADA' },
+    { codigo: '036', descripcion: 'TAPA PRINCIPAL GOLPEADA VENCIDA-ROTA (ESPECIFIQUEN)' },
+    { codigo: '037', descripcion: 'OREJAS DE FIJACION PARA SELLOS TAPA PRINCIPAL ROTAS/PEGADAS' },
+    { codigo: '038', descripcion: 'TORNILLOS DE FIJACION TAPA PRINCIPAL ROTOS/PEGADOS' },
+    { codigo: '039', descripcion: 'PUENTE DE TENSION ABIERTO/AUSENTE/FLOJO, ESPECIFIQUE LA FASE' },
+    { codigo: '040', descripcion: 'PUENTE DE TENSION AISLADO, ESPECIFIQUE LA FASE' },
+    { codigo: '041', descripcion: 'PUENTE DE TENSION ROTO/DETERIORADO, ESPECIFIQUE LA FASE' },
+    { codigo: '042', descripcion: 'SECUENCIA DE FASES INVERTIDA' },
+    { codigo: '043', descripcion: 'SELLOS ANORMALES EN CELDA O ARMARIO DE MEDIDORES (ESPECIFIQUEN)' },
+    { codigo: '044', descripcion: 'SELLOS ANORMALES EN EL DOBLE FONDO DE LA CELDA DEL MEDIDOR' },
+    { codigo: '045', descripcion: 'SELLOS ENCONTRADOS NO COINCIDEN CON LOS SELLOS INSTALADOS' },
+    { codigo: '046', descripcion: 'SELLOS PEGADOS/SOLDADOS EN TAPA BORNERA' },
+    { codigo: '047', descripcion: 'SELLOS PEGADOS/SOLDADOS EN TAPA PRINCIPAL' },
+    { codigo: '048', descripcion: 'SELLOS ROTOS EN LA TAPA BORNERA' },
+    { codigo: '049', descripcion: 'SELLOS ROTOS EN LA TAPA PRINCIPAL' },
+    { codigo: '050', descripcion: 'SELLOS VIOLADOS EN LA TAPA BORNERA' },
+    { codigo: '051', descripcion: 'SELLOS VIOLADOS EN LA TAPA PRINCIPAL' },
+    { codigo: '052', descripcion: 'SIN SELLOS EN LA TAPA BORNERA' },
+    { codigo: '053', descripcion: 'SIN SELLOS EN LA TAPA PRINCIPAL' },
+    { codigo: '054', descripcion: 'SERVICIO DIRECTO BIFASICO, ESPECIFIQUE CARGA' },
+    { codigo: '055', descripcion: 'SERVICIO DIRECTO CON MEDIDOR (MEDIDOR NO REGISTRA CONSUMO)' },
+    { codigo: '056', descripcion: 'SERVICIO DIRECTO MONOFASICO, ESPECIFIQUE CARGA' },
+    { codigo: '057', descripcion: 'SERVICIO DIRECTO SIN FACTURACION (USUARIO NO CLIENTE)' },
+    { codigo: '058', descripcion: 'SERVICIO DIRECTO TRIFASICO, ESPECIFIQUE CARGA' },
+    { codigo: '059', descripcion: 'AUMENTO DE CARGA POR ENCIMA DE LA CONTRATADA' },
+    { codigo: '060', descripcion: 'CARGA INSTALADA MAYOR A 12 KW SIN TRANSFORMADOR EXCLUSIVO' },
+    { codigo: '061', descripcion: 'USO DIFERENTE AL MATRICULADO' },
+    { codigo: '062', descripcion: 'PRESTA SERVICIOS A OTROS INMUEBLES' },
+    { codigo: '063', descripcion: 'PROVISIONAL DE ENERGIA SIN MEDIDOR (RESIDENCIAL O NO RESIDENCIAL)' },
+    { codigo: '064', descripcion: 'LECTURA ENCONTRADA MENOR A LA FACTURADA (DEVOLUCION DE LECTURA)' },
+    { codigo: '065', descripcion: 'ERROR EN LECTURA TOMADA' },
+    { codigo: '066', descripcion: 'RECONEXION NO AUTORIZADA POR LA EMPRESA' },
+    { codigo: '067', descripcion: 'MEDIDOR NO REGISTRADO EN SISTEMA COMERCIAL' },
+    { codigo: '068', descripcion: 'CLIENTE CON DOBLE FACTURACION (DOBLE MATRICULA)' },
+    { codigo: '069', descripcion: 'OTROS' },
+    { codigo: '070', descripcion: 'MEDIDOR DESCONECTADO' },
+    { codigo: '071', descripcion: 'PROGRAMACION DEL MEDIDOR ELECTRONICO ADULTERADA, MODIFICADA' },
+    { codigo: '072', descripcion: 'SELLOS NO CONFORMES EN EL DOBLE FONDO DE LA CELDA DEL MEDIDOR' },
+    { codigo: '073', descripcion: 'SELLOS DEL BLOQUE DE PRUEBA NO CONFORMES' },
+    { codigo: '074', descripcion: 'SELLOS INSTALADOS EN REVISION ANTERIOR ROTOS, ESPECIFICAR' },
+    { codigo: '075', descripcion: 'SIN SELLO INSTALADO EN REVISION ANTERIOR, ESPECIFICAR' },
+    { codigo: '076', descripcion: 'SELLOS DE TP\'S ADULTERADOS Y/O RETIRADOS' },
+    { codigo: '077', descripcion: 'SELLOS DE TC\'S ADULTERADOS Y/O RETIRADOS' },
+    { codigo: '078', descripcion: 'SELLOS DE BLOQUE DE PRUEBA ADULTERADOS Y/O RETIRADOS' },
+    { codigo: '079', descripcion: 'SELLOS DE RELOJ TARIFARIO ADULTERADOS Y/O RETIRADOS' },
+    { codigo: '080', descripcion: 'TP\'S DAÑADOS, ESPECIFICAR' },
+    { codigo: '081', descripcion: 'TC\'S DAÑADOS, ESPECIFICAR' },
+    { codigo: '082', descripcion: 'TC SUBDIMENSIONADO' },
+    { codigo: '083', descripcion: 'TC SOBREDIMENSIONADO' },
+    { codigo: '084', descripcion: 'POLARIDAD DEL TC O TP INVERTIDA' },
+    { codigo: '085', descripcion: 'PUENTEADOS EL PRIMARIO O SECUNDARIOS DEL TC, ESPECIFIQUE LA FASE' },
+    { codigo: '086', descripcion: 'AISLADA SEÑAL EN EL SECUNDARIO DEL TC O DEL TP' },
+    { codigo: '087', descripcion: 'INVERTIDA CONEXIONES ENTRADAS O SALIDAS DE TC\'S' },
+    { codigo: '088', descripcion: 'INVERTIDAS CONEXIONES ENTRADAS O SALIDAS DE TP\'S' },
+    { codigo: '089', descripcion: 'TC O TP DESCONECTADO O QUEMADO' },
+    { codigo: '090', descripcion: 'INTERRUMPIDA SEÑAL DE TP AL MEDIDOR' },
+    { codigo: '091', descripcion: 'SECUENCIA DE FASES INVERTIDA' },
+    { codigo: '092', descripcion: 'SECUENCIA CONMUTADA DE CORRIENTES Y/O VOLTAJES' },
+    { codigo: '093', descripcion: 'MODEM U OTRO ELEMENTO CONECTADO AL BLOQUE DE PRUEBAS' },
+    { codigo: '094', descripcion: 'MODEM CONTROLADOR BLOQUEADO/QUEMADO' },
+    { codigo: '095', descripcion: 'RELOJ DESPROGRAMADO' },
+    { codigo: '096', descripcion: 'RELOJ APAGADO, DAÑADO O DESCONECTADO' },
+    { codigo: '097', descripcion: 'AUSENCIA DE BANCO DE CONDENSADORES' },
+    { codigo: '098', descripcion: 'CABLE DE SEÑAL EN MAL ESTADO' },
+    { codigo: '099', descripcion: 'CABLE DE SEÑAL CHUZADO O PELADO, ESPECIFIGER TENSION O CORRIENTE' },
+    { codigo: '100', descripcion: 'SEÑAL DE CORRIENTE DE UNO O VARIOS TC\'S PUENTEADOS' },
+    { codigo: '101', descripcion: 'FACTOR MULTIPLICADOR DIFERENTE AL REGISTRADO EN EL SISTEMA COMERCIAL' },
+    { codigo: '102', descripcion: 'ERROR MAYOR AL PERMITIDO (-5% < E > 5)' }
+  ];
 
-  const [codigoSeleccionado, setCodigoSeleccionado] = useState('');
+  const [codigosDisponibles, setCodigosDisponibles] = useState(() => {
+    // Inicializar con todos los códigos disponibles
+    return irregularidades.map(item => item.codigo);
+  });
+
   const [codigosSeleccionados, setCodigosSeleccionados] = useState(() => {
-    // Inicializar con los códigos que ya estén en data
     if (data.codigosIrregularidades) {
       try {
-        // Si está guardado como JSON
         return JSON.parse(data.codigosIrregularidades);
       } catch {
-        // Si está guardado como string separado por comas
         return data.codigosIrregularidades.split(',').filter(c => c.trim());
       }
     }
@@ -30,7 +132,6 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
       const nuevosSeleccionados = [...codigosSeleccionados, codigo];
       setCodigosSeleccionados(nuevosSeleccionados);
       
-      // Actualizar también el data del padre
       const syntheticEvent = {
         target: {
           name: 'codigosIrregularidades',
@@ -39,28 +140,44 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
       };
       handleChange(syntheticEvent);
       
-      // Remover de disponibles
       setCodigosDisponibles(codigosDisponibles.filter(c => c !== codigo));
     }
   };
 
-    // Función para remover un código
-    const handleRemoverCodigo = (codigo) => {
-      const nuevosSeleccionados = codigosSeleccionados.filter(c => c !== codigo);
-      setCodigosSeleccionados(nuevosSeleccionados);
-      
-      // Actualizar también el data del padre
-      const syntheticEvent = {
-        target: {
-          name: 'codigosIrregularidades',
-          value: nuevosSeleccionados.length > 0 ? JSON.stringify(nuevosSeleccionados) : ''
-        }
-      };
-      handleChange(syntheticEvent);
-      
-      // Agregar de vuelta a disponibles
-      setCodigosDisponibles([...codigosDisponibles, codigo].sort());
+  const handleRemoverCodigo = (codigo) => {
+    const nuevosSeleccionados = codigosSeleccionados.filter(c => c !== codigo);
+    setCodigosSeleccionados(nuevosSeleccionados);
+    
+    const syntheticEvent = {
+      target: {
+        name: 'codigosIrregularidades',
+        value: nuevosSeleccionados.length > 0 ? JSON.stringify(nuevosSeleccionados) : ''
+      }
     };
+    handleChange(syntheticEvent);
+    
+    setCodigosDisponibles([...codigosDisponibles, codigo].sort());
+  };
+
+  const [dropdownAbierto, setDropdownAbierto] = useState(false);
+  const [busquedaCodigo, setBusquedaCodigo] = useState('');
+
+    // FILTRO PARA EL DROPDOWN (corregido)
+    const resultadosDropdown = irregularidades.filter(item => {
+      if (!codigosDisponibles.includes(item.codigo)) {
+        return false;
+      }
+      const texto = busquedaCodigo.toLowerCase();
+      return (
+        item.codigo.toLowerCase().includes(texto) ||
+        item.descripcion.toLowerCase().includes(texto)
+      );
+    });
+
+    // FILTRO PARA EL SELECT (corregido)
+    const irregularidadesFiltradas = irregularidades.filter(item => 
+      codigosDisponibles.includes(item.codigo)
+    );
 
   return (
     <div className={styles.form3Container}>
@@ -845,102 +962,94 @@ const Form3 = ({ data, handleChange, nextStep, prevStep}) => {
             
             <div className={styles.evidenciasGrid}>
               <div className={styles.formGroup}>
-              <label>Códigos de las Irregularidades</label>
-              
-              {/* Dropdown sin botón */}
-              <select 
-                className={styles.informeSelect}
-                value=""
-                onChange={handleSelectCodigo}
-                disabled={codigosDisponibles.length === 0}
-                style={{ marginBottom: '12px' }}
-              >
-                <option value="">
-                  {codigosDisponibles.length === 0 
-                    ? 'No hay códigos disponibles' 
-                    : 'Seleccione un código'}
-                </option>
-                {codigosDisponibles.map(codigo => (
-                  <option key={codigo} value={codigo}>
-                    {codigo}
-                  </option>
-                ))}
-              </select>
+                <label>Códigos de las Irregularidades</label>
 
-              {/* Chips de códigos seleccionados */}
-              {codigosSeleccionados.length > 0 && (
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '8px',
-                  padding: '12px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '4px',
-                  minHeight: '44px',
-                  border: '1px solid #dee2e6'
-                }}>
-                  {codigosSeleccionados.map(codigo => (
-                    <div 
-                      key={codigo} 
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        borderRadius: '16px',
-                        padding: '6px 10px 6px 14px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      <span>{codigo}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoverCodigo(codigo)}
-                        style={{
-                          marginLeft: '8px',
-                          background: 'rgba(255,255,255,0.2)',
-                          border: 'none',
-                          color: 'white',
-                          fontSize: '16px',
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                          padding: '0 4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '50%',
-                          width: '22px',
-                          height: '22px',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f44336';
-                          e.currentTarget.style.borderColor = '#f44336';
-                          e.currentTarget.style.color = 'white';
-                          e.currentTarget.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                          e.currentTarget.style.color = 'white';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                      >
-                        ×
-                      </button>
+              {/* DROPDOWN CON BÚSQUEDA */}
+                <div className={styles.dropdownContainer}>
+                  <button
+                    type="button"
+                    className={`${styles.dropdownButton} ${dropdownAbierto ? styles.active : ''}`}
+                    onClick={() => setDropdownAbierto(!dropdownAbierto)}
+                  >
+                    Seleccione un código
+                    <span>
+                      {dropdownAbierto ? <FiChevronsUp /> : <FiChevronsDown />}
+                    </span>
+                  </button>
+
+                  {dropdownAbierto && (
+                    <div className={styles.dropdownMenu}>
+                      <input
+                        type="text"
+                        placeholder="Buscar código o descripción..."
+                        value={busquedaCodigo}  
+                        onChange={(e) => setBusquedaCodigo(e.target.value)}
+                        autoFocus
+                      />
+
+                      <div className={styles.dropdownOptions}>
+                        {resultadosDropdown.map(item => (  // 
+                          <div
+                            key={item.codigo}
+                            className={styles.dropdownOption}
+                            onClick={() => {
+                              handleSelectCodigo({
+                                target: {
+                                  value: item.codigo
+                                }
+                              });
+                              setBusquedaCodigo('');  // 
+                              setDropdownAbierto(false);
+                            }}
+                          >
+                            <strong>{item.codigo}</strong>
+                            <span>{item.descripcion}</span>
+                          </div>
+                        ))}
+
+                        {resultadosDropdown.length === 0 && ( 
+                          <div className={styles.noResults}>
+                            {busquedaCodigo ? 'No se encontraron coincidencias' : 'No hay códigos disponibles'}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
 
-              {/* Campo oculto para mantener la compatibilidad con el formulario */}
-              <input 
-                type="hidden"
-                name="codigosIrregularidades"
-                value={codigosSeleccionados.length > 0 ? JSON.stringify(codigosSeleccionados) : ''}
-              />
-            </div>
+
+                {/* Chips de códigos seleccionados - CORREGIDO */}
+                {codigosSeleccionados.length > 0 && (
+                  <div className={styles.codigosSeleccionados}>
+                    {codigosSeleccionados.map(codigo => {
+                      const descripcion = irregularidades.find(i => i.codigo === codigo)?.descripcion || '';
+                      return (
+                        <div key={codigo} className={styles.codigoChip}>
+                          <span title={descripcion}>{codigo}</span>
+                          <button
+                            type="button"
+                            className={styles["chip-remove"]}
+                            onClick={() => handleRemoverCodigo(codigo)}
+                            title="Eliminar código"
+                          >
+                            <FiXCircle />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <input
+                  type="hidden"
+                  name="codigosIrregularidades"
+                  value={
+                    codigosSeleccionados.length > 0
+                      ? JSON.stringify(codigosSeleccionados)
+                      : ''
+                  }
+                />
+              </div>
               
               <div className={styles.formGroup}>
                 <label>Tipo de Evidencia</label>

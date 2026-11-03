@@ -15,11 +15,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 async function crearUsuario() {
-  const hashed = await bcrypt.hash("123456789", 10);
+  const hashed = await bcrypt.hash("17345407", 10);
   
   db.run(
     `INSERT INTO users (username, password, role, name, cc) VALUES (?, ?, ?, ?, ?)`,
-    ["test", hashed, "user", "User Test", "111111"],
+    ["wilfred.machado", hashed, "user", "Wilfred Machado", "17345407"],
     function (err) {
       if (err) {
         console.error("❌ Error creando usuario:", err.message);

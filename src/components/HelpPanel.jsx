@@ -191,7 +191,63 @@ function HelpPanel({ onClose, currentStep = 1 }) {
         "💡 Revise cuidadosamente todas las pruebas antes de continuar"
       ]
     },
+    // ============================================
+    // NUEVO PASO 5: ACTA DE MATERIALES
+    // ============================================
     5: {
+      title: "Acta de Materiales - Gestión de Insumos",
+      description: "Registre, gestione y liquide todos los materiales utilizados en la visita técnica",
+      steps: [
+        {
+          title: "📋 Información de la Visita",
+          description: "Visualice el resumen generado automáticamente con los datos de la visita (fecha, hora, ciudad, dirección, técnicos responsables). Esta información se toma de los formularios anteriores."
+        },
+        {
+          title: "📊 Medidores - Datos Generales",
+          description: "Complete los datos básicos del medidor: Fasico (1, 2, 3), Fases (F) e Hilos (H). Estos datos son fundamentales para la correcta identificación del equipo."
+        },
+        {
+          title: "🔌 Medidores - Especificaciones Técnicas",
+          description: "Registre los diferentes tipos de medidores instalados: Electromecánico, Electrónico Registrador Ciclométrico y Electrónico con Display. Para cada uno especifique: Tipo, Amperios (A), Voltios (V), Clase, Estado y Cantidad."
+        },
+        {
+          title: "🛡️ Protecciones y Herrajes",
+          description: "Documente todos los elementos de protección y herrajes utilizados: Cinta Bandit, Grapa Hebilla, Capacete, Conector Curvo, Conduletas, Conduleta con Tapa, Tubo Galvanizado y Anclaje Acometida. Para cada uno indique estado, cantidad y medidas específicas."
+        },
+        {
+          title: "🔒 Sellos de Seguridad",
+          description: "Registre los sellos instalados: Rotoseal de Color (especificando color) y Estampilla. Cada uno requiere estado y cantidad."
+        },
+        {
+          title: "📱 Medidor Instalado y Disposición de Sellos",
+          description: "Complete los datos del medidor final instalado (número, marca, fases, dígitos, lectura, voltios, amperios) y registre la disposición de los sellos TP, TB y EST con sus respectivos números y colores."
+        },
+        {
+          title: "🗑️ Material Retirado",
+          description: "Describa el material que fue retirado durante la visita. Es importante documentar qué se retiró para el control de inventario."
+        },
+        {
+          title: "💰 Liquidación de Materiales",
+          description: "Visualice automáticamente la liquidación de todos los materiales registrados. El sistema calcula: Concepto, Cantidad, Valor Unitario y Subtotal. Se muestra el TOTAL LIQUIDADO de todos los materiales."
+        },
+        {
+          title: "📝 Atención, Autorización y Observaciones",
+          description: "Registre quién atendió la visita, seleccione el tipo de pago (Contado o Financiado) que autoriza el cliente, seleccione el tipo de informe realizado y agregue observaciones adicionales si es necesario."
+        }
+      ],
+      tips: [
+        "💡 Los precios son referenciales - el valor final puede variar según cotización vigente",
+        "💡 Use los botones + y - para ajustar cantidades rápidamente",
+        "💡 Los estados del material: PR:Provisional, VE:Venta, TE:Usuario, RE:Reutilizado, FI:Financiado",
+        "💡 Estados de material retirado: EA:Entregado al usuario, BC:Bodega Contratista, BE:Bodega, EMSA:PR",
+        "💡 Verifique que todos los medidores tengan sus especificaciones completas",
+        "💡 La disposición de sellos debe coincidir con lo encontrado en campo",
+        "💡 Revise la liquidación de materiales antes de continuar al siguiente paso",
+        "💡 Tome evidencia fotográfica de los materiales instalados",
+        "💡 Asegúrese de que el cliente autorice el tipo de pago correctamente"
+      ]
+    },
+    6: {
       title: "Firma Digital del Acta",
       description: "Capture las firmas digitales de todos los participantes",
       steps: [
@@ -204,8 +260,8 @@ function HelpPanel({ onClose, currentStep = 1 }) {
           description: "Firma del cliente o usuario presente en la revisión. Los datos vienen del formulario 1."
         },
         {
-          title: "👷 Supervisor/Interventor",
-          description: "Firma del supervisor o interventor que acompaña la visita. Los datos vienen del formulario 1."
+          title: "👷 Testigo",
+          description: "Firma del testigo que acompaña la visita. Los datos vienen del formulario 1."
         }
       ],
       tips: [
@@ -216,7 +272,7 @@ function HelpPanel({ onClose, currentStep = 1 }) {
         "💡 Las firmas son legalmente vinculantes para el acta"
       ]
     },
-    6: {
+    7: {
       title: "Resumen Final del Acta",
       description: "Revise toda la información y genere el acta final en PDF",
       steps: [
@@ -280,9 +336,9 @@ function HelpPanel({ onClose, currentStep = 1 }) {
     1: { icon: <FiFileText />, name: "Datos Básicos" },
     2: { icon: <FiFileText />, name: "Información Técnica" },
     3: { icon: <FiFileText />, name: "Detalles Finales" },
-    4: { icon: <FiLayers />, name: "Acta de Diagramas" },
-    5: { icon: <FiEdit3 />, name: "Firma Digital" },
-    6: { icon: <FiClipboard />, name: "Resumen Final" }
+    5: { icon: <FiClipboard />, name: "Acta de Materiales" }, // NUEVO
+    6: { icon: <FiEdit3 />, name: "Firma Digital" },
+    7: { icon: <FiClipboard />, name: "Resumen Final" }
   }
 
   // Cambiar automáticamente a 'pasoActual' cuando cambie el currentStep

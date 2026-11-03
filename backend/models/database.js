@@ -1,19 +1,24 @@
 // models/database.js
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const sqlite3 = require('sqlite3');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dbPath = path.join(__dirname, '..', 'database.sqlite');
+const dbFolder = process.env.DB_PATH || __dirname;
+const dbPath = path.join(dbFolder, 'database.sqlite');
 
-const db = new sqlite3.Database(dbPath);
+console.log("📁 Ruta DB:", dbPath);
 
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("❌ Error abriendo DB:", err);
+  } else {
+    console.log("✅ Base de datos conectada");
+  }
+});
 // ============================================
 // INICIALIZACIÓN DE LA BASE DE DATOS
 // ============================================
 
-export const initializeDatabase = () => {
+const initializeDatabase = () => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       // Tabla de usuarios
@@ -83,7 +88,7 @@ export const initializeDatabase = () => {
 // FUNCIONES PARA USUARIOS
 // ============================================
 
-export const getUserByUsername = (username) => {
+const getUserByUsername = (username) => {
   return new Promise((resolve, reject) => {
     db.get(
       "SELECT * FROM users WHERE username = ?",
@@ -96,10 +101,10 @@ export const getUserByUsername = (username) => {
   });
 };
 
-export const getUserById = (id) => {
+const getUserById = (id) => {
   return new Promise((resolve, reject) => {
     db.get(
-      "SELECT username, name, cc, correo FROM users WHERE id = ?",
+      "SELECT username, name, cc FROM users WHERE id = ?",
       [id],
       (err, row) => {
         if (err) reject(err);
@@ -113,7 +118,7 @@ export const getUserById = (id) => {
 // FUNCIONES PARA CLIENTES
 // ============================================
 
-export const getClientByCode = (codigo) => {
+const getClientByCode = (codigo) => {
   return new Promise((resolve, reject) => {
     db.get(
       "SELECT * FROM clients WHERE codigo = ?",
@@ -130,7 +135,7 @@ export const getClientByCode = (codigo) => {
 // FUNCIONES PARA REVIEWS
 // ============================================
 
-export const getNextReviewNumber = () => {
+const getNextReviewNumber = () => {
   return new Promise((resolve, reject) => {
     db.get(
       "SELECT no FROM reviews ORDER BY no DESC LIMIT 1",
@@ -143,7 +148,7 @@ export const getNextReviewNumber = () => {
   });
 };
 
-export const saveReview = async (reviewData) => {
+const saveReview = async (reviewData) => {
   return new Promise(async (resolve, reject) => {
     try {
       const nextNo = await getNextReviewNumber();
@@ -214,7 +219,7 @@ export const saveReview = async (reviewData) => {
   });
 };
 
-export const getAllReviews = () => {
+const getAllReviews = () => {
   return new Promise((resolve, reject) => {
     db.all(
       "SELECT * FROM reviews ORDER BY no DESC",
@@ -227,7 +232,7 @@ export const getAllReviews = () => {
   });
 };
 
-export const getReviewById = (id) => {
+const getReviewById = (id) => {
   return new Promise((resolve, reject) => {
     db.get(
       "SELECT * FROM reviews WHERE id = ?",
@@ -240,7 +245,7 @@ export const getReviewById = (id) => {
   });
 };
 
-export const updateReview = (id, updates) => {
+const updateReview = (id, updates) => {
   return new Promise((resolve, reject) => {
     const fields = [];
     const values = [];
@@ -260,7 +265,7 @@ export const updateReview = (id, updates) => {
   });
 };
 
-export const deleteReview = (id) => {
+const deleteReview = (id) => {
   return new Promise((resolve, reject) => {
     db.run(
       'DELETE FROM reviews WHERE id = ?',
@@ -277,7 +282,7 @@ export const deleteReview = (id) => {
 // FUNCIONES PARA MARCAS Y TIPOS
 // ============================================
 
-export const getAllMarcas = () => {
+const getAllMarcas = () => {
   return new Promise((resolve, reject) => {
     db.all("SELECT * FROM marcaMedidores", [], (err, rows) => {
       if (err) reject(err);
@@ -286,7 +291,7 @@ export const getAllMarcas = () => {
   });
 };
 
-export const getTiposByMarca = (marcaId) => {
+const getTiposByMarca = (marcaId) => {
   return new Promise((resolve, reject) => {
     db.all(
       "SELECT * FROM tipoMedidores WHERE marca_id = ?",
@@ -297,4 +302,20 @@ export const getTiposByMarca = (marcaId) => {
       }
     );
   });
+};
+
+// Exportar todas las funciones
+module.exports = {
+  initializeDatabase,
+  getUserByUsername,
+  getUserById,
+  getClientByCode,
+  getNextReviewNumber,
+  saveReview,
+  getAllReviews,
+  getReviewById,
+  updateReview,
+  deleteReview,
+  getAllMarcas,
+  getTiposByMarca
 };

@@ -1383,3 +1383,74 @@
 .estadoBC { background: #20c997; color: white; }
 .estadoBE { background: #6f42c1; color: white; }
 .estadoEMSA { background: #dc3545; color: white; }
+
+/* ===== Vista previa: encabezado y zoom ===== */
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 70px 14px 24px; /* espacio a la derecha para el botón cerrar */
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 2px solid #e0e7ff;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #007bff;
+}
+
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: #f0f4ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+}
+
+.zoomButton {
+  min-width: 36px;
+  padding: 6px 12px;
+  background: white;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zoomButton:hover {
+  color: #007bff;
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
+}
+
+.zoomLabel {
+  min-width: 52px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* El visor ya no es blanco: así se ve la hoja resaltada */
+.previewIframe {
+  background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .previewHeader {
+    padding: 12px 64px 12px 16px;
+  }
+  .modalTitle {
+    font-size: 1.05rem;
+  }
+}

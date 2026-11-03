@@ -324,10 +324,6 @@
   font-size: 0.9rem;
 }
 
-.savedDiagramInfo span::before {
-  content: "✅ ";
-}
-
 .savedDiagramInfo button {
   padding: 6px 12px;
   background: #28a745;
@@ -948,10 +944,6 @@
     min-width: 45px;
   }
 
-  .angleInput {
-    width: 80px;
-    padding: 6px 8px;
-  }
 
   .typeSelect {
     min-width: 120px;
@@ -1031,20 +1023,22 @@
 }
 
 .magnitudInput {
-  width: 60px;
-  padding: 6px 8px;
+  width: 90px;
+  padding: 8px 10px;
   border: 2px solid #e1e5e9;
   border-radius: 6px;
   font-size: 0.9rem;
   text-align: center;
   background: white;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .magnitudInput:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+  background: white;
 }
 
 /* Responsive para los nuevos controles */
@@ -1133,4 +1127,298 @@
   font-weight: 600;
   color: #374151;
   font-size: 0.95rem;
+}
+
+/* Estilos para la tabla fasorial */
+.fasorialTableWrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.fasorialTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.fasorialTable th {
+  background: #f5f5f5;
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 14px;
+}
+
+.fasorialTable td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.fasorialRow {
+  transition: background-color 0.2s;
+}
+
+.fasorialRow:hover {
+  filter: brightness(0.98);
+}
+
+.fasorialControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.fasorialControl .rangeInput {
+  width: 100px;
+  cursor: pointer;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.fasorialControl .rangeInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.fasorialControl .magnitudInput:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+
+.fasorialControl .angleInput:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.fasorialControl .typeSelect {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+  min-width: 90px;
+}
+
+.fasorialControl .typeSelect:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.fasorialControl span {
+  font-size: 13px;
+  color: #666;
+  min-width: 16px;
+}
+
+/* Sistema de tipos de sistema */
+.systemTypeSelector {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.systemTypeSelector label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.systemTypeSelector .typeSelect {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+/* Contenedor del diagrama fasorial */
+.phasorDiagramWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  min-height: 420px;
+}
+
+.phasorDiagramWrapper svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.diagramHint {
+  font-size: 13px;
+  color: #666;
+  margin-top: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border-left: 3px solid #2196F3;
+  line-height: 1.6;
+}
+
+/* ========== MODAL DE TEXTO ========== */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.2s;
+}
+
+.modalCloseBtn:hover {
+  color: #ef4444;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.modalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalDescription {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.modalTextInput {
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modalTextInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modalHelper {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.modalFooter {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalCancelBtn,
+.modalSaveBtn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.modalCancelBtn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.modalCancelBtn:hover {
+  background: #e5e7eb;
+}
+
+.modalSaveBtn {
+  background: #3b82f6;
+  color: white;
+}
+
+.modalSaveBtn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.modalSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

@@ -1,5 +1,6 @@
-import React, { useState,useEffect } from 'react';
-import html2pdf from 'html2pdf.js';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import styles from './Summary.module.css';
 import logo from '../assets/images/logo-4@3x.png';
 // Importar todas las imágenes
@@ -13,7 +14,7 @@ import conexiones1 from '../assets/images/conexiones/conexiones.png';
 import conexiones2 from '../assets/images/conexiones/conexiones2.png';
 import conexiones3 from '../assets/images/conexiones/conexiones3.png';
 import { FiEye, FiDownload, FiPrinter, FiSend, FiX, FiArrowLeft,FiLoader  } from 'react-icons/fi';
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import medidorImg from '../assets/overlays/medidor.png';
 import tpImg from '../assets/overlays/tp.png';
 
@@ -24,6 +25,8 @@ function Summary({ data, prevStep }) {
   const [marcas, setMarcas] = useState([]);
   const [tiposPorMarca, setTiposPorMarca] = useState({});
   const [loading, setLoading] = useState(false);
+  const previewRef = useRef(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
   const [message, setMessage] = useState(null);
   const [signatures, setSignatures] = useState({
   firmaFuncionario: localStorage.getItem('firmaFuncionario') || '',
@@ -62,7 +65,6 @@ const captureEditedDiagram = async (diagramData, baseImageSrc) => {
     const baseImageX = (canvasWidth - baseImageWidth) / 2;
     const baseImageY = (canvasHeight - baseImageHeight) / 2;
     
-    // Función para cargar imágenes
     const loadImage = (src) => {
       return new Promise((resolveImg) => {
         const img = new Image();
@@ -75,7 +77,6 @@ const captureEditedDiagram = async (diagramData, baseImageSrc) => {
       });
     };
     
-    // Cargar TODAS las imágenes en paralelo ANTES de dibujar
     Promise.all([
       loadImage(baseImageSrc),
       loadImage(medidorImg),
@@ -96,25 +97,43 @@ const captureEditedDiagram = async (diagramData, baseImageSrc) => {
       
       const imageMap = { medidor: medidorImage, tp: tpImage };
       
-      // Dibujar elementos (overlays) - USAR LAS POSICIONES GUARDADAS
+      // Dibujar elementos (overlays) - CON ROTACIÓN Y PROPIEDADES COMPLETAS
       if (diagramData.elements && diagramData.elements.length > 0) {
-        console.log('Dibujando elementos en Summary:', diagramData.elements.map(el => ({type: el.type, x: el.x, y: el.y})));
         diagramData.elements.forEach(el => {
           const elementImage = imageMap[el.type];
           if (elementImage && el.x !== undefined && el.y !== undefined) {
-            ctx.drawImage(elementImage, el.x, el.y, el.width || 60, el.height || 60);
+            const x = el.x || baseImageX + 100;
+            const y = el.y || baseImageY + 100;
+            const width = el.width || 60;
+            const height = el.height || 60;
+            const rotation = el.rotation || 0;
+            
+            ctx.save();
+            ctx.translate(x + width/2, y + height/2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.drawImage(elementImage, -width/2, -height/2, width, height);
+            ctx.restore();
           }
         });
       }
       
-      // Dibujar textos - USAR LAS POSICIONES GUARDADAS
+      // Dibujar textos - CON ROTACIÓN Y PROPIEDADES COMPLETAS
       if (diagramData.texts && diagramData.texts.length > 0) {
-        console.log('Dibujando textos en Summary:', diagramData.texts.map(t => ({text: t.text, x: t.x, y: t.y})));
         diagramData.texts.forEach(text => {
           if (text.x !== undefined && text.y !== undefined && text.text) {
-            ctx.font = `${text.fontSize || 20}px Arial`;
-            ctx.fillStyle = text.fill || '#333';
-            ctx.fillText(text.text, text.x, text.y);
+            const fontSize = text.fontSize || 20;
+            const rotation = text.rotation || 0;
+            const fill = text.fill || '#333';
+            
+            ctx.save();
+            ctx.translate(text.x, text.y);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = fill;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(text.text, 0, 0);
+            ctx.restore();
           }
         });
       }
@@ -326,7 +345,10 @@ useEffect(() => {
   useEffect(() => {
     fetch("http://localhost:5000/marcas")
       .then((res) => res.json())
-      .then((data) => setMarcas(Array.isArray(data) ? data : []))
+      .then((response) => {
+        const lista = response?.data ?? response;
+        setMarcas(Array.isArray(lista) ? lista : []);
+      })
       .catch(() => setMarcas([]));
   }, []);
 
@@ -355,10 +377,11 @@ useEffect(() => {
 
       fetch(`http://localhost:5000/tipos/${marcaId}`)
         .then((res) => res.json())
-        .then((data) => {
+        .then((response) => {
+          const lista = response?.data ?? response;
           setTiposPorMarca((prev) => ({
             ...prev,
-            [marcaId]: Array.isArray(data) ? data : []
+            [marcaId]: Array.isArray(lista) ? lista : []
           }));
         })
         .catch(() => {
@@ -543,6 +566,20 @@ useEffect(() => {
         {
           loading: 'Guardando acta...',
           success: (result) => {
+            const keysToRemove = [
+              'firmaFuncionario',
+              'firmaSuscriptor', 
+              'firmaSupervisor',
+              'diagrama_unifilar_editado',
+              'diagrama_fasorial',
+              'diagrama_conexiones_editado',
+              'savedUnifilar',
+              'savedConexiones'
+            ];
+            
+            keysToRemove.forEach(key => {
+              localStorage.removeItem(key);
+            });
             // Redirigir después de un tiempo
             setTimeout(() => {
               window.location.reload();
@@ -569,10 +606,10 @@ useEffect(() => {
           },
           // Para que el toast de éxito dure más
           success: {
-            duration: 4000,
+            duration: 3000,
           },
           error: {
-            duration: 4000,
+            duration: 3000,
           },
         }
       ).finally(() => {
@@ -580,3599 +617,606 @@ useEffect(() => {
       });
     };
 
-    // Función para enviar el PDF por correo
-// Función para enviar el PDF por correo
-const handleSendEmail = async () => {
-  if (!emailTo) {
-    toast.error('Por favor ingrese un destinatario');
-    return;
-  }
+    // Genera el PDF (3 hojas legal) renderizando cada .page por separado
+    const buildPdf = async () => {
+      const PAGE_W = 8.5;      // legal ancho (in)
+      const CONTENT_W = 7.9;   // ancho de .page (in)
+      const TOP = 0.3;         // margen superior (in)
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(emailTo)) {
-    toast.error('Por favor ingrese un correo electrónico válido');
-    return;
-  }
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText =
+        'position:fixed;left:-10000px;top:0;width:900px;height:1400px;border:0;';
+      document.body.appendChild(iframe);
 
-  setSendingEmail(true);
-  
-  try {
-    const html = generatePDFHtml();
-    
-    const opt = {
-      margin: 0.5,
-      filename: `Acta_Revision_No_${data.numero_acta || '1001'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'in', format: 'legal' }
+      try {
+        await new Promise((resolve) => {
+          iframe.onload = resolve;
+          iframe.srcdoc = generatePDFHtml();
+        });
+
+        const idoc = iframe.contentDocument;
+
+        // Esperar imágenes y fuentes
+        if (idoc.fonts?.ready) await idoc.fonts.ready;
+        await Promise.all(
+          Array.from(idoc.images).map((img) =>
+            img.complete ? null : new Promise((r) => { img.onload = img.onerror = r; })
+          )
+        );
+        // Dar tiempo a que corra el script "fit" del HTML
+        await new Promise((r) => setTimeout(r, 200));
+
+        const pdf = new jsPDF({ unit: 'in', format: 'legal', orientation: 'portrait', compress: true });
+        const pages = idoc.querySelectorAll('.page');
+
+        for (let i = 0; i < pages.length; i++) {
+          const el = pages[i];
+          el.style.border = 'none';   // quita el borde punteado de pantalla
+          el.style.margin = '0';
+
+          const canvas = await html2canvas(el, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+          });
+
+          if (i > 0) pdf.addPage('legal', 'portrait');
+
+          const imgH = CONTENT_W * (canvas.height / canvas.width);
+          pdf.addImage(
+            canvas.toDataURL('image/jpeg', 0.95),
+            'JPEG',
+            (PAGE_W - CONTENT_W) / 2,
+            TOP,
+            CONTENT_W,
+            imgH,
+            undefined,
+            'FAST'
+          );
+        }
+
+        return pdf;
+      } finally {
+        document.body.removeChild(iframe);
+      }
     };
+
+    // Función para enviar el PDF por correo
+  const handleSendEmail = async () => {
+    if (!emailTo) {
+      toast.error('Por favor ingrese un destinatario');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTo)) {
+      toast.error('Por favor ingrese un correo electrónico válido');
+      return;
+    }
+
+    setSendingEmail(true);
     
-    const pdfBlob = await html2pdf().set(opt).from(html).outputPdf('blob');
+    try {
+      const pdf = await buildPdf();
+      const pdfBlob = pdf.output('blob');
 
-    const formData = new FormData();
-    formData.append('pdf', pdfBlob, `Acta_Revision_No_${data.numero_acta || '1001'}.pdf`);
-    formData.append('to', emailTo);
-    formData.append('actaNumber', data.numero_acta || '1001'); 
-    formData.append('nombreCliente', data.nombre || 'No especificado');
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, `Acta_Revision_No_${data.numero_acta || '1001'}.pdf`);
+      formData.append('to', emailTo);
+      formData.append('actaNumber', data.numero_acta || '1001'); 
+      formData.append('nombreCliente', data.nombre || 'No especificado');
 
-    if (includeTxtFile === true) {
-      console.log('✅ Adjuntando archivo TXT...');
+      if (includeTxtFile === true) {
+        console.log('✅ Adjuntando archivo TXT...');
+        
+        // Crear el objeto con todos los datos
+        const dataToSave = {
+          // Información principal
+          numero_acta: data.numero_acta,
+          ciudad: data.ciudad,
+          resultado: data.resultado,
+          codigo_suscriptor: data.codigo,
+          codigo_asic: data.asic,
+          solicitud_numero: data.solicitudNo,
+          revision_numero: data.revisionNo,
+          
+          // Cliente
+          nombre: data.nombre,
+          direccion: data.direccion,
+          
+          // Representantes
+          otroRepresentante: data.otroRepresentante,
+          ccOtroRepresentante: data.ccOtroRepresentante,
+          usuarioVisita: data.usuarioVisita,
+          documentoVisitante: data.documentoVisitante,
+          tipoUsuario: data.tipoUsuario,
+          derecho: data.derecho,
+          
+          // Configuración
+          dependencia: data.dependencia,
+          contratista: data.contratista,
+          
+          // Datos generales
+          cargaKw: data.cargaKw,
+          ciclo: data.ciclo,
+          factor1: data.factor1,
+          factor2: data.factor2,
+          factor3: data.factor3,
+          telefono: data.telefono,
+          macromedidor: data.macromedidor,
+          nodoTrafo: data.nodoTrafo,
+          comercializador: data.comercializador,
+          longitud: data.longitud,
+          latitud: data.latitud,
+          uso: data.uso,
+          ubicacion: data.ubicacion,
+          familias: data.familias,
+          nivelTension: data.nivelTension,
+          bloquesPrueba: data.bloquesPrueba,
+          tipoMedidor: data.tipoMedidor,
+          tipoInstalacion: data.tipoInstalacion,
+          ubicacionMedidor: data.ubicacionMedidor,
+          proteccionGeneral: data.proteccionGeneral,
+          acometidaTipo: data.acometidaTipo,
+          fh: data.fh,
+          acometidaLongitud: data.acometidaLongitud,
+          acometidaCalibre: data.acometidaCalibre,
+          modemUbicacion: data.modemUbicacion,
+          marcaModem: data.marcaModem,
+          marcaModemOtro: data.marcaModemOtro,
+          serieModem: data.serieModem,
+          ipModem: data.ipModem,
+          configuracionMedida: data.configuracionMedida,
+          tipoMedida: data.tipoMedida,
+          marcaCable: data.marcaCable,
+          marcaCeldaMedida: data.marcaCeldaMedida,
+          
+          // Datos de medidores
+          numeroActiva1: data.numeroActiva1,
+          capacidadActiva1: data.capacidadActiva1,
+          tensionActiva1: data.tensionActiva1,
+          claseActiva1: data.claseActiva1,
+          kdActiva1: data.kdActiva1,
+          khActiva1: data.khActiva1,
+          lecturaActiva1: data.lecturaActiva1,
+          edActiva1: data.edActiva1,
+          fechaLabActiva1: data.fechaLabActiva1,
+          
+          // Observaciones y adecuaciones
+          observaciones: data.observaciones,
+          adecuaciones: data.adecuaciones,
+          
+          // Informe
+          informe: data.informe,
+          informeTexto: data.informeTexto,
+          tipoInforme: data.tipoInforme,
+          tipoInformeOtro: data.tipoInformeOtro,
+          
+          // Irregularidades
+          codigosIrregularidades: data.codigosIrregularidades,
+          irregularidadCorrida: data.irregularidadCorrida,
+          medidorRetirado: data.medidorRetirado,
+          tipoEvidencia: data.tipoEvidencia,
+          
+          // Datos de pruebas
+          tpData: data.tpData,
+          tcData: data.tcData,
+          factorData: data.factorData,
+          
+          // Metadatos
+          fechaCreacion: new Date().toLocaleString('es-ES'),
+          usuarioCreacion: userData.name,
+          correoEnviadoA: emailTo,
+          fechaEnvio: new Date().toLocaleString('es-ES')
+        };
+        
+        // Convertir a JSON con formato legible
+        const jsonString = JSON.stringify(dataToSave, null, 2);
+        
+        // Crear el Blob del TXT
+        const txtBlob = new Blob([jsonString], { type: 'text/plain;charset=utf-8' });
+        const txtFileName = `datos_acta_${data.numero_acta || 'sin_numero'}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+        
+        formData.append('txt', txtBlob, txtFileName);
+      } else {
+        console.log('❌ TXT NO adjuntado - checkbox desmarcado');
+      }
       
-      // Crear el objeto con todos los datos
-      const dataToSave = {
-        // Información principal
-        numero_acta: data.numero_acta,
-        ciudad: data.ciudad,
-        resultado: data.resultado,
-        codigo_suscriptor: data.codigo,
-        codigo_asic: data.asic,
-        solicitud_numero: data.solicitudNo,
-        revision_numero: data.revisionNo,
-        
-        // Cliente
-        nombre: data.nombre,
-        direccion: data.direccion,
-        
-        // Representantes
-        otroRepresentante: data.otroRepresentante,
-        ccOtroRepresentante: data.ccOtroRepresentante,
-        usuarioVisita: data.usuarioVisita,
-        documentoVisitante: data.documentoVisitante,
-        tipoUsuario: data.tipoUsuario,
-        derecho: data.derecho,
-        
-        // Configuración
-        dependencia: data.dependencia,
-        contratista: data.contratista,
-        
-        // Datos generales
-        cargaKw: data.cargaKw,
-        ciclo: data.ciclo,
-        factor1: data.factor1,
-        factor2: data.factor2,
-        factor3: data.factor3,
-        telefono: data.telefono,
-        macromedidor: data.macromedidor,
-        nodoTrafo: data.nodoTrafo,
-        comercializador: data.comercializador,
-        longitud: data.longitud,
-        latitud: data.latitud,
-        uso: data.uso,
-        ubicacion: data.ubicacion,
-        familias: data.familias,
-        nivelTension: data.nivelTension,
-        bloquesPrueba: data.bloquesPrueba,
-        tipoMedidor: data.tipoMedidor,
-        tipoInstalacion: data.tipoInstalacion,
-        ubicacionMedidor: data.ubicacionMedidor,
-        proteccionGeneral: data.proteccionGeneral,
-        acometidaTipo: data.acometidaTipo,
-        fh: data.fh,
-        acometidaLongitud: data.acometidaLongitud,
-        acometidaCalibre: data.acometidaCalibre,
-        modemUbicacion: data.modemUbicacion,
-        marcaModem: data.marcaModem,
-        marcaModemOtro: data.marcaModemOtro,
-        serieModem: data.serieModem,
-        ipModem: data.ipModem,
-        configuracionMedida: data.configuracionMedida,
-        tipoMedida: data.tipoMedida,
-        marcaCable: data.marcaCable,
-        marcaCeldaMedida: data.marcaCeldaMedida,
-        
-        // Datos de medidores
-        numeroActiva1: data.numeroActiva1,
-        capacidadActiva1: data.capacidadActiva1,
-        tensionActiva1: data.tensionActiva1,
-        claseActiva1: data.claseActiva1,
-        kdActiva1: data.kdActiva1,
-        khActiva1: data.khActiva1,
-        lecturaActiva1: data.lecturaActiva1,
-        edActiva1: data.edActiva1,
-        fechaLabActiva1: data.fechaLabActiva1,
-        
-        // Observaciones y adecuaciones
-        observaciones: data.observaciones,
-        adecuaciones: data.adecuaciones,
-        
-        // Informe
-        informe: data.informe,
-        informeTexto: data.informeTexto,
-        tipoInforme: data.tipoInforme,
-        tipoInformeOtro: data.tipoInformeOtro,
-        
-        // Irregularidades
-        codigosIrregularidades: data.codigosIrregularidades,
-        irregularidadCorrida: data.irregularidadCorrida,
-        medidorRetirado: data.medidorRetirado,
-        tipoEvidencia: data.tipoEvidencia,
-        
-        // Datos de pruebas
-        tpData: data.tpData,
-        tcData: data.tcData,
-        factorData: data.factorData,
-        
-        // Metadatos
-        fechaCreacion: new Date().toLocaleString('es-ES'),
-        usuarioCreacion: userData.name,
-        correoEnviadoA: emailTo,
-        fechaEnvio: new Date().toLocaleString('es-ES')
+      const response = await fetch('http://localhost:5000/enviar', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        toast.success(`Acta N° ${result.actaNumber} enviada exitosamente a ${emailTo}`, {
+            duration: 6000, // 6 segundos (por defecto son 3000ms = 3 segundos)
+            position: 'top-center',
+            style: {
+              background: '#10b981',
+              color: 'white',
+              padding: '16px',
+              borderRadius: '8px',
+              zIndex: 99999,
+            },
+          }
+        );
+
+        setTimeout(() => {
+          setShowEmailModal(false);
+          setEmailTo('');
+        }, 500);
+      } else {
+        throw new Error(result.error || 'Error al enviar el correo');
+      }
+    } catch (error) {
+      console.error('Error enviando correo:', error);
+      
+      if (error.message.includes('Failed to fetch')) {
+        toast.error('No se pudo conectar con el servidor. Verifica que esté corriendo.');
+      } else {
+        toast.error(`Error: ${error.message}`);
+      }
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+    // Función para calcular el total de materiales
+    const calcularTotalMateriales = () => {
+      const precios = {
+        // Medidores
+      medidorElectroMecanico: 1000000,
+      medidorElectronicoRegis: 1200000,
+      medidorElectronicoDisplay: 1500000,
+      medidorSemiElectro: 800000,
+      medidorSemiElectronico: 900000,
+      medidorSinPerfil: 1100000,
+      medidorConPerfil: 1300000,
+      medidorConPerfilModem: 1600000,
+      // Protecciones y Herrajes
+      cintaBandit: 15000,
+      grapaHebilla: 8000,
+      capacete: 25000,
+      conectorCurvo: 12000,
+      conduletas: 18000,
+      conduletaTapa: 22000,
+      tuboGalvanizado: 35000,
+      anclajeAcometida: 28000,
+      conectorBimetalicoCuna: 32000,
+      estribo: 25000,
+      conectorBimetalicoPerno: 30000,
+      tensorAcometida: 45000,
+      ojoAluminio: 15000,
+      breakers: 55000,
+      conectorVarilla: 12000,
+      tensorCambio: 45000,
+      alambreCobre: 8000,
+      varillaPuestaTierra: 65000,
+      terminalMT: 18000,
+      curvaMT: 15000,
+      flexiConduit: 22000,
+      terminalFlexi: 12000,
+      // Router y Varios
+      routerGPRS: 250000,
+      conversores: 180000,
+      bloquePrueba: 95000,
+      // Sellos
+      rotoseal: 5000,
+      estampilla: 3000,
+      // Cables y Alambre
+      cableConcentrico: 120000,
+      cableControl: 85000,
+      // Caja Hermetica
+      cajaSobreponer: 75000,
+      cajaIncrustar: 82000,
+      cajaGabinete: 120000,
+      // Material Retirado
+      materialRetirado: 0
       };
       
-      // Convertir a JSON con formato legible
-      const jsonString = JSON.stringify(dataToSave, null, 2);
+      let total = 0;
       
-      // Crear el Blob del TXT
-      const txtBlob = new Blob([jsonString], { type: 'text/plain;charset=utf-8' });
-      const txtFileName = `datos_acta_${data.numero_acta || 'sin_numero'}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+      if (data.materiales?.medidorElectroMecanico?.cantidad > 0) {
+        total += data.materiales.medidorElectroMecanico.cantidad * precios.medidorElectroMecanico;
+      }
+      if (data.materiales?.medidorElectronicoRegis?.cantidad > 0) {
+        total += data.materiales.medidorElectronicoRegis.cantidad * precios.medidorElectronicoRegis;
+      }
+      if (data.materiales?.medidorElectronicoDisplay?.cantidad > 0) {
+        total += data.materiales.medidorElectronicoDisplay.cantidad * precios.medidorElectronicoDisplay;
+      }
+      if (data.materiales?.cintaBandit?.cantidad > 0) {
+        total += data.materiales.cintaBandit.cantidad * precios.cintaBandit;
+      }
+      if (data.materiales?.rotoseal?.cantidad > 0) {
+        total += data.materiales.rotoseal.cantidad * precios.rotoseal;
+      }
       
-      formData.append('txt', txtBlob, txtFileName);
-    } else {
-      console.log('❌ TXT NO adjuntado - checkbox desmarcado');
-    }
-    
-    const response = await fetch('http://localhost:5000/enviar', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    
-    if (response.ok && result.success) {
-      toast.success(`Acta N° ${result.actaNumber} enviada exitosamente a ${emailTo}`, {
-          duration: 6000, // 6 segundos (por defecto son 3000ms = 3 segundos)
-          position: 'top-center',
-          style: {
-            background: '#10b981',
-            color: 'white',
-            padding: '16px',
-            borderRadius: '8px',
-            zIndex: 99999,
-          },
-        }
-      );
-
-      setTimeout(() => {
-        setShowEmailModal(false);
-        setEmailTo('');
-      }, 500);
-    } else {
-      throw new Error(result.error || 'Error al enviar el correo');
-    }
-  } catch (error) {
-    console.error('Error enviando correo:', error);
-    
-    if (error.message.includes('Failed to fetch')) {
-      toast.error('No se pudo conectar con el servidor. Verifica que esté corriendo.');
-    } else {
-      toast.error(`Error: ${error.message}`);
-    }
-  } finally {
-    setSendingEmail(false);
-  }
-};
+      return total;
+    };
 
   // Generar HTML para el PDF
   const generatePDFHtml = () => {
+
+    // Definir precios de materiales
+const preciosMateriales = {
+  medidorElectroMecanico: 1000000,
+  medidorElectronicoRegis: 1200000,
+  medidorElectronicoDisplay: 1500000,
+  medidorSemiElectro: 800000,
+  medidorSemiElectronico: 900000,
+  medidorSinPerfil: 1100000,
+  medidorConPerfil: 1300000,
+  medidorConPerfilModem: 1600000,
+  cintaBandit: 15000,
+  grapaHebilla: 8000,
+  capacete: 25000,
+  conectorCurvo: 12000,
+  conduletas: 18000,
+  conduletaTapa: 22000,
+  tuboGalvanizado: 35000,
+  anclajeAcometida: 28000,
+  conectorBimetalicoCuna: 32000,
+  estribo: 25000,
+  conectorBimetalicoPerno: 30000,
+  tensorAcometida: 45000,
+  ojoAluminio: 15000,
+  breakers: 55000,
+  conectorVarilla: 12000,
+  tensorCambio: 45000,
+  alambreCobre: 8000,
+  varillaPuestaTierra: 65000,
+  terminalMT: 18000,
+  curvaMT: 15000,
+  flexiConduit: 22000,
+  terminalFlexi: 12000,
+  routerGPRS: 250000,
+  conversores: 180000,
+  bloquePrueba: 95000,
+  rotoseal: 5000,
+  estampilla: 3000,
+  cableConcentrico: 120000,
+  cableControl: 85000,
+  cajaSobreponer: 75000,
+  cajaIncrustar: 82000,
+  cajaGabinete: 120000
+};
     
     return `
-        <!DOCTYPE html>
-    <html>
-    <head>
+    <!DOCTYPE html>
+      <html>
+      <head>
       <meta charset="utf-8" />
       <style>
-        /* Estilos generales (igual para ambas páginas) */
-        body {
-          font-family: sans-serif;
-          font-size: 10px;
-          margin: 0;
-          padding: 10px;
-          background-color: #ffffff;
-        }
-        
-        .page {
-          page-break-inside: avoid;
-          page-break-after: always;
-          margin-bottom: 20px;
-          
-        }
-        
-        @media print {
-        @page {
-          size: legal;
-          margin: 0.5in;
-        }
+      @page { size: 8.5in 14in; margin: 0.3in; }
+      * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { margin: 0; padding: 0; background: #fff; color: #1f2d3d; font-family: Arial, Helvetica, sans-serif; font-size: 7px; line-height: 1.2; }
 
-        .pdf-content {
-          transform: scale(0.95);
-          zoom: 0.85; /* Reduce el tamaño para que quepa en una hoja */
-          transform-origin: top left;
-          width: 8.5in;
-          min-height: 14in;
-          font-size: 11px;
-        }
-      }
-        
-        .page:last-child {
-          page-break-after: auto;
-        }
-        
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 10px;
-        }
-        
-        td, th {
-          border: 1px solid #34495e;
-          padding: 5px;
-          text-align: left;
-          vertical-align: top;
-        }
-        
-        .header-table {
-          margin: 0 auto; 
-          width: 100%;
-        }
-        
-        .header-table td {
-          border: none;
-          padding: 3px;
-        }
-        
-        .header-table-content {
-          border-radius: 10px 10px 0 0; 
-          overflow: hidden;
-          background-color: #f8f9fa;
-          padding: 8px;
-          border: 1px solid #ddd;
-        }
-        
-        .text-center {
-          text-align: center;
-        }
-        
-        .title {
-          font-size: 16px;
-          font-weight: bold;
-          text-align: center;
-          color: #2c3e50;
-          margin: 10px 0;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        
-        .subtitle {
-          font-size: 12px;
-          font-weight: bold;
-          text-align: center;
-          color: #7f8c8d;
-        }
-        
-        .section-title {
-          background-color: #e9ecef;
-          color: #2c3e50;
-          font-weight: bold;
-          text-align: center;
-          padding: 8px;
-          font-size: 11px;
-          border: 1px solid #dee2e6;
-        }
-        
-        .firma-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 20px;
-          page-break-inside: avoid;
-        }
-        
-        .firma-table td {
-          border: 1px solid #34495e;
-          padding: 10px;
-          text-align: center;
-          vertical-align: middle;
-        }
-        
-        .firma-table tr:first-child td {
-          background-color: #e9ecef;
-          color: #2c3e50;
-          font-weight: bold;
-          font-size: 11px;
-          padding: 8px;
-          border-bottom: 1px solid #dee2e6;
-        }
-        
-        .firma-label {
-          text-align: center;
-          font-weight: bold;
-          padding: 5px 0;
-          font-size: 10px;
-          color: #2c3e50;
-        }
-        
-        .no-border {
-          border: none !important;
-        }
-        
-        .firma-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          margin: 8px 0;
-        }
-        
-        .firma-text {
-          font-weight: bold;
-          font-size: 10px;
-          white-space: nowrap;
-        }
-        
-        .firma-imagen {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .firma-imagen img {
-          max-width: 120px;
-          max-height: 50px;
-          padding: 3px;
-          background-color: white;
-          border: 1px dashed #adb5bd;
-        }
-        
-        .firma-faltante {
-          color: #6c757d;
-          font-style: italic;
-          padding: 8px;
-          background-color: #f8f9fa;
-          border-radius: 3px;
-          font-size: 10px;
-          border: 1px dashed #dee2e6;
-          display: inline-block;
-        }
-        
-        .text-justify {
+      /* ===== Hoja: tamaño LEGAL (8.5 x 14 in) menos márgenes de @page ===== */
+      .page { width: 7.9in; height: 13.25in; margin: 0 auto; overflow: hidden; position: relative; break-after: page; page-break-after: always; }
+      .page:last-child { break-after: auto; page-break-after: auto; }
+      .page-inner { height: 100%; display: flex; flex-direction: column; }
+      .page-inner > * { flex: none; }
+      .page-inner > .diagrams { flex: 1 1 auto; }
+      .bottom { margin-top: auto; }
+      @media screen { .page { border: 1px dashed #c9ced4; margin-bottom: 14px; } }
 
-          text-align: justify;
-        }
-        
-        .field-label {
-          font-weight: bold;
-          background-color: #f8f9fa;
-          padding: 5px;
-        }
-        
-        .field-value {
-          padding: 5px;
-        }
-        
-        .acta-number {
-          font-size: 16px;
-          color: #e74c3c;
-          font-weight: bold;
-          text-align: center;
-        }
-        
-        .legal-text {
-          margin: 15px 0;
-          padding: 12px;
-          background-color: #f8f9fa;
-          border: 1px solid #dee2e6;
-          border-radius: 5px;
-          font-size: 9px;
-          line-height: 1.4;
-          color: #373a3dff;
-          text-align: justify;
-        }
-        
-        /* Estilos específicos para la hoja 2 */
-        .test-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 10px 0;
-        }
-        
-        .test-table th {
-          background: #2c3e50;
-          color: white;
-          padding: 8px;
-          text-align: center;
-          font-weight: 600;
-          font-size: 10px;
-        }
-        
-        .test-table td {
-          padding: 6px;
-          border: 1px solid #e1e8ed;
-          text-align: center;
-        }
-        
-        .test-table input {
-          width: 100%;
-          padding: 4px;
-          border: 1px solid #ddd;
-          border-radius: 3px;
-          text-align: center;
-          font-size: 10px;
-        }
-        
-        .diagram-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-          margin: 15px 0;
-        }
-        
-        .diagram-card {
-          text-align: center;
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-        }
-        
-        .diagram-card img {
-          max-width: 100%;
-          max-height: 80px;
-          margin-bottom: 5px;
-        }
-        
-        .observaciones-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-          margin: 10px 0;
-        }
-        
-        .observacion-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 5px;
-          border: 1px solid #ddd;
-          border-radius: 3px;
-          font-size: 9px;
-        }
-        
-        /* Estilos específicos para el formato de diagramas */
-        .diagram-container {
-          display: flex;
-          width: 100%;
-        }
-        
-        .diagram {
-          flex: 1;
-          padding: 10px;
-          text-align: center;
-        }
-        
-        .diagram-img {
-          max-width: 100%;
-          max-height: 180px;
-          height: auto;
-        }
-        
-        .logo-img {
-          height: 50px;
-        }
-        
-        .checkbox-list {
-          list-style-type: none;
-          padding-left: 5px;
-          margin: 2px 0;
-          font-size: 9px;
-        }
-        
-        .checkbox-list li {
-          margin-bottom: 3px;
-        }
-        
-        .estado-cell {
-          text-align: center;
-          width: 20px;
-        }
-        
-        @media print {
-          body {
-            margin: 0;
-            padding: 10px;
-            font-size: 9px;
-          }
-          
-          .page {
-            page-break-after: always;
-            margin: 0;
-            padding: 15px;
-          }
-          
-          .diagram-img {
-            max-height: 150px;
-          }
-        }
-        .vertical-header {
-        writing-mode: vertical-rl;
-        transform: rotate(180deg);
-        text-align: center;
-        background-color: #e6e6e6; /* mismo gris del título */
-        font-weight: bold;
-        }
+      /* ===== Tablas ===== */
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0 0 3px 0; }
+      td, th { border: 1px solid #34495e; padding: 1.5px 2px; vertical-align: middle; overflow-wrap: anywhere; word-break: break-word; }
+      th { background: #ecf0f1; font-weight: bold; text-align: center; font-size: 6.5px; }
+      .c { text-align: center; }
+      .st { background: #e9ecef; color: #2c3e50; font-weight: bold; text-align: center; font-size: 7.5px; padding: 2.5px; }
+      .fl { background: #f8f9fa; font-weight: bold; font-size: 6px; vertical-align: top; }
+      .lb { background: #ecf0f1; font-weight: bold; font-size: 6.5px; }
+      .lb2 { background: #f8f9fa; font-weight: bold; text-align: center; font-size: 6.5px; }
+      .v { margin: 1px 0 0 0; text-align: center; font-weight: bold; font-size: 7px; color: #000; }
+      .fl .v { min-height: 8px; }
+      .ds { font-size: 6.5px; }
+      .acta-number { font-size: 12px; color: #e74c3c; font-weight: bold; text-align: center; }
+      .intro { font-size: 7.5px; line-height: 1.35; text-align: justify; padding: 3px 5px; }
+      .note { font-size: 7px; font-style: italic; background: #f8f9fa; padding: 3px 4px; }
+      .j { text-align: justify; }
+      .x { font-weight: bold; font-size: 9px; }
+      .grp { background: #f2f2f2; font-weight: bold; text-align: center; font-size: 6px; }
+      .est { font-weight: bold; }
 
-    /* CONTENEDOR PRINCIPAL DE DIAGRAMAS - MÁS ALTO */
-    .diagrams-section {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 650px; /* Aumentado de 500px a 650px */
-      margin: 15px 0 20px 0;
-      border: 1px solid #030303ff;
-    }
+      /* texto vertical (ENCONTRADO / INSTALADO / MED ACTIVA...) */
+      .vh { background: #e6e6e6; padding: 0; text-align: center; position: relative; overflow: hidden; }
+.vtxt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); transform-origin: center center; white-space: nowrap; font-weight: bold; font-size: 6px; line-height: 1.1; text-align: center; }
 
-    /* MITAD SUPERIOR: Unifilar y Fasorial lado a lado */
-    .diagrams-top-half {
-      display: flex;
-      flex: 1; /* Ocupa 50% de la altura */
-      width: 100%;
-      height: 50%;
-      min-height: 300px; /* Aumentado */
-    }
+      /* ===== Encabezado ===== */
+      .hdr { border: 1px solid #ddd; border-radius: 6px 6px 0 0; background: #f8f9fa; padding: 4px; margin-bottom: 3px; }
+      .hdr-t, .code { margin: 0; }
+      .hdr-t td.nb { border: none; padding: 0; }
+      .logo { height: 44px; max-width: 100%; object-fit: contain; }
+      .code td { font-size: 7px; padding: 1.5px 3px; }
+      .title { font-size: 13px; font-weight: bold; text-align: center; color: #2c3e50; text-transform: uppercase; letter-spacing: .5px; margin: 1px 0 4px 0; }
 
-    /* MITAD INFERIOR: Conexiones */
-    .diagrams-bottom-half {
-      flex: 1; /* Ocupa el otro 50% de la altura */
-      width: 100%;
-      height: 50%;
-      min-height: 300px; /* Aumentado */
-      border-top: 2px solid #cbd5e1;
-    }
+      /* ===== Tablas con celdas bajas ===== */
+      .dense td { font-size: 6px; }
+      .sellos td { height: 11px; font-size: 6.5px; }
+      .mt td, .err td, .func td { font-size: 6.5px; }
+      .mat td { font-size: 7.3px; height: 18px; }
+      .ret { vertical-align: top; font-size: 7px; line-height: 1.4; padding: 4px; background: #fafafa; text-align: justify; }
+      .inst td, .inst th { font-size: 7px; height: 16px; }
+      .atend { border: 1px solid #34495e; font-size: 8px; line-height: 1.5; padding: 4px 5px; margin-bottom: 3px; }
+      .obs-box { height: 70px; vertical-align: top; font-size: 7px; }
 
-    /* COLUMNAS INDIVIDUALES (Unifilar y Fasorial) */
-    .diagram-column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      width: 50%;
-      height: 100%;
-      box-sizing: border-box;
-    }
+      /* ===== Hoja 2: diagramas ===== */
+      .diagrams { min-height: 240px; display: flex; flex-direction: column; border: 1px solid #34495e; margin-bottom: 3px; }
+      .d-top { flex: 1 1 50%; display: flex; min-height: 0; }
+      .d-col { flex: 1 1 50%; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+      .d-col + .d-col { border-left: 1px solid #34495e; }
+      .d-bottom { flex: 1 1 50%; display: flex; flex-direction: column; min-height: 0; border-top: 1px solid #34495e; }
+      .d-title { flex: none; background: #e9ecef; color: #2c3e50; font-weight: bold; text-align: center; font-size: 7.5px; padding: 2.5px; border-bottom: 1px solid #34495e; }
+      .d-box { flex: 1 1 auto; position: relative; min-height: 0; background: #fafafa; }
+      .d-box img { position: absolute; top: 4px; left: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; }
 
-    /* Borde entre columnas */
-    .diagram-column:first-child {
-      border-right: 2px solid #cbd5e1;
-    }
+      /* adecuaciones */
+      .adec { vertical-align: top; font-size: 6.5px; padding: 3px; }
+      .adec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+      .cbl { list-style: none; margin: 0; padding: 0; }
+      .cbl li { display: flex; align-items: flex-start; gap: 2px; margin-bottom: 3px; }
+      .cbl input { margin: 0; width: 7px; height: 7px; flex: none; }
+      .siec td { font-size: 6.5px; }
 
-    /* TÍTULOS DE DIAGRAMAS - GRIS CLARO */
-    .diagram-title {
-      background-color: #f1f5f9; /* Gris claro */
-      color: #334155; /* Texto gris oscuro para buen contraste */
-      font-weight: bold;
-      text-align: center;
-      padding: 8px 6px;
-      font-size: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      font-family: 'Arial', sans-serif;
-    }
+      /* ===== Textos legales ===== */
+      .legal { border: 1px solid #dee2e6; background: #f8f9fa; border-radius: 3px; padding: 3px 5px; margin: 3px 0; font-size: 6.2px; line-height: 1.3; text-align: justify; color: #373a3d; }
+      .legal p { margin: 0 0 2px 0; }
+      .legal.c { text-align: center; font-weight: bold; }
 
-    /* CONTENEDORES DE DIAGRAMAS */
-    .diagram-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px; /* Aumentado el padding */
-      background-color: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-sizing: border-box;
-      overflow: hidden;
-      width: 100%;
-      height: calc(100% - 35px); /* Ajustado por el título más grande */
-    }
-
-    /* IMÁGENES DE DIAGRAMAS */
-    .diagram-container img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: auto;
-    }
-
-    /* ESPECÍFICO PARA CADA DIAGRAMA */
-    .diagram-unifilar {
-      background-color: #fafafa;
-    }
-
-    .diagram-fasorial {
-      background-color: #fafafa;
-    }
-
-    .diagram-conexiones {
-      height: calc(100% - 35px);
-      min-height: 250px;
-      background-color: #fafafa;
-    }
-
-    /* Hover effect para mejor interacción */
-    .diagram-container:hover {
-      background-color: #f8fafc;
-      transition: background-color 0.2s ease;
-    }
-
-    /* Para impresión */
-    @media print {
-      .diagrams-section {
-        height: 700px !important; /* Más alto para impresión */
-        border: 1px solid #ccc !important;
-        page-break-inside: avoid;
-        margin-bottom: 25px;
-      }
-      
-      .diagram-title {
-        background-color: #f5f5f5 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
-
-    /* Responsive para pantallas más pequeñas */
-    @media (max-width: 992px) {
-      .diagrams-section {
-        height: 550px;
-        min-height: 550px;
-      }
-    }
-
-    /* Ajuste para cuando no hay imágenes */
-    .diagram-container:empty::before {
-      content: "Sin diagrama disponible";
-      color: #94a3b8;
-      font-style: italic;
-      font-size: 14px;
-    }
-      .firma-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .firma-table td {
-      padding: 8px;
-      vertical-align: middle;
-    }
-
-    /* Encabezados */
-    .firma-header {
-      text-align: left;
-      font-weight: bold;
-      background-color: #e9ecef;
-    }
-
-    /* Filas con label + valor */
-    .firma-row {
-      display: flex;
-      align-items: center;
-    }
-
-    /* Etiqueta (NOMBRE, FIRMA, CC...) */
-    .firma-text {
-      font-weight: bold;
-      margin-right: 6px;
-      white-space: nowrap;
-    }
-
-    /* Valor centrado */
-    .firma-value {
-      flex: 1;
-      text-align: center;
-      font-size: 12px; 
-    }
-
-    /* Contenedor de la firma */
-    .firma-imagen {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* Imagen de la firma */
-    .firma-imagen img {
-      width: 100%;
-      max-height: 120px;
-      object-fit: contain;
-      border: none;
-    }
-
-    /* Texto cuando no hay firma */
-    .firma-faltante {
-      font-style: italic;
-      color: #6c757d;
-      text-align: center;
-    }
-    
-    /* Estilos específicos para la Hoja 3 - Acta de Materiales Eléctricos */
-.materials-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 8px;
-}
-
-.materials-table td,
-.materials-table th {
-  border: 1px solid #666;
-  padding: 3px 5px;
-  vertical-align: middle;
-}
-
-.header-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 10px;
-}
-
-.header-table td {
-  border: none;
-}
-
-.code-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 10px;
-}
-
-.code-table td {
-  border: 1px solid #34495e;
-  padding: 3px 5px;
-}
-
-.logo-section {
-  padding: 5px;
-  text-align: center;
-}
-
-.title {
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-}
-
-.subtitle {
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-}
-
-.number-box {
-  font-size: 22px;
-  font-weight: bold;
-  color: #d43838;
-  text-align: center;
-  letter-spacing: 3px;
-}
-
-.line-text {
-  line-height: 1.7;
-  font-size: 11px;
-  padding: 10px;
-}
-
-.section-title {
-  background: #efefef;
-  text-align: center;
-  font-weight: bold;
-  font-size: 11px;
-}
-
-.center {
-  text-align: center;
-}
-
-.bold {
-  font-weight: bold;
-  background: #e9e9e9;
-}
-
-.footer-note {
-  font-size: 10px;
-  text-align: center;
-  padding: 10px;
-  font-weight: bold;
-  margin-top: 15px;
-}
-
-/* Estilos para las firmas (igual que hoja 2) */
-.firma-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-.firma-table td {
-  border: 1px solid #34495e;
-  padding: 8px;
-  vertical-align: middle;
-}
-
-.firma-header {
-  text-align: left;
-  font-weight: bold;
-  background-color: #e9ecef;
-}
-
-.firma-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.firma-text {
-  font-weight: bold;
-  margin-right: 6px;
-  white-space: nowrap;
-  font-size: 10px;
-}
-
-.firma-value {
-  flex: 1;
-  text-align: center;
-  font-size: 10px;
-}
-
-.firma-imagen {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.firma-imagen img {
-  max-width: 120px;
-  max-height: 50px;
-  object-fit: contain;
-}
-
-.firma-faltante {
-  font-style: italic;
-  color: #6c757d;
-  text-align: center;
-  font-size: 10px;
-}
+      /* ===== Firmas ===== */
+      .firma-table { margin-top: 3px; }
+      .firma-header { background: #e9ecef; text-align: left; font-size: 6.5px; padding: 3px; }
+      .firma-table td { padding: 2px 3px; }
+      .firma-row { display: flex; align-items: center; gap: 3px; min-height: 12px; }
+      .firma-text { font-weight: bold; white-space: nowrap; font-size: 6.5px; }
+      .firma-value { flex: 1; min-width: 0; text-align: center; font-size: 7px; overflow-wrap: anywhere; }
+      .sig-row td { height: 40px; }
+      .firma-imagen { display: flex; align-items: center; justify-content: center; height: 36px; }
+      .firma-imagen img { max-width: 100%; max-height: 36px; object-fit: contain; border: none; }
+      .firma-faltante { font-style: italic; color: #6c757d; font-size: 7px; }
       </style>
-    </head>
-    <body>
-      <!-- HOJA 1: ACTA DE REVISIÓN ORIGINAL -->
-      <div id="pdf-page-1" class="page">
-        <div class="header-table-content">
-            <table class="header-table">
-                <tr>
-                    <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                        <img src="${base64Logo}" alt="Logo" style="height: 60px;"/>
-                    </td>
-                    <td style="width: 30%; padding: 0; ">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
-                            <tr>
-                                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
-                                <td style="border: 1px solid #34495e;">FO-GD-CP-03</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
-                                <td style="border: 1px solid #34495e;">${new Date().toLocaleDateString('es-ES')}</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
-                                <td style="border: 1px solid #34495e;">4</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
-                                <td style="border: 1px solid #34495e;">1 DE 1</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        
-        <div class="title">ACTA DE REVISIÓN</div>
-
-        <table>
-            <tr>
-                <td class="section-title" colspan="6">ACTA DE REVISIÓN CLIENTES DESTACADOS</td>
-                <td class="section-title" colspan="3">CONTROL DE PÉRDIDAS</td>
-            </tr>
-            <tr>
-                <td class="field-label">Acta De Revisión No.</td>
-                <td class="acta-number">
-                    N° <span id="numero">${data.numero_acta}</span>
-                </td>
-                <td class="field-label">Ciudad</td>
-                <td colspan="2" class="field-value">${data.ciudad}</td>
-                <td colspan="2" class="field-label">Resultado</td>
-                <td colspan="2" class="field-value">${data.resultado || ''}</td>
-            </tr>
-            <tr>
-                <td class="field-label">Solicitud No.</td>
-                <td class="field-value">${data.solicitudNo || ''}</td>
-                <td class="field-label">Código de cliente</td>
-                <td class="field-value">${data.codigo || ''}</td>
-                <td class="field-label">ASIC</td>
-                <td class="field-value">${data.asic || ''}</td>
-                <td class="field-label">Revisión No.</td>
-                <td colspan="2" class="field-value">
-                    <span id="revision">${data.revisionNo || ''}</span>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="9" class="text-justify">
-                    <p style="font-size: 12px; line-height: 1.4; margin: 0;">
-                        A los <strong>${new Date().getDate()}</strong> días del mes de
-                        <strong>${new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del
-                        <strong>${new Date().getFullYear()}</strong>, siendo las
-                        <strong>${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</strong>
-                        se hacen presentes en el inmueble de la dirección
-                        <strong>${data.direccion || '______'}</strong> los representantes de EMSA ESP
-                        <strong>${userData.name || '______'}</strong> con C.C:
-                        <strong>${userData.cc || '______'}</strong> y
-                        <strong>${data.otroRepresentante || '______'}</strong> con C.C:
-                        <strong>${data.ccOtroRepresentante || '______'}</strong> en presencia del señor(a)
-                        <strong>${data.usuarioVisita || '______'}</strong> con
-                        <strong>${data.documentoVisitante || '______'}</strong> calidad de
-                        <strong>${data.tipoUsuario ? capitalize(data.tipoUsuario) : '______'}</strong> con el fin de efectuar 
-                        una revisión de los equipos de medida e instalaciones del inmueble con el código indicado.
-                        Habiéndose identificado los empleados y/o contratistas informan al usuario que de acuerdo 
-                        al Contrato de Servicios Públicos con Condiciones Uniformes vigente su derecho a solicitar 
-                        asesoría y/o participación de un técnico particular, o de cualquier persona para que sirva 
-                        de testigo en el proceso de revisión. Sin embargo, si transcurre un plazo máximo de 15 minutos 
-                        sin hacerse presente se hará la revisión sin su presencia. El cliente/usuario hace uso de su derecho:
-                        <strong>SÍ (${data.derecho === 'SI' ? 'X' : ' '})</strong>
-                        <strong>NO (${data.derecho === 'NO' ? 'X' : ' '})</strong>. Transcurrido ese tiempo, se procede a hacer la revisión.
-                    </p>
-                </td>
-            </tr>
-            <tr style=" margin: 0;">
-                <td class="field-label">DEPENDENCIA</td>
-                <td class="field-value">EMSA</td>
-                <td class="field-value">
-                <p style="text-align: center; margin: 0; padding:0">
-                <strong> ${data.dependencia || ''}</strong>
-                </p>
-                </td>
-                <td class="field-value">CONTRATISTA</td>
-                <td  >
-                <p style="text-align: center; margin: 0; padding:0">
-                  <strong>${data.contratista || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">ITEM DE PAGO</td>
-                <td>
-                <p style="text-align: center; margin: 0; padding:0">
-                  <strong>${data.itemPago || ''}</strong>
-                </p>
-                </td>
-                <td>
-                <p style="text-align: center; margin: 0; padding:0">
-                  <strong>${data.itemPago2 || ''}</strong>
-                </p>
-                </td>
-                <td>
-                <p style="text-align: center; margin: 0; padding:0">
-                  <strong>${data.itemPago3 || ''}</strong>
-                </p>
-                </td>
-            </tr>
-        </table>
-        
-        <table>
-            <tr>
-                <td class="section-title" colspan="8">DATOS GENERALES DEL SUSCRIPTOR</td>
-            </tr>
-            <tr>
-                <td colspan="1" class="field-label">NOMBRE
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.nombre || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">CARGA KW
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.cargaKw || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">CICLO
-                  <p style="text-align: center; margin: 0; padding:0">
-                  <strong>${data.ciclo || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">FACTOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.factor1 || ''}</strong>
-                  </p>
-                  </td>
-                <td class="field-label">FACTOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.factor2 || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">FACTOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.factor3 || ''}</strong>
-                  </p>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="1" class="field-label">DIRECCIÓN <br> POBLACIÓN
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.direccion || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">NÚMERO MACROMEDIDOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.macromedidor || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">NODO TRAFO
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.nodoTrafo || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">COMERCIALIZADOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.comercializador || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">LONGITUD
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.longitud || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">LATITUD
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.latitud || ''}</strong>
-                  </p>
-                </td>
-                
-            </tr>
-        </table>
-        
-        <table>
-            <tr>
-                <td class="section-title" colspan="13">DATOS DEL SUSCRIPTOR Y EQUIPO DE MEDIDA ENCONTRADOS</td>
-            </tr>
-            <tr>
-                <td class="field-label">TELÉFONO
-                  <p style="text-align: center; margin: 0; padding:0"></p>
-                    <strong>${data.telefono || ''}</strong>
-                </td>
-                <td class="field-label">USO
-                <p style="text-align: center; margin: 0; padding:0">
-                    <strong>
-                    ${data.uso === 'R' ? 'RESIDENCIAL' : 
-                      data.uso === 'C' ? 'COMERCIAL' : 
-                      data.uso === 'I' ? 'INDUSTRIAL' : 
-                      data.uso === 'O' ? 'OFICIAL' : ''}
-                      </strong>
-                      </p>
-                </td>
-                <td class="field-label">UBICACIÓN
-                <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.ubicacion || ''}</strong>
-                </p>    
-                </td>
-                <td class="field-label">FAMILIAS
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.familias || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">NIVEL TENSIÓN
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.nivelTension || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">BLOQUES PRUEBA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.bloquesPrueba || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">TIPO MEDIDOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.tipoMedidor || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">TIPO INSTALACIÓN
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.tipoInstalacion || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">UBICACIÓN MEDIDOR
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.ubicacionMedidor || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">TIPO ACOMETIDA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.acometidaTipo || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">#F #H
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.fh || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">PROTECCIÓN GENERAL (A)
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.proteccionGeneral || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-value">LONGITUD (M)
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.acometidaLongitud ? data.acometidaLongitud + ' M' : ''}</strong>
-                  </p>
-                </td>
-            </tr>
-            <tr>
-
-                <td class="field-label">CALIBRE ACOMETIDA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.acometidaCalibre || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">UBICACIÓN MODEM
-                <p>
-                  <strong>${data.modemUbicacion || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">MARCA MODEM
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>
-                      ${data.marcaModem === 'Otro'
-                        ? data.marcaModemOtro
-                        : data.marcaModem || ''}
-                    </strong>
-                  </p>
-                </td>
-                <td class="field-label">NÚMERO SERIE MODEM:
-                <p style="text-align: center; margin: 0; padding:0">
-                <strong>${data.serieModem || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">IP
-                <p style="text-align: center; margin: 0; padding:0">
-                <strong>${data.ipModem || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">MARCA MODEM RESPALDO
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>
-                      ${data.marcaModemRes === 'OtroRes'
-                        ? data.marcaModemOtroRes
-                        : data.marcaModemRes || ''}
-                    </strong>
-                  </p>
-                </td>
-                <td class="field-label">NÚMERO SERIE MODEM RESPALDO:
-                <p style="text-align: center; margin: 0; padding:0">
-                <strong>${data.serieModemRes || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">IP RESPALDO
-                <p style="text-align: center; margin: 0; padding:0">
-                <strong>${data.ipModemRes || ''}</strong>
-                </p>
-                </td>
-                <td class="field-label">CONFIGURACIÓN MEDIDA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.configuracionMedida || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">TIPO MEDIDA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.tipoMedida || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label " colspan="2">MARCA CABLE
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.marcaCable || ''}</strong>
-                  </p>
-                </td>
-                <td class="field-label">MARCA CELDA MEDIDA
-                  <p style="text-align: center; margin: 0; padding:0">
-                    <strong>${data.marcaCeldaMedida || ''}</strong>
-                  </p>
-                </td>
-            </tr>
-        </table>
-
-        <!-- TABLA DE MEDIDOR ENCONTRADO Y INSTALADO PRINCIPAL -->
-        <table>
-            <tr>
-                <td class="section-title" colspan="13">DATOS MEDIDOR PRINCIPAL</td>
-            </tr>
-            <tr>
-                <th style="width: 8%;" colspan="2">Medida</th>
-                <th style="width: 10%;">Número</th>
-                <th style="width: 10%;">Marca</th>
-                <th style="width: 8%;">Tipo</th>
-                <th style="width: 8%;">Capac. (A)</th>
-                <th style="width: 8%;">Tensión (V)</th>
-                <th style="width: 6%;">Clase</th>
-                <th style="width: 8%;">Kd (rev/kWh)</th>
-                <th style="width: 8%;">Kh (kWh/rev)</th>
-                <th style="width: 8%;">Lectura</th>
-                <th style="width: 8%;">E/D</th>
-                <th style="width: 10%;">Fecha Lab</th>
-            </tr>
-            <!-- Fila Activa 1 -->
-            <tr>
-                <td class="vertical-header" rowspan="4">ENCONTRADO</td>
-                <td>Activa1</td>
-                <td>${data.numeroActiva1 || ''}</td>
-                <td>${resumen.marcaActiva1}</td>
-                <td>${resumen.tipoActiva1 || ''}</td>
-                <td>${data.capacidadActiva1 || ''}</td>
-                <td>${data.tensionActiva1 || ''}</td>
-                <td>${data.claseActiva1 || ''}</td>
-                <td>${data.kdActiva1 || ''}</td>
-                <td>${data.khActiva1 || ''}</td>
-                <td>${data.lecturaActiva1 || ''}</td>
-                <td>${data.edActiva1 || ''}</td>
-                <td>${data.fechaLabActiva1 || ''}</td>
-            </tr>
-            <!-- Fila Activa 2 -->
-            <tr>
-                <td>Activa 2</td>
-                <td>${data.numeroActiva1 || ''}</td>
-                <td>${resumen.marcaActiva1}</td>
-                <td>${resumen.tipoActiva1 || ''}</td>
-                <td>${data.capacidadActiva2 || ''}</td>
-                <td>${data.tensionActiva2 || ''}</td>
-                <td>${data.claseActiva2 || ''}</td>
-                <td>${data.kdActiva2 || ''}</td>
-                <td>${data.khActiva2 || ''}</td>
-                <td>${data.lecturaActiva2 || ''}</td>
-                <td>${data.edActiva2 || ''}</td>
-                <td>${data.fechaLabActiva2 || ''}</td>
-            </tr>
-            <!-- Fila Reactiva1  -->
-            <tr>
-                <td>Reactiva 1</td>
-                <td>${data.numeroActiva1 || ''}</td>
-                <td>${resumen.marcaActiva1}</td>
-                <td>${resumen.tipoActiva1 || ''}</td>
-                <td>${data.capacidadReactiva1 || ''}</td>
-                <td>${data.tensionReactiva1 || ''}</td>
-                <td>${data.claseReactiva1 || ''}</td>
-                <td>${data.kdReactiva1 || ''}</td>
-                <td>${data.khReactiva1 || ''}</td>
-                <td>${data.lecturaReactiva1 || ''}</td>
-                <td>${data.edReactiva1 || ''}</td>
-                <td>${data.fechaLabReactiva1 || ''}</td>
-            </tr>
-            <!-- Fila Reactiva 2  -->
-            <tr>
-                <td>Reactiva 2</td>
-                <td>${data.numeroActiva1 || ''}</td>
-                <td>${resumen.marcaActiva1}</td>
-                <td>${resumen.tipoActiva1 || ''}</td>
-                <td>${data.capacidadReactiva2 || ''}</td>
-                <td>${data.tensionReactiva2 || ''}</td>
-                <td>${data.claseReactiva2 || ''}</td>
-                <td>${data.kdReactiva2 || ''}</td>
-                <td>${data.khReactiva2 || ''}</td>
-                <td>${data.lecturaReactiva2 || ''}</td>
-                <td>${data.edReactiva2 || ''}</td>
-                <td>${data.fechaLabReactiva2 || ''}</td>
-            </tr>
-            <!-- Fila Activa 1 -->
-            <tr>
-                <td class="vertical-header" rowspan="4">INSTALADO</td>
-                <td>Activa 1</td>
-                <td>${data.numeroActivaIns1 || ''}</td>
-                <td>${resumen.marcaActivaIns1 || ''}</td>
-                <td>${resumen.tipoActivaIns1 || ''}</td>
-                <td>${data.capacidadActivaIns1 || ''}</td>
-                <td>${data.tensionActivaIns1 || ''}</td>
-                <td>${data.claseActivaIns1 || ''}</td>
-                <td>${data.kdActivaIns1 || ''}</td>
-                <td>${data.khActivaIns1 || ''}</td>
-                <td>${data.lecturaActivaIns1 || ''}</td>
-                <td>${data.edActivaIns1 || ''}</td>
-                <td>${data.fechaLabActivaIns1 || ''}</td>
-            </tr>
-            <!-- Fila Activa 2 -->
-            <tr>
-                <td>Activa 2</td>
-                <td>${data.numeroActivaIns1 || ''}</td>
-                <td>${resumen.marcaActivaIns1 || ''}</td>
-                <td>${resumen.tipoActivaIns1 || ''}</td>
-                <td>${data.capacidadActivaIns2 || ''}</td>
-                <td>${data.tensionActivaIns2 || ''}</td>
-                <td>${data.claseActivaIns2 || ''}</td>
-                <td>${data.kdActivaIns2 || ''}</td>
-                <td>${data.khActivaIns2 || ''}</td>
-                <td>${data.lecturaActivaIns2 || ''}</td>
-                <td>${data.edActivaIns2 || ''}</td>
-                <td>${data.fechaLabActivaIns2 || ''}</td>
-            </tr>
-            <!-- Fila Reactiva1  -->
-            <tr>
-                <td>Reactiva 1</td>
-                <td>${data.numeroActivaIns1 || ''}</td>
-                <td>${resumen.marcaActivaIns1 || ''}</td>
-                <td>${resumen.tipoActivaIns1 || ''}</td>
-                <td>${data.capacidadReactivaIns1 || ''}</td>
-                <td>${data.tensionReactivaIns1 || ''}</td>
-                <td>${data.claseReactivaIns1 || ''}</td>
-                <td>${data.kdReactivaIns1 || ''}</td>
-                <td>${data.khReactivaIns1 || ''}</td>
-                <td>${data.lecturaReactivaIns1 || ''}</td>
-                <td>${data.edReactivaIns1 || ''}</td>
-                <td>${data.fechaLabReactivaIns1 || ''}</td>
-            </tr>
-            <!-- Fila Reactiva2  -->
-            <tr>
-                <td>Reactiva 2</td>
-                <td>${data.numeroActivaIns1 || ''}</td>
-                <td>${resumen.marcaActivaIns1 || ''}</td>
-                <td>${resumen.tipoActivaIns1 || ''}</td>
-                <td>${data.capacidadReactivaIns2 || ''}</td>
-                <td>${data.tensionReactivaIns2 || ''}</td>
-                <td>${data.claseReactivaIns2 || ''}</td>
-                <td>${data.kdReactivaIns2 || ''}</td>
-                <td>${data.khReactivaIns2 || ''}</td>
-                <td>${data.lecturaReactivaIns2 || ''}</td>
-                <td>${data.edReactivaIns2 || ''}</td>
-                <td>${data.fechaLabReactivaIns2 || ''}</td>
-            </tr>
-        </table>
-
-        <!-- TABLA DE MEDIDOR ENCONTRADO Y INSTALADO RESPALDO -->
-        <table>
-            <tr>
-                <td class="section-title" colspan="13">DATOS MEDIDOR RESPALDO</td>
-            </tr>
-            <tr>
-                <th style="width: 8%;" colspan="2">Medida</th>
-                <th style="width: 10%;">Número</th>
-                <th style="width: 10%;">Marca</th>
-                <th style="width: 8%;">Tipo</th>
-                <th style="width: 8%;">Capac. (A)</th>
-                <th style="width: 8%;">Tensión (V)</th>
-                <th style="width: 6%;">Clase</th>
-                <th style="width: 8%;">Kd (rev/kWh)</th>
-                <th style="width: 8%;">Kh (kWh/rev)</th>
-                <th style="width: 8%;">Lectura</th>
-                <th style="width: 8%;">E/D</th>
-                <th style="width: 10%;">Fecha Lab</th>
-            </tr>
-            <!-- Fila Activa 1 -->
-            <tr>
-                <td class="vertical-header" rowspan="4">ENCONTRADO</td>
-                <td>Activa1</td>
-                <td>${data.numeroActiva1Res || ''}</td>
-                <td>${resumen.marcaActiva1Res}</td>
-                <td>${resumen.tipoActiva1Res || ''}</td>
-                <td>${data.capacidadActiva1Res || ''}</td>
-                <td>${data.tensionActiva1Res || ''}</td>
-                <td>${data.claseActiva1Res || ''}</td>
-                <td>${data.kdActiva1Res || ''}</td>
-                <td>${data.khActiva1Res || ''}</td>
-                <td>${data.lecturaActiva1Res || ''}</td>
-                <td>${data.edActiva1Res || ''}</td>
-                <td>${data.fechaLabActiva1Res || ''}</td>
-            </tr>
-            <!-- Fila Activa 2 -->
-            <tr>
-                <td>Activa 2</td>
-                <td>${data.numeroActiva1Res || ''}</td>
-                <td>${resumen.marcaActiva1Res}</td>
-                <td>${resumen.tipoActiva1Res || ''}</td>
-                <td>${data.capacidadActiva2Res || ''}</td>
-                <td>${data.tensionActiva2Res || ''}</td>
-                <td>${data.claseActiva2Res || ''}</td>
-                <td>${data.kdActiva2Res || ''}</td>
-                <td>${data.khActiva2Res || ''}</td>
-                <td>${data.lecturaActiva2Res || ''}</td>
-                <td>${data.edActiva2Res || ''}</td>
-                <td>${data.fechaLabActiva2Res || ''}</td>
-            </tr>
-            <!-- Fila Reactiva1  -->
-            <tr>
-                <td>Reactiva 1</td>
-                <td>${data.numeroActiva1Res || ''}</td>
-                <td>${resumen.marcaActiva1Res}</td>
-                <td>${resumen.tipoActiva1Res || ''}</td>
-                <td>${data.capacidadReactiva1Res || ''}</td>
-                <td>${data.tensionReactiva1Res || ''}</td>
-                <td>${data.claseReactiva1Res || ''}</td>
-                <td>${data.kdReactiva1Res || ''}</td>
-                <td>${data.khReactiva1Res || ''}</td>
-                <td>${data.lecturaReactiva1Res || ''}</td>
-                <td>${data.edReactiva1Res || ''}</td>
-                <td>${data.fechaLabReactiva1Res || ''}</td>
-            </tr>
-            <!-- Fila Reactiva 2  -->
-            <tr>
-                <td>Reactiva 2</td>
-                <td>${data.numeroActiva1Res || ''}</td>
-                <td>${resumen.marcaActiva1Res}</td>
-                <td>${resumen.tipoActiva1Res || ''}</td>
-                <td>${data.capacidadReactiva2Res || ''}</td>
-                <td>${data.tensionReactiva2Res || ''}</td>
-                <td>${data.claseReactiva2Res || ''}</td>
-                <td>${data.kdReactiva2Res || ''}</td>
-                <td>${data.khReactiva2Res || ''}</td>
-                <td>${data.lecturaReactiva2Res || ''}</td>
-                <td>${data.edReactiva2Res || ''}</td>
-                <td>${data.fechaLabReactiva2Res || ''}</td>
-            </tr>
-            <!-- Fila Activa 1 -->
-            <tr>
-                <td class="vertical-header" rowspan="4">INSTALADO</td>
-                <td>Activa 1</td>
-                <td>${data.numeroActivaIns1Res || ''}</td>
-                <td>${resumen.marcaActivaIns1Res}</td>
-                <td>${resumen.tipoActivaIns1Res || ''}</td>
-                <td>${data.capacidadActivaIns1Res || ''}</td>
-                <td>${data.tensionActivaIns1Res || ''}</td>
-                <td>${data.claseActivaIns1Res || ''}</td>
-                <td>${data.kdActivaIns1Res || ''}</td>
-                <td>${data.khActivaIns1Res || ''}</td>
-                <td>${data.lecturaActivaIns1Res || ''}</td>
-                <td>${data.edActivaIns1Res || ''}</td>
-                <td>${data.fechaLabActivaIns1Res || ''}</td>
-            </tr>
-            <!-- Fila Activa 2 -->
-            <tr>
-                <td>Activa 2</td>
-                <td>${data.numeroActivaIns1Res || ''}</td>
-                <td>${resumen.marcaActivaIns1Res}</td>
-                <td>${resumen.tipoActivaIns1Res || ''}</td>
-                <td>${data.capacidadActivaIns2Res || ''}</td>
-                <td>${data.tensionActivaIns2Res || ''}</td>
-                <td>${data.claseActivaIns2Res || ''}</td>
-                <td>${data.kdActivaIns2Res || ''}</td>
-                <td>${data.khActivaIns2Res || ''}</td>
-                <td>${data.lecturaActivaIns2Res || ''}</td>
-                <td>${data.edActivaIns2Res || ''}</td>
-                <td>${data.fechaLabActivaIns2Res || ''}</td>
-            </tr>
-            <!-- Fila Reactiva1  -->
-            <tr>
-                <td>Reactiva 1</td>
-                <td>${data.numeroActivaIns1Res || ''}</td>
-                <td>${resumen.marcaActivaIns1Res}</td>
-                <td>${resumen.tipoActivaIns1Res || ''}</td>
-                <td>${data.capacidadReactivaIns1Res || ''}</td>
-                <td>${data.tensionReactivaIns1Res || ''}</td>
-                <td>${data.claseReactivaIns1Res || ''}</td>
-                <td>${data.kdReactivaIns1Res || ''}</td>
-                <td>${data.khReactivaIns1Res || ''}</td>
-                <td>${data.lecturaReactivaIns1Res || ''}</td>
-                <td>${data.edReactivaIns1Res || ''}</td>
-                <td>${data.fechaLabReactivaIns1Res || ''}</td>
-            </tr>
-            <!-- Fila Reactiva2  -->
-            <tr>
-                <td>Reactiva 2</td>
-                <td>${data.numeroActivaIns1Res || ''}</td>
-                <td>${resumen.marcaActivaIns1Res}</td>
-                <td>${resumen.tipoActivaIns1Res || ''}</td>
-                <td>${data.capacidadReactivaIns2Res || ''}</td>
-                <td>${data.tensionReactivaIns2Res || ''}</td>
-                <td>${data.claseReactivaIns2Res || ''}</td>
-                <td>${data.kdReactivaIns2Res || ''}</td>
-                <td>${data.khReactivaIns2Res || ''}</td>
-                <td>${data.lecturaReactivaIns2Res || ''}</td>
-                <td>${data.edReactivaIns2Res || ''}</td>
-                <td>${data.fechaLabReactivaIns2Res || ''}</td>
-            </tr>
-        </table>
-
-      <!-- TABLA TRANSFORMADOR DE POTENCIA -->
-    <table>
-        <tr>
-            <td class="section-title" colspan="8">TRANSFORMADOR DE POTENCIA</td>
-        </tr>
-        <tr>
-            <td class="field-label">Transformador Asociado No. 
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoNumero || ''}</strong></p>
-            </td>
-            <td class="field-label">Marca
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoMarca || ''}</strong></p>
-            </td>
-            <td class="field-label">KVA
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoKva || ''}</strong></p>
-            </td>
-            <td class="field-label">Año
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoAno || ''}</strong></p>
-            </td>
-            <td class="field-label">V1/V2
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoV1V2 || ''}</strong></p>
-            </td>
-            <td class="field-label">Circuito
-            <p style="text-align: center; margin: 0;"><strong>${data.transformadorPoCircuito || ''}</strong></p>
-            </td>
-            <td class="field-label" colspan="2">Propietario
-            <p style="text-align: center; margin: 0;">
-            <strong>
-              ${data.transformadorPoPropietario || ''}
-              <!--
-                EMSA (${data.transformadorPoPropietario === 'EMSA' ? 'X' : ' '}) 
-                PARTICULAR (${data.transformadorPoPropietario === 'PARTICULAR' ? 'X' : ' '})
-              -->
-            </strong></p>
-            </td>
-        </tr>
-    </table>
-
-    <!-- TABLA RELACIÓN DE SELLOS -->
-    <table>
-        <tr>
-            <td class="section-title" colspan="16">RELACIÓN DE SELLOS</td>
-        </tr>
-        <!-- Fila de encabezados -->
-        <tr>
-            <th colspan="4" style="text-align: center; border: 1px solid #34495e;">ENCONTRADOS</th>
-            <th colspan="4" style="text-align: center; border: 1px solid #34495e;">INSTALADOS</th>
-            <th colspan="4" style="text-align: center; border: 1px solid #34495e;">ENCONTRADOS</th>
-            <th colspan="4" style="text-align: center; border: 1px solid #34495e;">INSTALADOS</th>
-        </tr>
-        <!-- Fila de ubicación -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;" colspan="2">UBICACIÓN</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COL</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">E</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">R</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COLOR</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">UBICACIÓN</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COL</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">E</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">R</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">TIPO/COLOR</td>
-            <td style="border: 1px solid #34495e; text-align: center; font-weight: bold;">NÚMERO</td>
-        </tr>
-        <!-- Fila 1  TAPA PRINCIPAL -->
-        <tr>
-            <th rowspan="5" class="vertical-header" style="writing-mode: vertical-lr; transform: rotate(180deg); background-color: #f2f2f2;">MED<br>ACTIVA</th>          
-            <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-                TAPA<br>PRINCIPAL
-            </td>
-            <td style="border: 1px solid #34495e;">${data.medActivaTipoCol1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaNum1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaE1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaR1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstNum1 || ''}</td>
-            <!-- Fila 1 TC'S -->
-            <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-                TC'S
-            </td>
-            <td style="border: 1px solid #34495e;">${data.tcsTipoCol1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsNumero1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsE1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsR1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstNumero1 || ''}</td> 
-        </tr>
-        <tr> <!-- Fila 2 TAPA PRINCIPAL -->
-            <td style="border: 1px solid #34495e;">${data.medActivaTipoCol2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaNum2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaE2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaR2  || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstNum2 || ''}</td>
-            <!-- Fila 2 TC'S -->
-            <td style="border: 1px solid #34495e;">${data.tcsTipoCol2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsNumero2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsE2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsR2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstNumero2 || ''}</td> 
-        </tr>
-        <tr> <!-- Fila 3 TAPA PRINCIPAL -->
-            <td style="border: 1px solid #34495e;">${data.medActivaTipoCol3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaNum3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaE3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaR3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstTipoColor3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.medActivaInstNum3 || ''}</td>
-            <!-- Fila 3 TC'S -->
-            <td style="border: 1px solid #34495e;">${data.tcsTipoCol3  || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsNumero3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsE3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsR3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstTipoColor3 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tcsInstNumero3 || ''}</td> 
-        </tr>
-        
-        <tr> 
-            <!-- Fila 1 TAPA BORNERA -->          
-            <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-                TAPA<br>BORNERA
-            </td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaTipoCol1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaNum1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaE1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaR1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstTipoColor1|| ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstNum1  || ''}</td>
-            <!-- Fila 1 TP'S -->
-            <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-                TP'S
-            </td>
-            <td style="border: 1px solid #34495e;">${data.tpsTipoCol1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsNumero1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsE1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsR1 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsInstTipoColor1|| ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsInstNumero1 || ''}</td> 
-        </tr>
-        <tr> <!-- Fila 2 TAPA BORNERA -->
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaTipoCol2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaNum2  || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaE2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaR2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstTipoColor2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tapaBorneraActivaInstNum2 || ''}</td>
-            <!-- Fila 2 TP'S -->
-            <td style="border: 1px solid #34495e;">${data.tpsTipoCol2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsNumero2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsE2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsR2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsInstTipoColor2 || ''}</td>
-            <td style="border: 1px solid #34495e;">${data.tpsInstNumero2 || ''}</td> 
-        </tr>
-        <tr>
-          <th rowspan="5" class="vertical-header" style="writing-mode: vertical-lr; transform: rotate(180deg); background-color: #f2f2f2;">MED<br>REACTIVA</th>          
-          <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-              TAPA<br>PRINCIPAL
-          </td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaNum1  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaE1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaR1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstNum1 || ''}</td>
-          <!-- Fila 1 CELDA DE MEDIDA -->
-          <td class="ubicacion-header" rowspan="3" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-              CELDA DE<br>MEDIDA
-          </td>
-          <td style="border: 1px solid #34495e;">${data.celdaTipoCol1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaNumero1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaE1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaR1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstNumero1 || ''}</td> 
-      </tr>
-      <tr> <!-- Fila 2 TAPA PRINCIPAL REACTIVA -->
-          <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol2  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaNum2  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaE2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaR2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstNum2 || ''}</td>
-          <!-- Fila 2 CELDA DE MEDIDA -->
-          <td style="border: 1px solid #34495e;">${data.celdaTipoCol2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaNumero2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaE2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaR2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor2  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstNumero2 || ''}</td> 
-      </tr>
-      <tr> <!-- Fila 3 TAPA PRINCIPAL REACTIVA -->
-          <td style="border: 1px solid #34495e;">${data.medReactivaTipoCol3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaNum3  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaE3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaR3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstTipoColor3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.medReactivaInstNum3 || ''}</td>
-          <!-- Fila 3 CELDA DE MEDIDA -->
-          <td style="border: 1px solid #34495e;">${data.celdaTipoCol3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaNumero3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaE3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaR3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstTipoColor3 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.celdaInstNumero3 || ''}</td> 
-      </tr>
-
-      <tr> 
-          <!-- Fila 1 TAPA BORNERA REACTIVA -->          
-          <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-              TAPA<br>BORNERA
-          </td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaTipoCol1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaNum1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaE1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaR1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstTipoColor1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstNum1 || ''}</td>
-          <!-- Fila 1 BLOQUES DE PRUEBA -->
-          <td class="ubicacion-header" rowspan="2" style="text-align: center; border: 1px solid #34495e; background-color: #f2f2f2; font-weight: bold; vertical-align: middle;">
-              BLOQUES DE<br>PRUEBA
-          </td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasTipoCol1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasNum1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasE1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasR1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasInstTipoColor1 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasInstNum1 || ''}</td> 
-      </tr>
-      <tr> <!-- Fila 2 TAPA BORNERA REACTIVA -->
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaTipoCol2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaNum2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaE2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaR2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstTipoColor2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.tapaBorneraReactivaInstNum2 || ''}</td>
-          <!-- Fila 2 BLOQUES DE PRUEBA -->
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasTipoCol2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasNum2  || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasE2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasR2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasInstTipoColor2 || ''}</td>
-          <td style="border: 1px solid #34495e;">${data.bloquePruebasInstNum2 || ''}</td> 
-      </tr>
-    </table>
-    <table>
-        <tr>
-            <td class="section-title" colspan="10" >PRUEBAS REALIZADAS MEDIDOR ACTIVA</td>
-            <td class="section-title" colspan="10" >PRUEBAS REALIZADAS MEDIDOR REACTIVA</td>
-        </tr>
-        <tr>
-            <td class="section-title" colspan="20">Cuadro de Cálculo del Error</td>
-        </tr>
-        <!-- Encabezados principales -->
-        <tr>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Fase</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tensión (V)</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">CORRIENTE (A)</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">P.Inst (W)</th>
-            <th rowspan="2" colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; vertical-align: middle;">Secuencia de Fases</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Fase</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tensión (V)</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">CORRIENTE (A)</th>
-            <th colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">P.Inst (W)</th>
-            <th rowspan="2" colspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; vertical-align: middle;">Secuencia de Fases</th>
-        </tr>
-        <!-- Fila R -->
-        <tr>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">R</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionR || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteR || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstR || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">R</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionR || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteR || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstR || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila S -->
-        <tr>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">S</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionS || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteS || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstS || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RST</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaRst || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">S</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionS || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteS || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstS || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RST</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaRst || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila T -->
-        <tr>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">T</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionT || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteT || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstT || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RTS</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaRts || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #f8f9fa;">T</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionT || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteT || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstT || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">RTS</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaRts || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila TOTAL (L-L) -->
-        <tr>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #e9ecef;">TOTAL (L-L)</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionTotal || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteTotal || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstTotal || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">F.P.</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaFp || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center; font-weight: bold; background-color: #e9ecef;">TOTAL (L-L)</td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTensionTotal || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaCorrienteTotal || ''}</strong>
-            </td>
-            <td colspan="2" style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPinstTotal || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">F.P.</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaFp || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila de cálculos -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">% Error</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPorcentajeError || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Giros</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaGiros || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Tiempo (S)</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTiempo || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Horas</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaHoras || ''}</strong>
-            </td>
-            
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">W</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaW || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">% Error</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPorcentajeError || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Giros</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaGiros || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Tiempo (S)</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaTiempo || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Horas</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaHoras || ''}</strong>
-            </td>
-            
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">W</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaW || ''}</strong>
-            </td>
-        </tr>
-    </table>
-
-    <table>
-        <tr>
-            <td class="section-title" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE ACTIVA</td>
-            <td class="section-title" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE REACTIVA</td>
-        </tr>
-        <!-- Encabezados -->
-        <tr>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Tipo</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Conforme</th>
-            <th colspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Prueba de Integración</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Tipo</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">Conforme</th>
-            <th colspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Prueba de Integración</th>
-        </tr>
-        <!-- Fila 1: Conexiones -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Conexiones</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <p style="margin: 0;">
-                    <strong>
-                  ${data.activaConexiones === 'si' ? 'SÍ' : data.activaConeciones === 'no' ? 'NO' : ' '}
-                    <!--SÍ (${data.activaConexiones === 'si' ? 'X' : ' '}) 
-                    NO (${data.activaConexiones === 'no' ? 'X' : ' '})-->
-                    </strong>
-                </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Inicial</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaLecturaInicial || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">% Error</td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Conexiones</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <p style="margin: 0;">
-                  <strong>
-                    ${data.reactivaConexiones === 'si' ? 'SÍ' : data.reactivaConexiones === 'no' ? 'NO' : ' '}
-                    <!--SÍ (${data.reactivaConexiones === 'si' ? 'X' : ' '}) 
-                    NO (${data.reactivaConexiones === 'no' ? 'X' : ' '})-->
-                  </strong>
-                </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Inicial</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.reactivaLecturaInicial || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">% Error</td>
-        </tr>
-        <!-- Fila 2: Continuidad -->
-        <tr>
-          
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Continuidad</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <p>
-                  <strong>    
-                  ${data.activaContinuidad === 'si' ? 'SÍ' : data.activaContinuidad === 'no' ? 'NO' : ' '}   
-                    <!--SÍ (${data.activaContinuidad === 'si' ? 'X' : ' '}) 
-                    NO (${data.activaContinuidad === 'no' ? 'X' : ' '})-->
-                  </strong>
-                </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Final</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaLecturaFinal || ''}</strong>
-            </td>
-            <td rowspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">
-              <p style="margin: 0; padding: 0.5rem 0;"  >
-                ${data.activaPorcentajeErrorPruebas || ''}
-              </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Continuidad</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <p>
-                <strong>
-                  ${data.reactivaContinuidad === 'si' ? 'SÍ' : data.reactivaContinuidad === 'no' ? 'NO' : ' '} 
-                    <!--SÍ (${data.reactivaContinuidad === 'si' ? 'X' : ' '}) 
-                    NO (${data.reactivaContinuidad === 'no' ? 'X' : ' '})-->
-                </strong>
-                </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Lectura Final</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.reactivaLecturaFinal || ''}</strong>
-            </td>
-            <td rowspan="3" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">${data.reactivaPorcentajeErrorPruebas || ''}</td>
-        </tr>
-        <!-- Fila 3: Prueba de Puentes (parte 1) -->
-        <tr>
-            <td rowspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">Prueba de Puentes</td>
-            <td rowspan="2" style="border: 1px solid #34495e; text-align: center; vertical-align: middle;">
-                <p style="margin: 0; padding: 0.5rem 0;">
-                  <strong>
-                    ${data.activaPuentes === 'si' ? 'SÍ' : data.activaPuentes === 'no' ? 'NO' : ' '} 
-                    <!--SÍ (${data.activaPuentes === 'si' ? 'X' : ' '}) 
-                    NO (${data.activaPuentes === 'no' ? 'X' : ' '})-->
-                  </strong>
-                </p>
-            </td>
-            
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Diferencia</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaDiferencia || ''}</strong>
-            </td>
-            
-            <td rowspan="2" style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa; vertical-align: middle;">Prueba de Puentes</td>
-            <td rowspan="2" style="border: 1px solid #34495e; text-align: center; vertical-align: middle;">
-                <p style="margin: 0; padding: 0.5rem 0;">
-                  <strong>
-                    ${data.reactivaPuentes === 'si' ? 'SÍ' : data.reactivaPuentes === 'no' ? 'NO' : ' '}
-                    <!--SÍ (${data.reactivaPuentes === 'si' ? 'X' : ' '}) 
-                    NO (${data.reactivaPuentes === 'no' ? 'X' : ' '})-->
-                  </strong>    
-                </p>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Diferencia</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.reactivaDiferencia || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila 4: Prueba de Puentes (parte 2) -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Patron</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.activaPatron || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">Patron</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.reactivaPatron || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila 5: Estado del integrador y Medidor se frena -->
-        <tr>
-            <td colspan="4" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Estado del integrador</td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Medidor se frena</td>
-            <td colspan="4" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Estado del integrador</td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Medidor se frena</td>
-        </tr>
-        <!-- Fila 7: ¿Giro en vacio?, ¿Registra? y checkbox -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Giro en vacio?</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                    ${data.activaGiroVacio === 'si' ? 'SÍ' : data.activaGiroVacio === 'no' ? 'NO' : ' '}
-                </strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Registra?</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                    ${data.activaRegistra === 'si' ? 'SÍ' : data.activaRegistra === 'no' ? 'NO' : ' '}
-                </strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                  ${data.activaSeFrena === 'si' ? 'SÍ' : data.activaSeFrena === 'no' ? 'NO' : ''}
-                </strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Giro en vacio?</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                    ${data.reactivaGiroVacio === 'si' ? 'SÍ' : data.reactivaGiroVacio === 'no' ? 'NO' : ''}
-                </strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center; background-color: #f8f9fa;">¿Registra?</td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                  ${data.reactivaRegistra === 'si' ? 'SÍ' : data.reactivaRegistra === 'no' ? 'NO' : ''}
-                </strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>
-                  ${data.reactivaSeFrena === 'si' ? 'SÍ' : data.reactivaSeFrena === 'no' ? 'NO' : ''}
-                </strong>
-            </td>
-        </tr>
-    </table>
-
-    <!-- TABLA TC'S ENCONTRADOS -->
-    <table>
-        <tr>
-            <td class="section-title" colspan="6">CARACTERISTICAS TRANSFORMADORES DE CORRIENTE TC'S ENCONTRADOS</td>
-            <td class="section-title" colspan="6">CARACTERISTICAS TRANSFORMADORES DE POTENCIA ENCONTRADOS</td>
-        </tr>
-        <!-- Encabezados de columnas -->
-        <tr>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Marca</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Series</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tipo</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Relación</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Clase</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">VA</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Marca</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Series</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Tipo</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Relación</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">Clase</th>
-            <th style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1;">VA</th>
-        </tr>
-        <!-- Fila 1 -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcMarca1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcSeries1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcTipo1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcRelacion1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcClase1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcVa1 || ''}</strong>
-            </td>
-            <!-- Fila 2  TPS -->
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpMarca1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpSeries1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpTipo1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpRelacion1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpClase1 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpVa1 || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila 2 -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcMarca2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcSeries2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcTipo2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcRelacion2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcClase2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcVa2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpMarca2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpSeries2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpTipo2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpRelacion2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpClase2 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpVa2 || ''}</strong>
-            </td>
-        </tr>
-        <!-- Fila 3 -->
-        <tr>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcMarca3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcSeries3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcTipo3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcRelacion3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcClase3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tcVa3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpMarca3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpSeries3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpTipo3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpRelacion3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpClase3 || ''}</strong>
-            </td>
-            <td style="border: 1px solid #34495e; text-align: center;">
-                <strong>${data.tpVa3 || ''}</strong>
-            </td>
-        </tr>
-    </table>
-
-    <table>
-        <tr>
-            <td class="section-title" colspan="7">IRREGULARIDADES ENCONTRADAS POR LA EMPRESA</td>
-        </tr>
-        <!-- Fila de datos principales -->
-        <tr>
-            <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 25%;">
-                CODIGO(S) DE LA(S) IRREGULARIDAD(ES)
-            </td>
-            <td class="field-value" style="border: 1px solid #34495e; text-align: center; width: 15%;">
-                <strong>${data.codigosIrregularidades || ''}</strong>
-            </td>
-            <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 10%;">
-                Foto<br>
-                <span style="font-weight: bold; font-size: 12px;">
-                    ${data.tipoEvidencia === 'foto' ? 'X' : ' '}
-                </span>
-            </td>
-            <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 10%;">
-                Video<br>
-                <span style="font-weight: bold; font-size: 12px;">
-                    ${data.tipoEvidencia === 'video' ? 'X' : ' '}
-                </span>
-            </td>
-            <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">
-                IRREGULARIDAD CORREGIDA<br>
-                <span style="font-weight: bold; font-size: 12px;">
-                    ${data.irregularidadCorrida === 'si' ? 'SÍ' : data.irregularidadCorrida === 'no' ? 'NO' : ''}
-                </span>
-            </td>
-            <td class="field-label" style="border: 1px solid #34495e; text-align: center; background-color: #ecf0f1; width: 20%;">
-                MEDIDOR RETIRADO<br>
-                <span style="font-weight: bold; font-size: 12px;">
-                    ${data.medidorRetirado === 'si' ? 'SÍ' : data.medidorRetirado === 'no' ? 'NO' : ''}
-                </span>
-            </td>
-        </tr>
-        <!-- Fila de nota -->
-        <tr>
-            <td colspan="7" style="border: 1px solid #34495e; padding: 8px; font-size: 13px; font-style: italic; background-color: #f8f9fa;">
-                NOTA: En caso de detectarse irregularidad(es), esta acta constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica
-            </td>
-        </tr>
-        <!-- Fila de informe -->
-        <tr>
-            <td colspan="7" class="text-justify" style="border: 1px solid #34495e; padding: 8px; font-size: 10px; line-height: 1.4; background-color: #f8f9fa;">
-                <p style="margin: 0;">
-                    Informe: <strong>
-                    ${getTipoInformeText()}
-                    </strong>
-                </p>
-            </td>
-        </tr>
-    </table>
-
-        <div class="legal-text">
-            <p>
-                Los abajo firmantes reconocen haber leído y aceptado el contenido de esta acta y mediante su firma la dan por levantadas.
-                (EL USO INDEBIDO DEL SERVICIO, LA ADULTERACIÓN O MANIPULACIÓN SIN AUTORIZACIÓN DEL EQUIPO DE MEDIDA SE CONSTITUYE EN EL DELITO DE "DEFRAUDACIÓN DE FLUIDOS") (artículo 256 del Código Penal). 
-                El artículo 256 del Código Penal establece que Defraudación de fluidos: El que mediante cualquier mecanismo clandestino o alterando los sistemas de control o aparatos contadores,
-                se apropie de energía eléctrica, en perjuicio ajeno, incurrirá en prisión de uno (1) a cuatro (4) años y en multa de uno (1) a cien (100) salarios mínimos legales mensuales vigentes.
-            </p>
-        </div>
-
-        <!-- TABLA DE FIRMAS (3 COLUMNAS) -->
-        <table class="firma-table">
-            <tr>
-                <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-                <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
-                <td class="firma-header" style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">TESTIGO</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${userData.name || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${data.usuarioVisita || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${data.otroRepresentante || 'No especificado'}</div>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaFuncionario
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaFuncionario}" alt="Firma Funcionario">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaSuscriptor
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaSupervisor
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaSupervisor}" alt="Firma Supervisor">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${userData.cc || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${data.documentoVisitante || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div>
-                </div>
-              </td>
-            </tr>
-        </table>
-    </div>
-    <!-- Fin Hoja 1 -->
+      </head>
+      <body>
+      <!-- HOJA 1: ACTA DE REVISIÓN -->
+      <div id="pdf-page-1" class="page"><div class="page-inner">
+      <div class="hdr"><table class="hdr-t"><colgroup><col style="width:68%"><col style="width:32%"></colgroup><tr><td class="nb c"><img class="logo" src="${base64Logo}" alt="Logo"></td><td class="nb"><table class="code"><colgroup><col style="width:38%"><col style="width:62%"></colgroup><tr><td class="lb">Código:</td><td>FO-GD-CP-03</td></tr><tr><td class="lb">Fecha:</td><td>${new Date().toLocaleDateString('es-ES')}</td></tr><tr><td class="lb">Versión:</td><td>4</td></tr><tr><td class="lb">Página:</td><td>1 DE 1</td></tr></table></td></tr></table></div>
+      <div class="title">ACTA DE REVISIÓN</div>
+      <table><colgroup><col style="width:14%"><col style="width:12%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:10%"><col style="width:12%"></colgroup><tr><td class="st" colspan="6">ACTA DE REVISIÓN CLIENTES DESTACADOS</td><td class="st" colspan="3">CONTROL DE PÉRDIDAS</td></tr><tr><td class="lb">Acta De Revisión No.</td><td class="acta-number">N° <span id="numero">${data.numero_acta}</span></td><td class="lb">Ciudad</td><td class="c" colspan="2">${data.ciudad}</td><td class="lb" colspan="2">Resultado</td><td class="c" colspan="2">${data.resultado || ''}</td></tr><tr><td class="lb">Solicitud No.</td><td class="c">${data.solicitudNo || ''}</td><td class="lb">Código de cliente</td><td class="c">${data.codigo || ''}</td><td class="lb">ASIC</td><td class="c">${data.asic || ''}</td><td class="lb">Revisión No.</td><td class="c" colspan="2"><span id="revision">${data.revisionNo || ''}</span></td></tr><tr><td colspan="9" class="intro">A los <strong>${new Date().getDate()}</strong> días del mes de <strong>${new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del <strong>${new Date().getFullYear()}</strong>, siendo las <strong>${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</strong> se hacen presentes en el inmueble de la dirección <strong>${data.direccion || '______'}</strong> los representantes de EMSA ESP <strong>${userData.name || '______'}</strong> con C.C: <strong>${userData.cc || '______'}</strong> y <strong>${data.otroRepresentante || '______'}</strong> con C.C: <strong>${data.ccOtroRepresentante || '______'}</strong> en presencia del señor(a) <strong>${data.usuarioVisita || '______'}</strong> con <strong>${data.documentoVisitante || '______'}</strong> calidad de <strong>${data.tipoUsuario ? capitalize(data.tipoUsuario) : '______'}</strong> con el fin de efectuar una revisión de los equipos de medida e instalaciones del inmueble con el código indicado. Habiéndose identificado los empleados y/o contratistas informan al usuario que de acuerdo al Contrato de Servicios Públicos con Condiciones Uniformes vigente su derecho a solicitar asesoría y/o participación de un técnico particular, o de cualquier persona para que sirva de testigo en el proceso de revisión. Sin embargo, si transcurre un plazo máximo de 15 minutos sin hacerse presente se hará la revisión sin su presencia. El cliente/usuario hace uso de su derecho: <strong>SÍ (${data.derecho === 'SI' ? 'X' : ' '})</strong> <strong>NO (${data.derecho === 'NO' ? 'X' : ' '})</strong>. Transcurrido ese tiempo, se procede a hacer la revisión.</td></tr><tr><td class="lb">DEPENDENCIA</td><td class="c">EMSA</td><td class="c"><strong>${data.dependencia || ''}</strong></td><td class="lb">CONTRATISTA</td><td class="c"><strong>${data.contratista || ''}</strong></td><td class="lb">ITEM DE PAGO</td><td class="c"><strong>${data.itemPago || ''}</strong></td><td class="c"><strong>${data.itemPago2 || ''}</strong></td><td class="c"><strong>${data.itemPago3 || ''}</strong></td></tr></table>
+      <table><colgroup><col style="width:24%"><col style="width:14%"><col style="width:14%"><col style="width:18%"><col style="width:15%"><col style="width:15%"></colgroup><tr><td class="st" colspan="6">DATOS GENERALES DEL SUSCRIPTOR</td></tr><tr><td class="fl">NOMBRE<p class="v">${data.nombre || ''}</p></td><td class="fl">CARGA KW<p class="v">${data.cargaKw || ''}</p></td><td class="fl">CICLO<p class="v">${data.ciclo || ''}</p></td><td class="fl">FACTOR<p class="v">${data.factor1 || ''}</p></td><td class="fl">FACTOR<p class="v">${data.factor2 || ''}</p></td><td class="fl">FACTOR<p class="v">${data.factor3 || ''}</p></td></tr><tr><td class="fl">DIRECCIÓN <br> POBLACIÓN<p class="v">${data.direccion || ''}</p></td><td class="fl">NÚMERO MACROMEDIDOR<p class="v">${data.macromedidor || ''}</p></td><td class="fl">NODO TRAFO<p class="v">${data.nodoTrafo || ''}</p></td><td class="fl">COMERCIALIZADOR<p class="v">${data.comercializador || ''}</p></td><td class="fl">LONGITUD<p class="v">${data.longitud || ''}</p></td><td class="fl">LATITUD<p class="v">${data.latitud || ''}</p></td></tr></table>
+      <table class="dense"><colgroup><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"><col style="width:7.7%"></colgroup><tr><td class="st" colspan="13">DATOS DEL SUSCRIPTOR Y EQUIPO DE MEDIDA ENCONTRADOS</td></tr><tr><td class="fl">TELÉFONO<p class="v">${data.telefono || ''}</p></td><td class="fl">USO<p class="v">${data.uso === 'R' ? 'RESIDENCIAL' : data.uso === 'C' ? 'COMERCIAL' : data.uso === 'I' ? 'INDUSTRIAL' : data.uso === 'O' ? 'OFICIAL' : ''}</p></td><td class="fl">UBICACIÓN<p class="v">${data.ubicacion || ''}</p></td><td class="fl">FAMILIAS<p class="v">${data.familias || ''}</p></td><td class="fl">NIVEL TENSIÓN<p class="v">${data.nivelTension || ''}</p></td><td class="fl">BLOQUES PRUEBA<p class="v">${data.bloquesPrueba || ''}</p></td><td class="fl">TIPO MEDIDOR<p class="v">${data.tipoMedidor || ''}</p></td><td class="fl">TIPO INSTALACIÓN<p class="v">${data.tipoInstalacion || ''}</p></td><td class="fl">UBICACIÓN MEDIDOR<p class="v">${data.ubicacionMedidor || ''}</p></td><td class="fl">TIPO ACOMETIDA<p class="v">${data.acometidaTipo || ''}</p></td><td class="fl">#F #H<p class="v">${data.fh || ''}</p></td><td class="fl">PROTECCIÓN GENERAL (A)<p class="v">${data.proteccionGeneral || ''}</p></td><td class="fl">LONGITUD (M)<p class="v">${data.acometidaLongitud ? data.acometidaLongitud + ' M' : ''}</p></td></tr><tr><td class="fl">CALIBRE ACOMETIDA<p class="v">${data.acometidaCalibre || ''}</p></td><td class="fl">UBICACIÓN MODEM<p class="v">${data.modemUbicacion || ''}</p></td><td class="fl">MARCA MODEM<p class="v">${data.marcaModem === 'Otro' ? data.marcaModemOtro : data.marcaModem || ''}</p></td><td class="fl">NÚMERO SERIE MODEM:<p class="v">${data.serieModem || ''}</p></td><td class="fl">IP<p class="v">${data.ipModem || ''}</p></td><td class="fl">MARCA MODEM RESPALDO<p class="v">${data.marcaModemRes === 'OtroRes' ? data.marcaModemOtroRes : data.marcaModemRes || ''}</p></td><td class="fl">NÚMERO SERIE MODEM RESPALDO:<p class="v">${data.serieModemRes || ''}</p></td><td class="fl">IP RESPALDO<p class="v">${data.ipModemRes || ''}</p></td><td class="fl">CONFIGURACIÓN MEDIDA<p class="v">${data.configuracionMedida || ''}</p></td><td class="fl">TIPO MEDIDA<p class="v">${data.tipoMedida || ''}</p></td><td class="fl" colspan="2">MARCA CABLE<p class="v">${data.marcaCable || ''}</p></td><td class="fl">MARCA CELDA MEDIDA<p class="v">${data.marcaCeldaMedida || ''}</p></td></tr></table>
+      <table class="mt"><colgroup><col style="width:3%"><col style="width:7%"><col style="width:10%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:6%"><col style="width:10%"></colgroup><tr><td class="st" colspan="13">DATOS MEDIDOR PRINCIPAL</td></tr><tr><th colspan="2">Medida</th><th>Número</th><th>Marca</th><th>Tipo</th><th>Capac. (A)</th><th>Tensión (V)</th><th>Clase</th><th>Kd (rev/kWh)</th><th>Kh (kWh/rev)</th><th>Lectura</th><th>E/D</th><th>Fecha Lab</th></tr><tr><td class="vh" rowspan="4"><div class="vtxt">ENCONTRADO</div></td><td class="lb2">Activa 1</td><td class="c">${data.numeroActiva1 || ''}</td><td class="c">${resumen.marcaActiva1}</td><td class="c">${resumen.tipoActiva1 || ''}</td><td class="c">${data.capacidadActiva1 || ''}</td><td class="c">${data.tensionActiva1 || ''}</td><td class="c">${data.claseActiva1 || ''}</td><td class="c">${data.kdActiva1 || ''}</td><td class="c">${data.khActiva1 || ''}</td><td class="c">${data.lecturaActiva1 || ''}</td><td class="c">${data.edActiva1 || ''}</td><td class="c">${data.fechaLabActiva1 || ''}</td></tr><tr><td class="lb2">Activa 2</td><td class="c">${data.numeroActiva1 || ''}</td><td class="c">${resumen.marcaActiva1}</td><td class="c">${resumen.tipoActiva1 || ''}</td><td class="c">${data.capacidadActiva2 || ''}</td><td class="c">${data.tensionActiva2 || ''}</td><td class="c">${data.claseActiva2 || ''}</td><td class="c">${data.kdActiva2 || ''}</td><td class="c">${data.khActiva2 || ''}</td><td class="c">${data.lecturaActiva2 || ''}</td><td class="c">${data.edActiva2 || ''}</td><td class="c">${data.fechaLabActiva1 || ''}</td></tr><tr><td class="lb2">Reactiva 1</td><td class="c">${data.numeroActiva1 || ''}</td><td class="c">${resumen.marcaActiva1}</td><td class="c">${resumen.tipoActiva1 || ''}</td><td class="c">${data.capacidadReactiva1 || ''}</td><td class="c">${data.tensionReactiva1 || ''}</td><td class="c">${data.claseReactiva1 || ''}</td><td class="c">${data.kdReactiva1 || ''}</td><td class="c">${data.khReactiva1 || ''}</td><td class="c">${data.lecturaReactiva1 || ''}</td><td class="c">${data.edReactiva1 || ''}</td><td class="c">${data.fechaLabActiva1 || ''}</td></tr><tr><td class="lb2">Reactiva 2</td><td class="c">${data.numeroActiva1 || ''}</td><td class="c">${resumen.marcaActiva1}</td><td class="c">${resumen.tipoActiva1 || ''}</td><td class="c">${data.capacidadReactiva2 || ''}</td><td class="c">${data.tensionReactiva2 || ''}</td><td class="c">${data.claseReactiva2 || ''}</td><td class="c">${data.kdReactiva2 || ''}</td><td class="c">${data.khReactiva2 || ''}</td><td class="c">${data.lecturaReactiva2 || ''}</td><td class="c">${data.edReactiva2 || ''}</td><td class="c">${data.fechaLabActiva1 || ''}</td></tr><tr><td class="vh" rowspan="4"><div class="vtxt">INSTALADO</div></td><td class="lb2">Activa 1</td><td class="c">${data.numeroActivaIns1 || ''}</td><td class="c">${resumen.marcaActivaIns1 || ''}</td><td class="c">${resumen.tipoActivaIns1 || ''}</td><td class="c">${data.capacidadActivaIns1 || ''}</td><td class="c">${data.tensionActivaIns1 || ''}</td><td class="c">${data.claseActivaIns1 || ''}</td><td class="c">${data.kdActivaIns1 || ''}</td><td class="c">${data.khActivaIns1 || ''}</td><td class="c">${data.lecturaActivaIns1 || ''}</td><td class="c">${data.edActivaIns1 || ''}</td><td class="c">${data.fechaLabActivaIns1 || ''}</td></tr><tr><td class="lb2">Activa 2</td><td class="c">${data.numeroActivaIns1 || ''}</td><td class="c">${resumen.marcaActivaIns1 || ''}</td><td class="c">${resumen.tipoActivaIns1 || ''}</td><td class="c">${data.capacidadActivaIns2 || ''}</td><td class="c">${data.tensionActivaIns2 || ''}</td><td class="c">${data.claseActivaIns2 || ''}</td><td class="c">${data.kdActivaIns2 || ''}</td><td class="c">${data.khActivaIns2 || ''}</td><td class="c">${data.lecturaActivaIns2 || ''}</td><td class="c">${data.edActivaIns2 || ''}</td><td class="c">${data.fechaLabActivaIns1 || ''}</td></tr><tr><td class="lb2">Reactiva 1</td><td class="c">${data.numeroActivaIns1 || ''}</td><td class="c">${resumen.marcaActivaIns1 || ''}</td><td class="c">${resumen.tipoActivaIns1 || ''}</td><td class="c">${data.capacidadReactivaIns1 || ''}</td><td class="c">${data.tensionReactivaIns1 || ''}</td><td class="c">${data.claseReactivaIns1 || ''}</td><td class="c">${data.kdReactivaIns1 || ''}</td><td class="c">${data.khReactivaIns1 || ''}</td><td class="c">${data.lecturaReactivaIns1 || ''}</td><td class="c">${data.edReactivaIns1 || ''}</td><td class="c">${data.fechaLabActivaIns1 || ''}</td></tr><tr><td class="lb2">Reactiva 2</td><td class="c">${data.numeroActivaIns1 || ''}</td><td class="c">${resumen.marcaActivaIns1 || ''}</td><td class="c">${resumen.tipoActivaIns1 || ''}</td><td class="c">${data.capacidadReactivaIns2 || ''}</td><td class="c">${data.tensionReactivaIns2 || ''}</td><td class="c">${data.claseReactivaIns2 || ''}</td><td class="c">${data.kdReactivaIns2 || ''}</td><td class="c">${data.khReactivaIns2 || ''}</td><td class="c">${data.lecturaReactivaIns2 || ''}</td><td class="c">${data.edReactivaIns2 || ''}</td><td class="c">${data.fechaLabActivaIns1 || ''}</td></tr></table>
+      <table class="mt"><colgroup><col style="width:3%"><col style="width:7%"><col style="width:10%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:6%"><col style="width:10%"></colgroup><tr><td class="st" colspan="13">DATOS MEDIDOR RESPALDO</td></tr><tr><th colspan="2">Medida</th><th>Número</th><th>Marca</th><th>Tipo</th><th>Capac. (A)</th><th>Tensión (V)</th><th>Clase</th><th>Kd (rev/kWh)</th><th>Kh (kWh/rev)</th><th>Lectura</th><th>E/D</th><th>Fecha Lab</th></tr><tr><td class="vh" rowspan="4"><div class="vtxt">ENCONTRADO</div></td><td class="lb2">Activa 1</td><td class="c">${data.numeroActiva1Res || ''}</td><td class="c">${resumen.marcaActiva1Res}</td><td class="c">${resumen.tipoActiva1Res || ''}</td><td class="c">${data.capacidadActiva1Res || ''}</td><td class="c">${data.tensionActiva1Res || ''}</td><td class="c">${data.claseActiva1Res || ''}</td><td class="c">${data.kdActiva1Res || ''}</td><td class="c">${data.khActiva1Res || ''}</td><td class="c">${data.lecturaActiva1Res || ''}</td><td class="c">${data.edActiva1Res || ''}</td><td class="c">${data.fechaLabActivaRes1 || ''}</td></tr><tr><td class="lb2">Activa 2</td><td class="c">${data.numeroActiva1Res || ''}</td><td class="c">${resumen.marcaActiva1Res}</td><td class="c">${resumen.tipoActiva1Res || ''}</td><td class="c">${data.capacidadActiva2Res || ''}</td><td class="c">${data.tensionActiva2Res || ''}</td><td class="c">${data.claseActiva2Res || ''}</td><td class="c">${data.kdActiva2Res || ''}</td><td class="c">${data.khActiva2Res || ''}</td><td class="c">${data.lecturaActiva2Res || ''}</td><td class="c">${data.edActiva2Res || ''}</td><td class="c">${data.fechaLabActivaRes1 || ''}</td></tr><tr><td class="lb2">Reactiva 1</td><td class="c">${data.numeroActiva1Res || ''}</td><td class="c">${resumen.marcaActiva1Res}</td><td class="c">${resumen.tipoActiva1Res || ''}</td><td class="c">${data.capacidadReactiva1Res || ''}</td><td class="c">${data.tensionReactiva1Res || ''}</td><td class="c">${data.claseReactiva1Res || ''}</td><td class="c">${data.kdReactiva1Res || ''}</td><td class="c">${data.khReactiva1Res || ''}</td><td class="c">${data.lecturaReactiva1Res || ''}</td><td class="c">${data.edReactiva1Res || ''}</td><td class="c">${data.fechaLabActivaRes1 || ''}</td></tr><tr><td class="lb2">Reactiva 2</td><td class="c">${data.numeroActiva1Res || ''}</td><td class="c">${resumen.marcaActiva1Res}</td><td class="c">${resumen.tipoActiva1Res || ''}</td><td class="c">${data.capacidadReactiva2Res || ''}</td><td class="c">${data.tensionReactiva2Res || ''}</td><td class="c">${data.claseReactiva2Res || ''}</td><td class="c">${data.kdReactiva2Res || ''}</td><td class="c">${data.khReactiva2Res || ''}</td><td class="c">${data.lecturaReactiva2Res || ''}</td><td class="c">${data.edReactiva2Res || ''}</td><td class="c">${data.fechaLabActivaRes1 || ''}</td></tr><tr><td class="vh" rowspan="4"><div class="vtxt">INSTALADO</div></td><td class="lb2">Activa 1</td><td class="c">${data.numeroActivaIns1Res || ''}</td><td class="c">${resumen.marcaActivaIns1Res || ''}</td><td class="c">${resumen.tipoActivaIns1Res || ''}</td><td class="c">${data.capacidadActivaIns1Res || ''}</td><td class="c">${data.tensionActivaIns1Res || ''}</td><td class="c">${data.claseActivaIns1Res || ''}</td><td class="c">${data.kdActivaIns1Res || ''}</td><td class="c">${data.khActivaIns1Res || ''}</td><td class="c">${data.lecturaActivaIns1Res || ''}</td><td class="c">${data.edActivaIns1Res || ''}</td><td class="c">${data.fechaLabActivaIns1Res || ''}</td></tr><tr><td class="lb2">Activa 2</td><td class="c">${data.numeroActivaIns1Res || ''}</td><td class="c">${resumen.marcaActivaIns1Res || ''}</td><td class="c">${resumen.tipoActivaIns1Res || ''}</td><td class="c">${data.capacidadActivaIns2Res || ''}</td><td class="c">${data.tensionActivaIns2Res || ''}</td><td class="c">${data.claseActivaIns2Res || ''}</td><td class="c">${data.kdActivaIns2Res || ''}</td><td class="c">${data.khActivaIns2Res || ''}</td><td class="c">${data.lecturaActivaIns2Res || ''}</td><td class="c">${data.edActivaIns2Res || ''}</td><td class="c">${data.fechaLabActivaIns1Res || ''}</td></tr><tr><td class="lb2">Reactiva 1</td><td class="c">${data.numeroActivaIns1Res || ''}</td><td class="c">${resumen.marcaActivaIns1Res || ''}</td><td class="c">${resumen.tipoActivaIns1Res || ''}</td><td class="c">${data.capacidadReactivaIns1Res || ''}</td><td class="c">${data.tensionReactivaIns1Res || ''}</td><td class="c">${data.claseReactivaIns1Res || ''}</td><td class="c">${data.kdReactivaIns1Res || ''}</td><td class="c">${data.khReactivaIns1Res || ''}</td><td class="c">${data.lecturaReactivaIns1Res || ''}</td><td class="c">${data.edReactivaIns1Res || ''}</td><td class="c">${data.fechaLabActivaIns1Res || ''}</td></tr><tr><td class="lb2">Reactiva 2</td><td class="c">${data.numeroActivaIns1Res || ''}</td><td class="c">${resumen.marcaActivaIns1Res || ''}</td><td class="c">${resumen.tipoActivaIns1Res || ''}</td><td class="c">${data.capacidadReactivaIns2Res || ''}</td><td class="c">${data.tensionReactivaIns2Res || ''}</td><td class="c">${data.claseReactivaIns2Res || ''}</td><td class="c">${data.kdReactivaIns2Res || ''}</td><td class="c">${data.khReactivaIns2Res || ''}</td><td class="c">${data.lecturaReactivaIns2Res || ''}</td><td class="c">${data.edReactivaIns2Res || ''}</td><td class="c">${data.fechaLabActivaIns1Res || ''}</td></tr></table>
+      <table><colgroup><col style="width:20%"><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup><tr><td class="st" colspan="8">TRANSFORMADOR DE POTENCIA</td></tr><tr><td class="fl">Transformador Asociado No.<p class="v">${data.transformadorPoNumero || ''}</p></td><td class="fl">Marca<p class="v">${data.transformadorPoMarca || ''}</p></td><td class="fl">KVA<p class="v">${data.transformadorPoKva || ''}</p></td><td class="fl">Año<p class="v">${data.transformadorPoAno || ''}</p></td><td class="fl">V1/V2<p class="v">${data.transformadorPoV1V2 || ''}</p></td><td class="fl">Circuito<p class="v">${data.transformadorPoCircuito || ''}</p></td><td class="fl" colspan="2">Propietario<p class="v">${data.transformadorPoPropietario || ''}</p></td></tr></table>
+      <table class="sellos"><colgroup><col style="width:4%"><col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:3%"><col style="width:3%"><col style="width:7%"><col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:9%"><col style="width:3%"><col style="width:3%"><col style="width:7%"><col style="width:9%"></colgroup><tr><td class="st" colspan="15">RELACIÓN DE SELLOS</td></tr><tr><th colspan="6">ENCONTRADOS</th><th colspan="2">INSTALADOS</th><th colspan="5">ENCONTRADOS</th><th colspan="2">INSTALADOS</th></tr><tr><th colspan="2">UBICACIÓN</th><th>TIPO/COL</th><th>NÚMERO</th><th>E</th><th>R</th><th>TIPO/COLOR</th><th>NÚMERO</th><th>UBICACIÓN</th><th>TIPO/COL</th><th>NÚMERO</th><th>E</th><th>R</th><th>TIPO/COLOR</th><th>NÚMERO</th></tr><tr><td class="vh" rowspan="5"><div class="vtxt">MED<br>ACTIVA</div></td><td class="grp" rowspan="3">TAPA<br>PRINCIPAL</td><td class="c">${data.medActivaTipoCol1 || ''}</td><td class="c">${data.medActivaNum1 || ''}</td><td class="c">${data.medActivaE1 || ''}</td><td class="c">${data.medActivaR1 || ''}</td><td class="c">${data.medActivaInstTipoColor1 || ''}</td><td class="c">${data.medActivaInstNum1 || ''}</td><td class="grp" rowspan="3">TC'S</td><td class="c">${data.tcsTipoCol1 || ''}</td><td class="c">${data.tcsNumero1 || ''}</td><td class="c">${data.tcsE1 || ''}</td><td class="c">${data.tcsR1 || ''}</td><td class="c">${data.tcsInstTipoColor1 || ''}</td><td class="c">${data.tcsInstNumero1 || ''}</td></tr><tr><td class="c">${data.medActivaTipoCol2 || ''}</td><td class="c">${data.medActivaNum2 || ''}</td><td class="c">${data.medActivaE2 || ''}</td><td class="c">${data.medActivaR2 || ''}</td><td class="c">${data.medActivaInstTipoColor2 || ''}</td><td class="c">${data.medActivaInstNum2 || ''}</td><td class="c">${data.tcsTipoCol2 || ''}</td><td class="c">${data.tcsNumero2 || ''}</td><td class="c">${data.tcsE2 || ''}</td><td class="c">${data.tcsR2 || ''}</td><td class="c">${data.tcsInstTipoColor2 || ''}</td><td class="c">${data.tcsInstNumero2 || ''}</td></tr><tr><td class="c">${data.medActivaTipoCol3 || ''}</td><td class="c">${data.medActivaNum3 || ''}</td><td class="c">${data.medActivaE3 || ''}</td><td class="c">${data.medActivaR3 || ''}</td><td class="c">${data.medActivaInstTipoColor3 || ''}</td><td class="c">${data.medActivaInstNum3 || ''}</td><td class="c">${data.tcsTipoCol3 || ''}</td><td class="c">${data.tcsNumero3 || ''}</td><td class="c">${data.tcsE3 || ''}</td><td class="c">${data.tcsR3 || ''}</td><td class="c">${data.tcsInstTipoColor3 || ''}</td><td class="c">${data.tcsInstNumero3 || ''}</td></tr><tr><td class="grp" rowspan="2">TAPA<br>BORNERA</td><td class="c">${data.tapaBorneraActivaTipoCol1 || ''}</td><td class="c">${data.tapaBorneraActivaNum1 || ''}</td><td class="c">${data.tapaBorneraActivaE1 || ''}</td><td class="c">${data.tapaBorneraActivaR1 || ''}</td><td class="c">${data.tapaBorneraActivaInstTipoColor1 || ''}</td><td class="c">${data.tapaBorneraActivaInstNum1 || ''}</td><td class="grp" rowspan="2">TP'S</td><td class="c">${data.tpsTipoCol1 || ''}</td><td class="c">${data.tpsNumero1 || ''}</td><td class="c">${data.tpsE1 || ''}</td><td class="c">${data.tpsR1 || ''}</td><td class="c">${data.tpsInstTipoColor1 || ''}</td><td class="c">${data.tpsInstNumero1 || ''}</td></tr><tr><td class="c">${data.tapaBorneraActivaTipoCol2 || ''}</td><td class="c">${data.tapaBorneraActivaNum2 || ''}</td><td class="c">${data.tapaBorneraActivaE2 || ''}</td><td class="c">${data.tapaBorneraActivaR2 || ''}</td><td class="c">${data.tapaBorneraActivaInstTipoColor2 || ''}</td><td class="c">${data.tapaBorneraActivaInstNum2 || ''}</td><td class="c">${data.tpsTipoCol2 || ''}</td><td class="c">${data.tpsNumero2 || ''}</td><td class="c">${data.tpsE2 || ''}</td><td class="c">${data.tpsR2 || ''}</td><td class="c">${data.tpsInstTipoColor2 || ''}</td><td class="c">${data.tpsInstNumero2 || ''}</td></tr><tr><td class="vh" rowspan="5"><div class="vtxt">MED<br>REACTIVA</div></td><td class="grp" rowspan="3">TAPA<br>PRINCIPAL</td><td class="c">${data.medReactivaTipoCol1 || ''}</td><td class="c">${data.medReactivaNum1 || ''}</td><td class="c">${data.medReactivaE1 || ''}</td><td class="c">${data.medReactivaR1 || ''}</td><td class="c">${data.medReactivaInstTipoColor1 || ''}</td><td class="c">${data.medReactivaInstNum1 || ''}</td><td class="grp" rowspan="3">CELDA DE<br>MEDIDA</td><td class="c">${data.celdaTipoCol1 || ''}</td><td class="c">${data.celdaNumero1 || ''}</td><td class="c">${data.celdaE1 || ''}</td><td class="c">${data.celdaR1 || ''}</td><td class="c">${data.celdaInstTipoColor1 || ''}</td><td class="c">${data.celdaInstNumero1 || ''}</td></tr><tr><td class="c">${data.medReactivaTipoCol2 || ''}</td><td class="c">${data.medReactivaNum2 || ''}</td><td class="c">${data.medReactivaE2 || ''}</td><td class="c">${data.medReactivaR2 || ''}</td><td class="c">${data.medReactivaInstTipoColor2 || ''}</td><td class="c">${data.medReactivaInstNum2 || ''}</td><td class="c">${data.celdaTipoCol2 || ''}</td><td class="c">${data.celdaNumero2 || ''}</td><td class="c">${data.celdaE2 || ''}</td><td class="c">${data.celdaR2 || ''}</td><td class="c">${data.celdaInstTipoColor2 || ''}</td><td class="c">${data.celdaInstNumero2 || ''}</td></tr><tr><td class="c">${data.medReactivaTipoCol3 || ''}</td><td class="c">${data.medReactivaNum3 || ''}</td><td class="c">${data.medReactivaE3 || ''}</td><td class="c">${data.medReactivaR3 || ''}</td><td class="c">${data.medReactivaInstTipoColor3 || ''}</td><td class="c">${data.medReactivaInstNum3 || ''}</td><td class="c">${data.celdaTipoCol3 || ''}</td><td class="c">${data.celdaNumero3 || ''}</td><td class="c">${data.celdaE3 || ''}</td><td class="c">${data.celdaR3 || ''}</td><td class="c">${data.celdaInstTipoColor3 || ''}</td><td class="c">${data.celdaInstNumero3 || ''}</td></tr><tr><td class="grp" rowspan="2">TAPA<br>BORNERA</td><td class="c">${data.tapaBorneraReactivaTipoCol1 || ''}</td><td class="c">${data.tapaBorneraReactivaNum1 || ''}</td><td class="c">${data.tapaBorneraReactivaE1 || ''}</td><td class="c">${data.tapaBorneraReactivaR1 || ''}</td><td class="c">${data.tapaBorneraReactivaInstTipoColor1 || ''}</td><td class="c">${data.tapaBorneraReactivaInstNum1 || ''}</td><td class="grp" rowspan="2">BLOQUES DE<br>PRUEBA</td><td class="c">${data.bloquePruebasTipoCol1 || ''}</td><td class="c">${data.bloquePruebasNum1 || ''}</td><td class="c">${data.bloquePruebasE1 || ''}</td><td class="c">${data.bloquePruebasR1 || ''}</td><td class="c">${data.bloquePruebasInstTipoColor1 || ''}</td><td class="c">${data.bloquePruebasInstNum1 || ''}</td></tr><tr><td class="c">${data.tapaBorneraReactivaTipoCol2 || ''}</td><td class="c">${data.tapaBorneraReactivaNum2 || ''}</td><td class="c">${data.tapaBorneraReactivaE2 || ''}</td><td class="c">${data.tapaBorneraReactivaR2 || ''}</td><td class="c">${data.tapaBorneraReactivaInstTipoColor2 || ''}</td><td class="c">${data.tapaBorneraReactivaInstNum2 || ''}</td><td class="c">${data.bloquePruebasTipoCol2 || ''}</td><td class="c">${data.bloquePruebasNum2 || ''}</td><td class="c">${data.bloquePruebasE2 || ''}</td><td class="c">${data.bloquePruebasR2 || ''}</td><td class="c">${data.bloquePruebasInstTipoColor2 || ''}</td><td class="c">${data.bloquePruebasInstNum2 || ''}</td></tr></table>
+      <table class="err"><colgroup><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"></colgroup><tr><td class="st" colspan="10">PRUEBAS REALIZADAS MEDIDOR ACTIVA</td><td class="st" colspan="10">PRUEBAS REALIZADAS MEDIDOR REACTIVA</td></tr><tr><td class="st" colspan="20">Cuadro de Cálculo del Error</td></tr><tr><th colspan="2">Fase</th><th colspan="2">Tensión (V)</th><th colspan="2">CORRIENTE (A)</th><th colspan="2">P.Inst (W)</th><th rowspan="2" colspan="2">Secuencia de Fases</th><th colspan="2">Fase</th><th colspan="2">Tensión (V)</th><th colspan="2">CORRIENTE (A)</th><th colspan="2">P.Inst (W)</th><th rowspan="2" colspan="2">Secuencia de Fases</th></tr><tr><td class="lb2" colspan="2">R</td><td class="c" colspan="2"><strong>${data.activaTensionR || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteR || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstR || ''}</strong></td><td class="lb2" colspan="2">R</td><td class="c" colspan="2"><strong>${data.activaTensionR || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteR || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstR || ''}</strong></td></tr><tr><td class="lb2" colspan="2">S</td><td class="c" colspan="2"><strong>${data.activaTensionS || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteS || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstS || ''}</strong></td><td class="lb2">RST</td><td class="c"><strong>${data.activaRst || ''}</strong></td><td class="lb2" colspan="2">S</td><td class="c" colspan="2"><strong>${data.activaTensionS || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteS || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstS || ''}</strong></td><td class="lb2">RST</td><td class="c"><strong>${data.activaRst || ''}</strong></td></tr><tr><td class="lb2" colspan="2">T</td><td class="c" colspan="2"><strong>${data.activaTensionT || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteT || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstT || ''}</strong></td><td class="lb2">RTS</td><td class="c"><strong>${data.activaRts || ''}</strong></td><td class="lb2" colspan="2">T</td><td class="c" colspan="2"><strong>${data.activaTensionT || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteT || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstT || ''}</strong></td><td class="lb2">RTS</td><td class="c"><strong>${data.activaRts || ''}</strong></td></tr><tr><td class="lb2" colspan="2">TOTAL (L-L)</td><td class="c" colspan="2"><strong>${data.activaTensionTotal || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteTotal || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstTotal || ''}</strong></td><td class="lb2">F.P.</td><td class="c"><strong>${data.activaFp || ''}</strong></td><td class="lb2" colspan="2">TOTAL (L-L)</td><td class="c" colspan="2"><strong>${data.activaTensionTotal || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaCorrienteTotal || ''}</strong></td><td class="c" colspan="2"><strong>${data.activaPinstTotal || ''}</strong></td><td class="lb2">F.P.</td><td class="c"><strong>${data.activaFp || ''}</strong></td></tr><tr><td class="lb2">% Error</td><td class="c"><strong>${data.activaPorcentajeError || ''}</strong></td><td class="lb2">Giros</td><td class="c"><strong>${data.activaGiros || ''}</strong></td><td class="lb2">Tiempo (S)</td><td class="c"><strong>${data.activaTiempo || ''}</strong></td><td class="lb2">Horas</td><td class="c"><strong>${data.activaHoras || ''}</strong></td><td class="lb2">W</td><td class="c"><strong>${data.activaW || ''}</strong></td><td class="lb2">% Error</td><td class="c"><strong>${data.activaPorcentajeError || ''}</strong></td><td class="lb2">Giros</td><td class="c"><strong>${data.activaGiros || ''}</strong></td><td class="lb2">Tiempo (S)</td><td class="c"><strong>${data.activaTiempo || ''}</strong></td><td class="lb2">Horas</td><td class="c"><strong>${data.activaHoras || ''}</strong></td><td class="lb2">W</td><td class="c"><strong>${data.activaW || ''}</strong></td></tr></table>
+      <table class="func"><colgroup><col style="width:12%"><col style="width:8%"><col style="width:11%"><col style="width:10%"><col style="width:9%"><col style="width:12%"><col style="width:8%"><col style="width:11%"><col style="width:10%"><col style="width:9%"></colgroup><tr><td class="st" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE ACTIVA</td><td class="st" colspan="5">PRUEBAS DE FUNCIONAMIENTO DEL MEDIDOR DE REACTIVA</td></tr><tr><th>Tipo</th><th>Conforme</th><th colspan="3">Prueba de Integración</th><th>Tipo</th><th>Conforme</th><th colspan="3">Prueba de Integración</th></tr><tr><td class="lb2">Conexiones</td><td class="c"><strong>${data.activaConexiones === 'si' ? 'SÍ' : data.activaConexiones === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Lectura Inicial</td><td class="c"><strong>${data.activaLecturaInicial || ''}</strong></td><td class="lb2">% Error</td><td class="lb2">Conexiones</td><td class="c"><strong>${data.reactivaConexiones === 'si' ? 'SÍ' : data.reactivaConexiones === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Lectura Inicial</td><td class="c"><strong>${data.reactivaLecturaInicial || ''}</strong></td><td class="lb2">% Error</td></tr><tr><td class="lb2">Continuidad</td><td class="c"><strong>${data.activaContinuidad === 'si' ? 'SÍ' : data.activaContinuidad === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Lectura Final</td><td class="c"><strong>${data.activaLecturaFinal || ''}</strong></td><td class="c" rowspan="3">${data.activaPorcentajeErrorPruebas || ''}</td><td class="lb2">Continuidad</td><td class="c"><strong>${data.reactivaContinuidad === 'si' ? 'SÍ' : data.reactivaContinuidad === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Lectura Final</td><td class="c"><strong>${data.reactivaLecturaFinal || ''}</strong></td><td class="c" rowspan="3">${data.reactivaPorcentajeErrorPruebas || ''}</td></tr><tr><td class="lb2" rowspan="2">Prueba de Puentes</td><td class="c" rowspan="2"><strong>${data.activaPuentes === 'si' ? 'SÍ' : data.activaPuentes === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Diferencia</td><td class="c"><strong>${data.activaDiferencia || ''}</strong></td><td class="lb2" rowspan="2">Prueba de Puentes</td><td class="c" rowspan="2"><strong>${data.reactivaPuentes === 'si' ? 'SÍ' : data.reactivaPuentes === 'no' ? 'NO' : ' '}</strong></td><td class="lb2">Diferencia</td><td class="c"><strong>${data.reactivaDiferencia || ''}</strong></td></tr><tr><td class="lb2">Patron</td><td class="c"><strong>${data.activaPatron || ''}</strong></td><td class="lb2">Patron</td><td class="c"><strong>${data.reactivaPatron || ''}</strong></td></tr><tr><th colspan="4">Estado del integrador</th><th>Medidor se frena</th><th colspan="4">Estado del integrador</th><th>Medidor se frena</th></tr><tr><td class="lb2">¿Giro en vacio?</td><td class="c"><strong>${data.activaGiroVacio === 'si' ? 'SÍ' : data.activaGiroVacio === 'no' ? 'NO' : ''}</strong></td><td class="lb2">¿Registra?</td><td class="c"><strong>${data.activaRegistra === 'si' ? 'SÍ' : data.activaRegistra === 'no' ? 'NO' : ''}</strong></td><td class="c"><strong>${data.activaSeFrena === 'si' ? 'SÍ' : data.activaSeFrena === 'no' ? 'NO' : ''}</strong></td><td class="lb2">¿Giro en vacio?</td><td class="c"><strong>${data.reactivaGiroVacio === 'si' ? 'SÍ' : data.reactivaGiroVacio === 'no' ? 'NO' : ''}</strong></td><td class="lb2">¿Registra?</td><td class="c"><strong>${data.reactivaRegistra === 'si' ? 'SÍ' : data.reactivaRegistra === 'no' ? 'NO' : ''}</strong></td><td class="c"><strong>${data.reactivaSeFrena === 'si' ? 'SÍ' : data.reactivaSeFrena === 'no' ? 'NO' : ''}</strong></td></tr></table>
+      <table><colgroup><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"></colgroup><tr><td class="st" colspan="6">CARACTERISTICAS TRANSFORMADORES DE CORRIENTE TC'S ENCONTRADOS</td><td class="st" colspan="6">CARACTERISTICAS TRANSFORMADORES DE POTENCIA ENCONTRADOS</td></tr><tr><th>Marca</th><th>Series</th><th>Tipo</th><th>Relación</th><th>Clase</th><th>VA</th><th>Marca</th><th>Series</th><th>Tipo</th><th>Relación</th><th>Clase</th><th>VA</th></tr><tr><td class="c"><strong>${data.tcMarca1 || ''}</strong></td><td class="c"><strong>${data.tcSeries1 || ''}</strong></td><td class="c"><strong>${data.tcTipo1 || ''}</strong></td><td class="c"><strong>${data.tcRelacion1 || ''}</strong></td><td class="c"><strong>${data.tcClase1 || ''}</strong></td><td class="c"><strong>${data.tcVa1 || ''}</strong></td><td class="c"><strong>${data.tpMarca1 || ''}</strong></td><td class="c"><strong>${data.tpSeries1 || ''}</strong></td><td class="c"><strong>${data.tpTipo1 || ''}</strong></td><td class="c"><strong>${data.tpRelacion1 || ''}</strong></td><td class="c"><strong>${data.tpClase1 || ''}</strong></td><td class="c"><strong>${data.tpVa1 || ''}</strong></td></tr><tr><td class="c"><strong>${data.tcMarca2 || ''}</strong></td><td class="c"><strong>${data.tcSeries2 || ''}</strong></td><td class="c"><strong>${data.tcTipo2 || ''}</strong></td><td class="c"><strong>${data.tcRelacion2 || ''}</strong></td><td class="c"><strong>${data.tcClase2 || ''}</strong></td><td class="c"><strong>${data.tcVa2 || ''}</strong></td><td class="c"><strong>${data.tpMarca2 || ''}</strong></td><td class="c"><strong>${data.tpSeries2 || ''}</strong></td><td class="c"><strong>${data.tpTipo2 || ''}</strong></td><td class="c"><strong>${data.tpRelacion2 || ''}</strong></td><td class="c"><strong>${data.tpClase2 || ''}</strong></td><td class="c"><strong>${data.tpVa2 || ''}</strong></td></tr><tr><td class="c"><strong>${data.tcMarca3 || ''}</strong></td><td class="c"><strong>${data.tcSeries3 || ''}</strong></td><td class="c"><strong>${data.tcTipo3 || ''}</strong></td><td class="c"><strong>${data.tcRelacion3 || ''}</strong></td><td class="c"><strong>${data.tcClase3 || ''}</strong></td><td class="c"><strong>${data.tcVa3 || ''}</strong></td><td class="c"><strong>${data.tpMarca3 || ''}</strong></td><td class="c"><strong>${data.tpSeries3 || ''}</strong></td><td class="c"><strong>${data.tpTipo3 || ''}</strong></td><td class="c"><strong>${data.tpRelacion3 || ''}</strong></td><td class="c"><strong>${data.tpClase3 || ''}</strong></td><td class="c"><strong>${data.tpVa3 || ''}</strong></td></tr></table>
+      <table><colgroup><col style="width:22%"><col style="width:18%"><col style="width:10%"><col style="width:10%"><col style="width:20%"><col style="width:20%"></colgroup><tr><td class="st" colspan="6">IRREGULARIDADES ENCONTRADAS POR LA EMPRESA</td></tr><tr><td class="lb">CODIGO(S) DE LA(S) IRREGULARIDAD(ES)</td><td class="c"><strong>${data.codigosIrregularidades || ''}</strong></td><td class="lb">Foto<br><span class="x">${data.tipoEvidencia === 'foto' ? 'X' : ' '}</span></td><td class="lb">Video<br><span class="x">${data.tipoEvidencia === 'video' ? 'X' : ' '}</span></td><td class="lb">IRREGULARIDAD CORREGIDA<br><span class="x">${data.irregularidadCorrida === 'si' ? 'SÍ' : data.irregularidadCorrida === 'no' ? 'NO' : ''}</span></td><td class="lb">MEDIDOR RETIRADO<br><span class="x">${data.medidorRetirado === 'si' ? 'SÍ' : data.medidorRetirado === 'no' ? 'NO' : ''}</span></td></tr><tr><td colspan="6" class="note">NOTA: En caso de detectarse irregularidad(es), esta acta constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica</td></tr><tr><td colspan="6" class="note j">Informe: <strong>${getTipoInformeText()}</strong></td></tr></table>
+      <div class="bottom"><div class="legal"><p>Los abajo firmantes reconocen haber leído y aceptado el contenido de esta acta y mediante su firma la dan por levantadas. (EL USO INDEBIDO DEL SERVICIO, LA ADULTERACIÓN O MANIPULACIÓN SIN AUTORIZACIÓN DEL EQUIPO DE MEDIDA SE CONSTITUYE EN EL DELITO DE "DEFRAUDACIÓN DE FLUIDOS") (artículo 256 del Código Penal). El artículo 256 del Código Penal establece que Defraudación de fluidos: El que mediante cualquier mecanismo clandestino o alterando los sistemas de control o aparatos contadores, se apropie de energía eléctrica, en perjuicio ajeno, incurrirá en prisión de uno (1) a cuatro (4) años y en multa de uno (1) a cien (100) salarios mínimos legales mensuales vigentes.</p></div>
+      <div class="legal"><p><strong>AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES</strong></p><p>El usuario y/o suscriptor autoriza de manera previa, expresa e informada a emsa E.S.P., como responsable del tratamiento, para tratar los datos personales suministrados en el marco de las actividades de revisión, control y gestión propias de la prestación del servicio público domiciliario de energía eléctrica, con las siguientes finalidades: (i) registrar la revisión realizada; (ii) identificar a los intervinientes y validar los hechos y/o resultados de la visita; (iii) ejercer las actuaciones derivadas de la visita realizada; y (iv) cumplir obligaciones legales y regulatorias aplicables al servicio público de energía eléctrica. De conformidad con lo dispuesto en el literal a) del artículo 10 de la Ley 1581 de 2012, emsa informa que el tratamiento de los datos personales se realiza en ejercicio de sus funciones legales y constitucionales, como prestador de servicios públicos domiciliarios. El tratamiento se realizará conforme a la Política de Tratamiento de la Información Personal disponible en los canales oficiales de emsa. El titular podrá ejercer sus derechos a conocer, actualizar, rectificar y suprimir sus datos, así como revocar la autorización, a través de dichos canales o del correo: pqr@emsa-esp.com.co. Cuando intervenga un testigo, este autoriza el tratamiento de sus datos únicamente para dejar constancia de su participación en la presente acta.</p></div>
+      <table class="firma-table"><colgroup><col style="width:33.33%"><col style="width:33.33%"><col style="width:33.34%"></colgroup><tr><th class="firma-header">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</th><th class="firma-header">SUSCRIPTOR O USUARIO</th><th class="firma-header">TESTIGO</th></tr><tr><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${userData.name || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.usuarioVisita || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.otroRepresentante || 'No especificado'}</div></div></td></tr><tr class="sig-row"><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaFuncionario ? `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSuscriptor ? `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSupervisor ? `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td></tr><tr><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${userData.cc || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.documentoVisitante || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div></div></td></tr></table>
+      </div></div></div>
+      <!-- Fin Hoja 1 -->
 
       <!-- HOJA 2: FORMATO ACTA DE DIAGRAMAS -->
-      <div id="pdf-page-2" class="page">
-        <!-- Encabezado hoja 2 -->
-        <div class="header-table-content">
-          <table class="header-table">
-            <tr>
-              <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                <img src="${base64Logo}" alt="Logo" style="height: 60px;"/>
-              </td>
-              <td style="width: 30%; padding: 0;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
-                  <tr>
-                    <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
-                    <td style="border: 1px solid #34495e;">FO-GD-CP-05</td>
-                  </tr>
-                  <tr>
-                    <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
-                    <td style="border: 1px solid #34495e;">1/02/2023</td>
-                  </tr>
-                  <tr>
-                    <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
-                    <td style="border: 1px solid #34495e;">04</td>
-                  </tr>
-                  <tr>
-                    <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
-                    <td style="border: 1px solid #34495e;">2 de 2</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <table>
-          <tr>
-            <td class="section-title" colspan="9">FORMATO ACTA DE DIAGRAMAS</td>
-            <td class="section-title" colspan="7">CONTROL DE PÉRDIDAS</td>
-          </tr>
-          <tr>
-            <td colspan="2" style="font-weight: bold; font-size: 12px;">Acta De Revisión No.</td>
-            <td colspan="3" style="font-weight: bold; font-size: 18px; color: red;">
-              N° <span id="numero">${data.numero_acta}</span>
-            </td>
-            <td colspan="3" style="font-weight: bold; font-size: 11px;">CÓDIGO</td>
-            <td colspan="3">${data.codigo || ''}</td>
-            <td colspan="2">FECHA</td>
-            <td colspan="2">${new Date().toLocaleDateString('es-ES')}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; font-size: 11px;">REVISIÓN N°</td>
-            <td colspan="3">${data.revision || ''}</td>
-            <td colspan="3" style="font-weight: bold; font-size: 11px;">SOLICITUD N°</td>
-            <td colspan="2">${data.solicitud || ''}</td>
-            <td>CIUDAD</td>
-            <td colspan="3">${data.ciudad || 'Acacias'}</td>
-            <td> ACTA DE REFERENCIA</td>
-            <td>${data.numero_acta || '52976'}</td>
-          </tr>
-          <tr>
-            <td colspan="2">CIRCUITO</td>
-            <td colspan="3">${data.circuito || ''}</td>
-            <td>SUBESTACIONES</td>
-            <td colspan="3">${data.subestacion || ''}</td>
-            <td>CLIENTES - RAZON SOCIAL</td>
-            <td colspan="5">${data.nombre || ''}</td>
-          </tr>
-          <tr>
-            <td>TELEMEDIDA</td>
-            <td>${data.telemedida || ''}</td>
-            <td>LINEA DEDICADA</td>
-            <td>SI</td>
-            <td> ${data.lineaDedicada === 'SI' ? 'X' : ' '} </td>
-            <td>NO</td>
-            <td> ${data.lineaDedicada === 'NO' ? 'X' : ' '}</td>
-            <td>TIPO DE FRONTERA</td>
-            <td>${data.tipoFrontera === 'MCM' ? 'X' : ' '} MCM</td>
-            <td>${data.tipoFrontera === 'RGP' ? 'X' : ' '} RGP</td>
-            <td>${data.tipoFrontera === 'NRP' ? 'X' : ' '} NRP</td>
-            <td>${data.tipoFrontera === 'NRO' ? 'X' : ' '} NRO</td>
-            <td>${data.tipoFrontera === 'REGO' ? 'X' : ' '} REGO</td>
-            <td>${data.tipoFrontera === 'SNT' ? 'X' : ' '} SNT</td>
-            <td>${data.tipoFrontera === 'CAMB COM' ? 'X' : ' '} CAMB COM</td>
-          </tr>
-        </table>
-
-        <!-- Diagramas -->
-        <div class="diagrams-section">
-        <!-- PRIMERA MITAD: Unifilar y Fasorial (verticalmente divididos) -->
-        <div class="diagrams-top-half">
-          <div class="diagram-column">
-            <div class="section-title">DIAGRAMA UNIFILAR</div>
-            <div class="diagram-container diagram-unifilar">
-              <img class="diagram-img" src="${diagramImages.diagramaUnifilar || './unifilar.png'}" alt="Diagrama Unifilar">
-            </div>
-          </div>
-          
-          <div class="diagram-column">
-            <div class="section-title">DIAGRAMA FASORIAL</div>
-            <div class="diagram-container diagram-fasorial">
-              <img class="diagram-img" src="${diagramImages.diagramaFasorial || './Fasorial.png'}" alt="Diagrama Fasorial">
-            </div>
-          </div>
-        </div>
-        
-        <!-- SEGUNDA MITAD: Conexiones (ocupa todo el ancho) -->
-        <div class="diagrams-bottom-half">
-          <div class="section-title">DIAGRAMA DE CONEXIONES</div>
-          <div class="diagram-container diagram-conexiones">
-            <img class="diagram-img" src="${diagramImages.diagramaConexiones || './conexiones.png'}" alt="Diagrama de Conexiones">
-          </div>
-        </div>
-      </div>
-
-        <!-- Pruebas de Transformadores -->
-        <table>
-          <tr>
-            <td class="section-title" colspan="6">PRUEBA DE TRANSFORMADORES DE POTENCIAL TP'S</td>
-            <td class="section-title" colspan="6">PRUEBA DE TRANSFORMADORES DE CORRIENTE TC'S</td>
-          </tr>
-          <tr>
-            <td>VOLTAJE</td>
-            <td>PRIMARIO</td>
-            <td>SECUNDARIO</td>
-            <td>RTP (Vp/Vs)</td>
-            <td>% ERROR</td>
-            <td>% PROMEDIO</td>
-            <td>VOLTAJE</td>
-            <td>PRIMARIO</td>
-            <td>SECUNDARIO</td>
-            <td>RTC (Ip/ls)</td>
-            <td>% ERROR</td>
-            <td>% PROMEDIO</td>
-          </tr>
-          <tr>
-            <td>VR</td>
-            <td>${data.tpData?.vRPrimario || ''}</td>
-            <td>${data.tpData?.vRSecundario || ''}</td>
-            <td>${data.tpData?.rtp || ''}</td>
-            <td>${data.tpData?.errorVR || ''}</td>
-            <td rowspan="3">${data.tpData?.errorPromedio || ''}</td>
-            <td>IR</td>
-            <td>${data.tcData?.vRPrimario || ''}</td>
-            <td>${data.tcData?.vRSecundario || ''}</td>
-            <td>${data.tcData?.rtc || ''}</td>
-            <td>${data.tcData?.errorVR || ''}</td>
-            <td rowspan="3">${data.tcData?.errorPromedio || ''}</td>
-          </tr>
-          <tr>
-            <td>VS</td>
-            <td>${data.tpData?.vSPrimario || ''}</td>
-            <td>${data.tpData?.vSSecundario || ''}</td>
-            <td>${data.tpData?.rtp || ''}</td>
-            <td>${data.tpData?.errorVS || ''}</td>
-            <td>LS</td>
-            <td>${data.tcData?.vSPrimario || ''}</td>
-            <td>${data.tcData?.vSSecundario || ''}</td>
-            <td>${data.tcData?.rtc || ''}</td>
-            <td>${data.tcData?.errorVS || ''}</td>
-          </tr>
-          <tr>
-            <td>V_T</td>
-            <td>${data.tpData?.vTPrimario || ''}</td>
-            <td>${data.tpData?.vTSecundario || ''}</td>
-            <td>${data.tpData?.rtp || ''}</td>
-            <td>${data.tpData?.errorVT || ''}</td>
-            <td>LT</td>
-            <td>${data.tcData?.vTPrimario || ''}</td>
-            <td>${data.tcData?.vTSecundario || ''}</td>
-            <td>${data.tcData?.rtc || ''}</td>
-            <td>${data.tcData?.errorVT || ''}</td>
-          </tr>
-        </table>
-
-        <!-- Factor SIEC y Observaciones -->
-        <table>
-          <tr>
-            <td class="section-title" colspan="1">FACTOR SIEC</td>
-            <td class="section-title" colspan="8">OBSERVACIONES GENERALES</td>
-            <td rowspan="2" class="section-title" colspan="5">ADECUACIONES Y MEJORAS QUE NECESITA LA INSTALACIÓN ELÉCTRICA</td>
-          </tr>
-          <tr>
-            <td rowspan="2">${data.factorData?.factorSiec || ''}</tdC>
-            <td>EQUIPOS</td>
-            <td class="estado-cell">B</td>
-            <td class="estado-cell">R</td>
-            <td class="estado-cell">M</td>
-            <td>EQUIPOS</td>
-            <td class="estado-cell">B</td>
-            <td class="estado-cell">R</td>
-            <td class="estado-cell">M</td>
-          </tr>
-          <tr>
-            <td>RED</td>
-            <td class="estado-cell">${data.observaciones?.redMT === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.redMT === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.redMT === 'Malo' ? 'X' : ''}</td>
-            <td>TPS</td>
-            <td class="estado-cell">${data.observaciones?.tps === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.tps === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.tps === 'Malo' ? 'X' : ''}</td>
-            <td rowspan="9" colspan="5" style="vertical-align: top; font-size: 9px;">
-              <div style="display: flex; gap: 20px;">
-              <!-- COLUMNA 1 -->
-              <ul class="checkbox-list" style="list-style: none; padding: 0; margin: 0;">
-                <li><input type="checkbox" ${data.adecuaciones?.cambiarMedidor || data.adecuaciones?.instalarMedidor ? 'checked' : ''}> Cambiar o instalar el medidor</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o instalar TC</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o Instalar TP</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiarCaja || data.adecuaciones?.instalarCaja ? 'checked' : ''}> Cambiar o instalación de caja para el medidor</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiarPuestaTierra || data.adecuaciones?.instalarPuestaTierra ? 'checked' : ''}> Cambiar o instalar sistema de puesta a tierra</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarBloquePruebas ? 'checked' : ''}> Cambiar o instalar Bloque de Pruebas</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesElectricas ? 'checked' : ''}> Cambiar o instalar Protecciones eléctricas</li>
-              </ul>
-
-              <!-- COLUMNA 2 -->
-              <ul class="checkbox-list" style="list-style: none; padding: 0; margin: 0;">
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCableSenal ? 'checked' : ''}> Cambiar o instalar Cable de señal (según norma)</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarSistemaComunicacion ? 'checked' : ''}> Cambiar o instalar sistema de comunicación</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarModem ? 'checked' : ''}> Cambiar o instalar MODEM</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesCommunicacion ? 'checked' : ''}> Cambiar o instalar Protecciones en comunicaciones</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarDuctosCableSeñal ? 'checked' : ''}> Cambiar o instalar ductos para cables de señal</li>
-                <li><input type="checkbox" ${data.adecuaciones?.otros ? 'checked' : ''}> Otros: ${data.adecuaciones?.otrosTexto || ''}</li>
-                <li><input type="checkbox" ${data.adecuaciones?.adecuaroInstalaraSeguridadCeldas ? 'checked' : ''}> Adecuar o instalar seguridad a las celdas de medidor</li>
-                <li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCelda ? 'checked' : ''}> Cambiar o instalar Celda para medida(TP'S y TC'S) norma</li>
-              </ul>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;">FACTOR ENCONTRADO</td>
-            <td>CRUCETAS</td>
-            <td class="estado-cell">${data.observaciones?.crucetas === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.crucetas === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.crucetas === 'Malo' ? 'X' : ''}</td>
-            <td>TCS</td>
-            <td class="estado-cell">${data.observaciones?.tcs === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.tcs === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.tcs === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td>${data.factorData?.factorEncontrado || ''}</td>
-            <td>PARARRAYOS</td>
-            <td class="estado-cell">${data.observaciones?.pararrayos === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.pararrayos === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.pararrayos === 'Malo' ? 'X' : ''}</td>
-            <td>BLOQUES DE PRUEBA</td>
-            <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.bloquesPrueba === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;">%ERROR DE FACT</td>
-            <td>CORTACIRCUITOS</td>
-            <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.cortacircuitos === 'Malo' ? 'X' : ''}</td>
-            <td>CELDA</td>
-            <td class="estado-cell">${data.observaciones?.celda === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.celda === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.celda === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td>${data.factorData?.errorFactor || ''}</td>
-            <td>FUSIBLES</td>
-            <td class="estado-cell">${data.observaciones?.fusibles === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.fusibles === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.fusibles === 'Malo' ? 'X' : ''}</td>
-            <td>GABINETES</td>
-            <td class="estado-cell">${data.observaciones?.gabinetes === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.gabinetes === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.gabinetes === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; color: #2c3e50; background-color: #e9ecef;" >FACTOR FINAL</td>
-            <td>BAJANTES</td>
-            <td class="estado-cell">${data.observaciones?.bajantes === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.bajantes === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.bajantes === 'Malo' ? 'X' : ''}</td>
-            <td>MODEM</td>
-            <td class="estado-cell">${data.observaciones?.modem === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.modem === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.modem === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td rowspan="2" >${data.factorData?.factorFinal || ''}</td>
-            <td>TRANSFORMADOR PRINCIPAL</td>
-            <td class="estado-cell">${data.observaciones?.transformador === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.transformador === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.transformador === 'Malo' ? 'X' : ''}</td>
-            <td>CABLE DE SEÑAL</td>
-            <td class="estado-cell">${data.observaciones?.cableSenal === 'Bueno' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.cableSenal === 'Regular' ? 'X' : ''}</td>
-            <td class="estado-cell">${data.observaciones?.cableSenal === 'Malo' ? 'X' : ''}</td>
-          </tr>
-          <tr>
-            <td colspan="8" class="field-label">EQUIPO PATRON
-            <p style="text-align: center; margin: 0; padding:0">
-              <strong>${data.factorData?.equipoPatron || ''}</strong>
-            </p>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Informe -->
-        <table>
-          <tr>
-            <td class="section-title" colspan="12">Nota: En caso de detectarse irregularidad(es), esta acta se constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica:</td>
-          </tr>
-          <tr>
-            <td class="section-title">INFORME</td>
-          </tr>
-          <tr>
-            <td style="text-align: justify; padding: 8px; font-size: 12px">
-              ${getInformeDisplayText()}
-            </td>
-          </tr>
-          <tr>
-            <td style="text-align: justify; padding: 8px; font-size: 12px">
-              LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.
-            </td>
-          </tr>
-        </table>
-
-        <!-- Firmas hoja 2 -->
-        <table class="firma-table">
-            <tr>
-                <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</td>
-                <td class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">SUSCRIPTOR O USUARIO</td>
-                <td class="firma-header" style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef;">TESTIGO</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${userData.name || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${data.usuarioVisita || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">NOMBRE:</span>
-                  <div class="firma-value">${data.otroRepresentante || 'No especificado'}</div>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaFuncionario
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaFuncionario}" alt="Firma Funcionario">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaSuscriptor
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">FIRMA:</span>
-                  <div class="firma-value">
-                    ${signatures.firmaSupervisor
-                      ? `<div class="firma-imagen">
-                          <img src="${signatures.firmaSupervisor}" alt="Firma Supervisor">
-                        </div>`
-                      : '<span class="firma-faltante">No disponible</span>'
-                    }
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${userData.cc || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${data.documentoVisitante || 'No especificado'}</div>
-                </div>
-              </td>
-              <td>
-                <div class="firma-row">
-                  <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                  <div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div>
-                </div>
-              </td>
-            </tr>
-        </table>
-      </div>
+      <div id="pdf-page-2" class="page"><div class="page-inner">
+      <div class="hdr"><table class="hdr-t"><colgroup><col style="width:68%"><col style="width:32%"></colgroup><tr><td class="nb c"><img class="logo" src="${base64Logo}" alt="Logo"></td><td class="nb"><table class="code"><colgroup><col style="width:38%"><col style="width:62%"></colgroup><tr><td class="lb">Código:</td><td>FO-GD-CP-05</td></tr><tr><td class="lb">Fecha:</td><td>1/02/2023</td></tr><tr><td class="lb">Versión:</td><td>04</td></tr><tr><td class="lb">Página:</td><td>2 de 2</td></tr></table></td></tr></table></div>
+      <table><colgroup><col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:3.5%"><col style="width:3.5%"><col style="width:3.5%"><col style="width:3.5%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:10%"></colgroup><tr><td class="st" colspan="9">FORMATO ACTA DE DIAGRAMAS</td><td class="st" colspan="6">CONTROL DE PÉRDIDAS</td></tr><tr><td class="lb" colspan="2">Acta De Revisión No.</td><td class="acta-number" colspan="3">N° <span id="numero">${data.numero_acta}</span></td><td class="lb" colspan="3">CÓDIGO</td><td class="c" colspan="3">${data.codigo || ''}</td><td class="lb" colspan="2">FECHA</td><td class="c" colspan="2">${new Date().toLocaleDateString('es-ES')}</td></tr><tr><td class="lb">REVISIÓN N°</td><td class="c" colspan="3">${data.revision || ''}</td><td class="lb" colspan="3">SOLICITUD N°</td><td class="c" colspan="2">${data.solicitud || ''}</td><td class="lb">CIUDAD</td><td class="c" colspan="3">${data.ciudad || 'Acacias'}</td><td class="lb">ACTA DE REFERENCIA</td><td class="c">${data.numero_acta || '52976'}</td></tr><tr><td class="lb">CIRCUITO</td><td class="c" colspan="2">${data.circuito || ''}</td><td class="lb" colspan="4">SUBESTACIONES</td><td class="c" colspan="3">${data.subestacion || ''}</td><td class="lb" colspan="2">CLIENTES - RAZON SOCIAL</td><td class="c" colspan="3">${data.nombre || ''}</td></tr><tr><td class="lb">TELEMEDIDA</td><td class="c">${data.telemedida || ''}</td><td class="lb">LINEA DEDICADA</td><td class="lb">SI</td><td class="c">${data.lineaDedicada === 'SI' ? 'X' : ' '}</td><td class="lb">NO</td><td class="c">${data.lineaDedicada === 'NO' ? 'X' : ' '}</td><td class="lb">TIPO DE FRONTERA</td><td class="c">${data.tipoFrontera === 'MCM' ? 'X' : ' '} MCM</td><td class="c">${data.tipoFrontera === 'RGP' ? 'X' : ' '} RGP</td><td class="c">${data.tipoFrontera === 'NRP' ? 'X' : ' '} NRP</td><td class="c">${data.tipoFrontera === 'NRO' ? 'X' : ' '} NRO</td><td class="c">${data.tipoFrontera === 'REGO' ? 'X' : ' '} REGO</td><td class="c">${data.tipoFrontera === 'SNT' ? 'X' : ' '} SNT</td><td class="c">${data.tipoFrontera === 'CAMB COM' ? 'X' : ' '} CAMB COM</td></tr></table>
+      <div class="diagrams"><div class="d-top"><div class="d-col"><div class="d-title">DIAGRAMA UNIFILAR</div><div class="d-box"><img src="${diagramImages.diagramaUnifilar || './unifilar.png'}" alt="Diagrama Unifilar"></div></div><div class="d-col"><div class="d-title">DIAGRAMA FASORIAL</div><div class="d-box"><img src="${diagramImages.diagramaFasorial || './Fasorial.png'}" alt="Diagrama Fasorial"></div></div></div><div class="d-bottom"><div class="d-title">DIAGRAMA DE CONEXIONES</div><div class="d-box"><img src="${diagramImages.diagramaConexiones || './conexiones.png'}" alt="Diagrama de Conexiones"></div></div></div>
+      <table><colgroup><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"><col style="width:8.33%"></colgroup><tr><td class="st" colspan="6">PRUEBA DE TRANSFORMADORES DE POTENCIAL TP'S</td><td class="st" colspan="6">PRUEBA DE TRANSFORMADORES DE CORRIENTE TC'S</td></tr><tr><th>VOLTAJE</th><th>PRIMARIO</th><th>SECUNDARIO</th><th>RTP (Vp/Vs)</th><th>% ERROR</th><th>% PROMEDIO</th><th>CORRIENTE</th><th>PRIMARIO</th><th>SECUNDARIO</th><th>RTC (Ip/Is)</th><th>% ERROR</th><th>% PROMEDIO</th></tr><tr><td class="lb2">VR</td><td class="c">${data.tpData?.vRPrimario || ''}</td><td class="c">${data.tpData?.vRSecundario || ''}</td><td class="c">${data.tpData.vRRtp || ''}</td><td class="c">${data.tpData?.errorVR || ''}</td><td class="c" rowspan="3">${data.tpData?.errorPromedio || ''}</td><td class="lb2">IR</td><td class="c">${data.tcData?.vRPrimario || ''}</td><td class="c">${data.tcData?.vRSecundario || ''}</td><td class="c">${data.tcData.vRRtc || ''}</td><td class="c">${data.tcData?.errorVR || ''}</td><td class="c" rowspan="3">${data.tcData?.errorPromedio || ''}</td></tr><tr><td class="lb2">VS</td><td class="c">${data.tpData?.vSPrimario || ''}</td><td class="c">${data.tpData?.vSSecundario || ''}</td><td class="c">${data.tpData.vSRtp || ''}</td><td class="c">${data.tpData?.errorVS || ''}</td><td class="lb2">LS</td><td class="c">${data.tcData?.vSPrimario || ''}</td><td class="c">${data.tcData?.vSSecundario || ''}</td><td class="c">${data.tcData?.vSRtc || ''}</td><td class="c">${data.tcData?.errorVS || ''}</td></tr><tr><td class="lb2">V_T</td><td class="c">${data.tpData?.vTPrimario || ''}</td><td class="c">${data.tpData?.vTSecundario || ''}</td><td class="c">${data.tpData?.vTRtp || ''}</td><td class="c">${data.tpData?.errorVT || ''}</td><td class="lb2">LT</td><td class="c">${data.tcData?.vTPrimario || ''}</td><td class="c">${data.tcData?.vTSecundario || ''}</td><td class="c">${data.tcData?.vTRtc || ''}</td><td class="c">${data.tcData?.errorVT || ''}</td></tr></table>
+      <table class="siec"><colgroup><col style="width:10%"><col style="width:14%"><col style="width:3%"><col style="width:3%"><col style="width:3%"><col style="width:14%"><col style="width:3%"><col style="width:3%"><col style="width:3%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"></colgroup><tr><td class="st" colspan="1">FACTOR SIEC</td><td class="st" colspan="8">OBSERVACIONES GENERALES</td><td class="st" colspan="5" rowspan="2">ADECUACIONES Y MEJORAS QUE NECESITA LA INSTALACIÓN ELÉCTRICA</td></tr><tr><td class="c" rowspan="2"><strong>${data.factorData?.factorSiec || ''}</strong></td><th>EQUIPOS</th><th>B</th><th>R</th><th>M</th><th>EQUIPOS</th><th>B</th><th>R</th><th>M</th></tr><tr><td class="lb2">RED</td><td class="c est">${data.observaciones?.redMT === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.redMT === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.redMT === 'Malo' ? 'X' : ''}</td><td class="lb2">TPS</td><td class="c est">${data.observaciones?.tps === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.tps === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.tps === 'Malo' ? 'X' : ''}</td><td rowspan="8" colspan="5" class="adec"><div class="adec-grid"><ul class="cbl"><li><input type="checkbox" ${data.adecuaciones?.cambiarMedidor || data.adecuaciones?.instalarMedidor ? 'checked' : ''}> Cambiar o instalar el medidor</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o instalar TC</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarMedidor ? 'checked' : ''}> Cambiar o Instalar TP</li><li><input type="checkbox" ${data.adecuaciones?.cambiarCaja || data.adecuaciones?.instalarCaja ? 'checked' : ''}> Cambiar o instalación de caja para el medidor</li><li><input type="checkbox" ${data.adecuaciones?.cambiarPuestaTierra || data.adecuaciones?.instalarPuestaTierra ? 'checked' : ''}> Cambiar o instalar sistema de puesta a tierra</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarBloquePruebas ? 'checked' : ''}> Cambiar o instalar Bloque de Pruebas</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesElectricas ? 'checked' : ''}> Cambiar o instalar Protecciones eléctricas</li></ul><ul class="cbl"><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCableSenal ? 'checked' : ''}> Cambiar o instalar Cable de señal (según norma)</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarSistemaComunicacion ? 'checked' : ''}> Cambiar o instalar sistema de comunicación</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarModem ? 'checked' : ''}> Cambiar o instalar MODEM</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarProteccionesCommunicacion ? 'checked' : ''}> Cambiar o instalar Protecciones en comunicaciones</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarDuctosCableSeñal ? 'checked' : ''}> Cambiar o instalar ductos para cables de señal</li><li><input type="checkbox" ${data.adecuaciones?.otros ? 'checked' : ''}> Otros: ${data.adecuaciones?.otrosTexto || ''}</li><li><input type="checkbox" ${data.adecuaciones?.adecuaroInstalaraSeguridadCeldas ? 'checked' : ''}> Adecuar o instalar seguridad a las celdas de medidor</li><li><input type="checkbox" ${data.adecuaciones?.cambiaroInstalarCelda ? 'checked' : ''}> Cambiar o instalar Celda para medida(TP'S y TC'S) norma</li></ul></div></td></tr><tr><td class="lb2">FACTOR ENCONTRADO</td><td class="lb2">CRUCETAS</td><td class="c est">${data.observaciones?.crucetas === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.crucetas === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.crucetas === 'Malo' ? 'X' : ''}</td><td class="lb2">TCS</td><td class="c est">${data.observaciones?.tcs === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.tcs === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.tcs === 'Malo' ? 'X' : ''}</td></tr><tr><td class="c"><strong>${data.factorData?.factorEncontrado || ''}</strong></td><td class="lb2">PARARRAYOS</td><td class="c est">${data.observaciones?.pararrayos === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.pararrayos === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.pararrayos === 'Malo' ? 'X' : ''}</td><td class="lb2">BLOQUES DE PRUEBA</td><td class="c est">${data.observaciones?.bloquesPrueba === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.bloquesPrueba === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.bloquesPrueba === 'Malo' ? 'X' : ''}</td></tr><tr><td class="lb2">%ERROR DE FACT</td><td class="lb2">CORTACIRCUITOS</td><td class="c est">${data.observaciones?.cortacircuitos === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.cortacircuitos === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.cortacircuitos === 'Malo' ? 'X' : ''}</td><td class="lb2">CELDA</td><td class="c est">${data.observaciones?.celda === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.celda === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.celda === 'Malo' ? 'X' : ''}</td></tr><tr><td class="c"><strong>${data.factorData?.errorFactor || ''}</strong></td><td class="lb2">FUSIBLES</td><td class="c est">${data.observaciones?.fusibles === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.fusibles === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.fusibles === 'Malo' ? 'X' : ''}</td><td class="lb2">GABINETES</td><td class="c est">${data.observaciones?.gabinetes === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.gabinetes === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.gabinetes === 'Malo' ? 'X' : ''}</td></tr><tr><td class="lb2">FACTOR FINAL</td><td class="lb2">BAJANTES</td><td class="c est">${data.observaciones?.bajantes === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.bajantes === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.bajantes === 'Malo' ? 'X' : ''}</td><td class="lb2">MODEM</td><td class="c est">${data.observaciones?.modem === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.modem === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.modem === 'Malo' ? 'X' : ''}</td></tr><tr><td class="c" rowspan="2"><strong>${data.factorData?.factorFinal || ''}</strong></td><td class="lb2">TRANSFORMADOR PRINCIPAL</td><td class="c est">${data.observaciones?.transformador === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.transformador === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.transformador === 'Malo' ? 'X' : ''}</td><td class="lb2">CABLE DE SEÑAL</td><td class="c est">${data.observaciones?.cableSenal === 'Bueno' ? 'X' : ''}</td><td class="c est">${data.observaciones?.cableSenal === 'Regular' ? 'X' : ''}</td><td class="c est">${data.observaciones?.cableSenal === 'Malo' ? 'X' : ''}</td></tr><tr><td class="fl" colspan="8">EQUIPO PATRON<p class="v">${data.factorData?.equipoPatron || ''}</p></td></tr></table>
+      <table><colgroup><col style="width:100%"></colgroup><tr><td class="st" colspan="1">Nota: En caso de detectarse irregularidad(es), esta acta se constituye en acta de irregularidades, por lo cual procede como tal ante el cliente o usuario del servicio de energía eléctrica:</td></tr><tr><td class="st">INFORME</td></tr><tr><td class="note j" style="font-style:normal;font-size:7.5px">${getInformeDisplayText()}</td></tr><tr><td class="note j" style="font-style:normal;font-size:7.5px">LA EMPRESA, con base en lo establecido en la ley 142 de 1994 y en su contrato de Servicios Públicos con Condiciones Uniformes, se permite informarle que usted dispone a partir de la fecha un Periodo de Facturación (30 días calendario), para instalar cambiar o adecuar las anomalías aquí indicadas, cumpliendo con las NORMAS TÉCNICAS exigidos por la EMPRESA; pasado este período y de no tomar las medidas necesarias para adquirirlos, las instalación(es) provicional(es) pasarán a ser definitiva(s) con cargo a su cuenta.</td></tr></table>
+      <div class="bottom"><div class="legal"><p><strong>AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES</strong></p><p>El usuario y/o suscriptor autoriza de manera previa, expresa e informada a emsa E.S.P., como responsable del tratamiento, para tratar los datos personales suministrados en el marco de las actividades de revisión, control y gestión propias de la prestación del servicio público domiciliario de energía eléctrica, con las siguientes finalidades: (i) registrar la revisión realizada; (ii) identificar a los intervinientes y validar los hechos y/o resultados de la visita; (iii) ejercer las actuaciones derivadas de la visita realizada; y (iv) cumplir obligaciones legales y regulatorias aplicables al servicio público de energía eléctrica. De conformidad con lo dispuesto en el literal a) del artículo 10 de la Ley 1581 de 2012, emsa informa que el tratamiento de los datos personales se realiza en ejercicio de sus funciones legales y constitucionales, como prestador de servicios públicos domiciliarios. El tratamiento se realizará conforme a la Política de Tratamiento de la Información Personal disponible en los canales oficiales de emsa. El titular podrá ejercer sus derechos a conocer, actualizar, rectificar y suprimir sus datos, así como revocar la autorización, a través de dichos canales o del correo: pqr@emsa-esp.com.co. Cuando intervenga un testigo, este autoriza el tratamiento de sus datos únicamente para dejar constancia de su participación en la presente acta.</p></div>
+      <table class="firma-table"><colgroup><col style="width:33.33%"><col style="width:33.33%"><col style="width:33.34%"></colgroup><tr><th class="firma-header">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</th><th class="firma-header">SUSCRIPTOR O USUARIO</th><th class="firma-header">TESTIGO</th></tr><tr><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${userData.name || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.usuarioVisita || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.otroRepresentante || 'No especificado'}</div></div></td></tr><tr class="sig-row"><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaFuncionario ? `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSuscriptor ? `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSupervisor ? `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td></tr><tr><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${userData.cc || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.documentoVisitante || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div></div></td></tr></table>
+      </div></div></div>
       <!-- Fin Hoja 2 -->
-      
+
       <!-- HOJA 3: ACTA DE MATERIALES ELÉCTRICOS -->
-      <div id="pdf-page-3" class="page">
-          <!-- HEADER (ESTRUCTURA IDÉNTICA A LA HOJA 1) -->
-          <div class="header-table-content">
-              <table class="header-table">
-                  <tr>
-                      <td style="width: 70%; padding: 5px; text-align: center; border: none;">
-                          <img src="${base64Logo}" alt="Logotipo de la Empresa" style="height: 60px;"/>
-                      </td>
-                      <td style="width: 30%; padding: 0; ">
-                          <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-left: 5px;">
-                              <tr>
-                                  <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Código:</td>
-                                  <td style="border: 1px solid #34495e;">FO-GD-CP-04</td>
-                              </tr>
-                              <tr>
-                                  <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Fecha:</td>
-                                  <td style="border: 1px solid #34495e;">${new Date().toLocaleDateString('es-ES')}</td>
-                              </tr>
-                              <tr>
-                                  <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Versión:</td>
-                                  <td style="border: 1px solid #34495e;">4</td>
-                              </tr>
-                              <tr>
-                                  <td style="border: 1px solid #34495e; font-weight: bold; background-color: #ecf0f1;">Página:</td>
-                                  <td style="border: 1px solid #34495e;">3 DE 3</td>
-                              </tr>
-                          </table>
-                      </td>
-                  </tr>
-              </table>
-          </div>
-
-          <!-- TÍTULO Y SUBTÍTULO -->
-          <div class="title">ACTA DE MATERIALES ELÉCTRICOS</div>
-
-          <!-- NÚMERO DE ACTA E INFORMACIÓN INICIAL -->
-          <table class="info-table" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-            <tr>
-              <td class="section-title" colspan="6">ACTA DE MATERIALES ELÉCTRICOS</td>
-              <td class="section-title" colspan="3">CONTROL DE PÉRDIDAS</td>
-            </tr>
-              <tr>
-                  <td class="field-label" style="width: 22%; border: 1px solid #34495e;">Acta De Materiales Eléctricos No.</td>
-                  <td class="acta-number" style="width: 13%; border: 1px solid #34495e;">
-                      N° <span>${data.numero_acta || ''}</span>
-                  </td>
-                  <td class="field-label" style="width: 8%; border: 1px solid #34495e;">Código</td>
-                  <td class="field-value" style="width: 12%; border: 1px solid #34495e;">${data.codigo || ''}</td>
-                  <td class="field-label" style="width: 18%; border: 1px solid #34495e;">Revisión ó Solicitud No.</td>
-                  <td class="field-value" style="width: 12%; border: 1px solid #34495e;">${data.solicitudNo || ''}</td>
-                  <td class="field-label" style="width: 15%; border: 1px solid #34495e;">ACTA REFERENCIA No.</td>
-                  <td class="field-value" style="border: 1px solid #34495e;">${data.numero_acta || ''}</td>
-              </tr>
-          </table>
-
-          <!-- TEXTO INTRODUCTORIO CON BORDE -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-              <tr>
-                  <td class="text-justify" style="border: 1px solid #34495e; padding: 8px; font-size: 12px; line-height: 1.4;">
-                      <p style="margin: 0;">
-                          A los <strong>${new Date().getDate()}</strong> días del mes de 
-                          <strong>${new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del <strong>${new Date().getFullYear()}</strong> 
-                          se hicieron presentes los señores <strong>${userData.name || '________________________________'}</strong> y 
-                          <strong>${data.otroRepresentante || '________________________________________'}</strong> en representación de la EMSA ESP, 
-                          en el inmueble ubicado en la <strong>${data.direccion || '________________________________________________'}</strong> 
-                          del Municipio de <strong>${data.ciudad || '_____________________'}</strong> con el fin de instalar material eléctrico, 
-                          el cual tiene las siguientes características
-                      </p>
-                  </td>
-              </tr>
-          </table>
-
-          <!-- TABLA DE MATERIALES -->
-          <table class="materials-table" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-              <thead>
-                  <tr>
-                      <th colspan="4" class="section-title" style="border: 1px solid #34495e;">DESCRIPCIÓN</th>
-                      <th colspan="3" class="section-title" style="border: 1px solid #34495e;">MATERIAL INCLUIDO</th>
-                      <th colspan="4" class="section-title" style="border: 1px solid #34495e;">DESCRIPCIÓN</th>
-                      <th colspan="3" class="section-title" style="border: 1px solid #34495e;">MATERIAL INCLUIDO</th>
-                  </tr>
-                  <!-- Medidor / PROTECCIONES -->
-                  <tr>
-                      <th colspan="4" class="center bold" style="border: 1px solid #34495e;">Medidor (${data.materiales?.medidor?.fasico || '___'})fasico, (${data.materiales?.medidor?.fases || '___'})F - (${data.materiales?.medidor?.hilos || '___'})H</th>
-                      <th class=class="center bold" style="border: 1px solid #34495e;">UNI</th>
-                      <th class="center bold" style="border: 1px solid #34495e;">ESTADO</th>
-                      <th class="center bold" style="border: 1px solid #34495e;">CANT.</th>
-                      <th colspan="4" class="center bold" style="border: 1px solid #34495e;">PROTECCIONES Y HERRAJES</th>
-                      <th class="center bold" style="border: 1px solid #34495e;"">UNI</th>
-                      <th class="center bold" style="border: 1px solid #34495e;">ESTADO</th>
-                      <th class="center bold" style="border: 1px solid #34495e;">CANT.</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <!-- ELECTROMECÁNICO / CINTA BANDIT -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">ELECTROMECÁNICO, (${data.materiales?.medidorElectroMecanico?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectroMecanico?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectroMecanico?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectroMecanico?.especificaciones?.clase || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectroMecanico?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectroMecanico?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CINTA BANDIT (${data.materiales?.cintaBandit?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cintaBandit?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cintaBandit?.cantidad || 0}</td>
-                  </tr>
-                  
-                  <!-- ELECTRÓNICO REGIS / GRAPA HEBILLA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">ELECTRÓNICO regis,ciclometrico (${data.materiales?.medidorElectronicoRegis?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectronicoRegis?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectronicoRegis?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectronicoRegis?.especificaciones?.clase || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectronicoRegis?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectronicoRegis?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">GRAPA "HEBILLA" PARA CINTA (${data.materiales?.grapaHebilla?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.grapaHebilla?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.grapaHebilla?.cantidad || 0}</td>
-                  </tr>
-                  
-                  <!-- ELECTRÓNICO DISPLAY / CAPACETE -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">ELECTRÓNICO con display (${data.materiales?.medidorElectronicoDisplay?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectronicoDisplay?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectronicoDisplay?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectronicoDisplay?.especificaciones?.clase || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectronicoDisplay?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorElectronicoDisplay?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CAPACETE DE (${data.materiales?.capacete?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.capacete?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.capacete?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- FILA VACÍA / CONECTOR CURVO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONECTOR CURVO (${data.materiales?.conectorCurvo?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorCurvo?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorCurvo?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- Medidores para Medida Semi / CONDULETAS -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">Medidores para Medida Semi</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONDULETAS DE (${data.materiales?.conduletas?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conduletas?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conduletas?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- ELECTROMECÁNICO SEMI / CONDULETA CON TAPA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">ELECTROMECÁNICO (${data.materiales?.medidorSemiElectro?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSemiElectro?.especificaciones?.hilos || '___'})H, Clase (${data.materiales?.medidorSemiElectro?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSemiElectro?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSemiElectro?.especificaciones?.voltios || '___'})V.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSemiElectro?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSemiElectro?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONDULETA EN (${data.materiales?.conduletaTapa?.tipo || '___'}) DE (${data.materiales?.conduletaTapa?.medida || '___'})" CON TAPA</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conduletaTapa?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conduletaTapa?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- ELECTRÓNICO SEMI / TUBO GALVANIZADO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">ELECTRÓNICO regis,ciclometrico (${data.materiales?.medidorSemiElectronico?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSemiElectronico?.especificaciones?.hilos || '___'})H, Clase (${data.materiales?.medidorSemiElectronico?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSemiElectronico?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSemiElectronico?.especificaciones?.voltios || '___'})V.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSemiElectronico?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSemiElectronico?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">TUBO GALVANIZADO (${data.materiales?.tuboGalvanizado?.medida || '___'})" x 3m</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tuboGalvanizado?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tuboGalvanizado?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- FILA VACÍA / ANCLAJE ACOMETIDA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td colspan="4" style="border: 1px solid #34495e;">ANCLAJE ACOMETIDA (${data.materiales?.anclajeAcometida?.tipo || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.anclajeAcometida?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.anclajeAcometida?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- Medidores para Medida Semi e indirecta Electrónicos / CONECTOR BIMETALICO TIPO CUÑA -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">Medidores para Medida Semi e indirecta Electrónicos</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONECTOR BIMETALICO TIPO CUÑA TIPO(${data.materiales?.conectorBimetalicoCuna?.tipo || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorBimetalicoCuna?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorBimetalicoCuna?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- SIN PERFIL / ESTRIBO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">SIN PERFIL (${data.materiales?.medidorSinPerfil?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSinPerfil?.especificaciones?.hilos || '___'})H Clase (${data.materiales?.medidorSinPerfil?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSinPerfil?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSinPerfil?.especificaciones?.voltios || '___'})V</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSinPerfil?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorSinPerfil?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">ESTRIBO TIPO (${data.materiales?.estribo?.tipo || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.estribo?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.estribo?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- CON PERFIL DE CARGA Y COMUNICACIONES / CONECTOR BIMETALICO PERNO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">CON PERFIL DE CARGA Y (${data.materiales?.medidorConPerfil?.especificaciones?.comunicaciones || '___'}) COMUNICACIONES, clase(${data.materiales?.medidorConPerfil?.especificaciones?.clase || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorConPerfil?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorConPerfil?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONECTOR BIMETALICO (${data.materiales?.conectorBimetalicoPerno?.tipo || '___'}) PERNO</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorBimetalicoPerno?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorBimetalicoPerno?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- CON PERFIL DE CARGA Y MODEM INTERNO / TENSOR PARA ACOMETIDA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">CON PERFIL DE CARGA Y MODEM INTERNO, clase (${data.materiales?.medidorConPerfilModem?.especificaciones?.clase || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorConPerfilModem?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.medidorConPerfilModem?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">TENSOR PARA ACOMETIDA CABLE CONCENTRICO</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tensorAcometida?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tensorAcometida?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- FILA VACÍA / OJO DE ALUMINIO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td colspan="4" style="border: 1px solid #34495e;">OJO DE ALUMINIO</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.ojoAluminio?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.ojoAluminio?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- Router y Varios / BREAKERS -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">Router y Varios</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">BREAKERS DE (${data.materiales?.breakers?.amperios || '___'}x${data.materiales?.breakers?.amperios || '___'})Amp.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.breakers?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.breakers?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- GPRS / CONECTOR PARA VARILLA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">GPRS (${data.materiales?.routerGPRS?.simCard || '___'}) SIM CARD</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.routerGPRS?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.routerGPRS?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONECTOR PARA VARILLA</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorVarilla?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conectorVarilla?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- CONVERSORES / TENSOR PARA ACOMETIDA CABLE CONCENTRICO cambio -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">CONVERSORES</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conversores?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.conversores?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">TENSOR PARA ACOMETIDA CABLE CONCENTRICO cambio</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tensorCambio?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tensorCambio?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- BLOQUE DE PRUEBA / ALAMBRE DE COBRE -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">BLOQUE DE PRUEBA</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.bloquePrueba?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.bloquePrueba?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">ALAMBRE DE COBRE No. (${data.materiales?.alambreCobre?.calibre || '___'}) AWG</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.alambreCobre?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.alambreCobre?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- FILA VACÍA / VARILLA PUESTA A TIERRA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td colspan="4" style="border: 1px solid #34495e;">VARILLA PUESTA A TIERRA(${data.materiales?.varillaPuestaTierra?.metros || '___'}) Mts.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.varillaPuestaTierra?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.varillaPuestaTierra?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- TRANSFORMADORES DE CORRIENTE / TERMINAL MT -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">TRANSFORMADORES DE CORRIENTE</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">TERMINAL MT(${data.materiales?.terminalMT?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.terminalMT?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.terminalMT?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- USO EXTERIOR 600V / CURVA MT -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO EXTERIOR (${data.materiales?.tcUsoExterior600?.amperios || '___'}/${data.materiales?.tcUsoExterior600?.amperios2 || '___'}) Amp, clase (${data.materiales?.tcUsoExterior600?.clase || '___'}) de ventada 600Vol.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoExterior600?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoExterior600?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">CURVA MT(${data.materiales?.curvaMT?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.curvaMT?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.curvaMT?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- USO INTERIOR 600V / FLEXI CONDUIT METALICO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO INTERIOR (${data.materiales?.tcUsoInterior600?.amperios || '___'}/${data.materiales?.tcUsoInterior600?.amperios2 || '___'}) Amp, clase (${data.materiales?.tcUsoInterior600?.clase || '___'}) de ventada 600Vol.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoInterior600?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoInterior600?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">FLEXI CONDUIT METALICO(${data.materiales?.flexiConduit?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.flexiConduit?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.flexiConduit?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- USO EXTERIOR ALTA / TERMINAL FLEXI -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO EXTERIOR (${data.materiales?.tcUsoExteriorAlta?.kv || '___'}) Kv de (${data.materiales?.tcUsoExteriorAlta?.primario || '___'}) / (${data.materiales?.tcUsoExteriorAlta?.secundario || '___'}) Amp. clase (${data.materiales?.tcUsoExteriorAlta?.clase || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoExteriorAlta?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoExteriorAlta?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">TERMINAL FLEXI(${data.materiales?.terminalFlexi?.medida || '___'})"</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.terminalFlexi?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.terminalFlexi?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- USO INTERIOR ALTA / VACÍO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO INTERIOR (${data.materiales?.tcUsoInteriorAlta?.kv || '___'}/${data.materiales?.tcUsoInteriorAlta?.kv2 || '___'}) Kv de (${data.materiales?.tcUsoInteriorAlta?.primario || '___'}) / (${data.materiales?.tcUsoInteriorAlta?.secundario || '___'}) Amp. clase (${data.materiales?.tcUsoInteriorAlta?.clase || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoInteriorAlta?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tcUsoInteriorAlta?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- TRANSFORMADORES DE POTENCIAL / SELLOS -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">TRANSFORMADORES DE POTENCIAL</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">SELLOS</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                  </tr>
-
-                  <!-- USO EXTERIOR TP / ROTOSEAL -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO EXTERIOR (${data.materiales?.tpUsoExterior?.primario || '___'}) / (${data.materiales?.tpUsoExterior?.secundario || '___'}) Vol. clase (${data.materiales?.tpUsoExterior?.clase || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tpUsoExterior?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tpUsoExterior?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">ROTOSEAL DE COLOR (${data.materiales?.rotoseal?.color || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.rotoseal?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.rotoseal?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- USO INTERIOR TP / ESTAMPILLA -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">USO INTERIOR (${data.materiales?.tpUsoInterior?.primario || '___'}) / (${data.materiales?.tpUsoInterior?.secundario || '___'}) Vol. clase (${data.materiales?.tpUsoInterior?.clase || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tpUsoInterior?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.tpUsoInterior?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;">ESTAMPILLA</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.estampilla?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.estampilla?.cantidad || 0}</td>
-                  </tr>
-
-                  <!-- CABLES Y ALAMBRE -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">CABLES Y ALAMBRE</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- CABLE CONCENTRICO -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">CABLE CONCENTRICO PARA ACOMETIDA (${data.materiales?.cableConcentrico?.calibre || '___'} X ${data.materiales?.cableConcentrico?.conductores || '___'}) + (${data.materiales?.cableConcentrico?.neutro || '___'})</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cableConcentrico?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cableConcentrico?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- CABLE DE CONTROL -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">CABLE DE CONTROL (${data.materiales?.cableControl?.conductores || '___'}) X (${data.materiales?.cableControl?.calibre || '___'}) AWG</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cableControl?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cableControl?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- CAJA Hermetica -->
-                  <tr>
-                      <td colspan="4" class="center bold" style="border: 1px solid #34495e;">CAJA Hermetica</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">UNI</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">ESTADO</td>
-                      <td class="center bold" style="border: 1px solid #34495e;">CANT.</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- SOBREPONER PARA MEDIDOR -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">SOBREPONER PARA MEDIDOR (${data.materiales?.cajaSobreponer?.fasico || '___'}) FASICO TIPO (${data.materiales?.cajaSobreponer?.tipo || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaSobreponer?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaSobreponer?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- INCRUSTAR MEDIDOR -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">INCRUSTAR MEDIDOR (${data.materiales?.cajaIncrustar?.fasico || '___'}) FASICO TIPO (${data.materiales?.cajaIncrustar?.tipo || '___'}).</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaIncrustar?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaIncrustar?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-
-                  <!-- TIPO GABINETE PARA MEDIDORES -->
-                  <tr>
-                      <td colspan="4" style="border: 1px solid #34495e;">TIPO GABINETE PARA MEDIDORES.</td>
-                      <td class="center" style="border: 1px solid #34495e;">Un</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaGabinete?.estado || '___'}</td>
-                      <td class="center" style="border: 1px solid #34495e;">${data.materiales?.cajaGabinete?.cantidad || 0}</td>
-                      <td colspan="4" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                      <td class="center" style="border: 1px solid #34495e;"></td>
-                  </tr>
-              </tbody>
-          </table>
-
-          <!-- MEDIDOR INSTALADO -->
-          <table class="medidor-table" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-              <tr>
-                  <td colspan="13" class="section-title" style="border: 1px solid #34495e;">ESTADO DEL MATERIAL INSTALADO=PR:Provisional, VE:Venta, TE:Usuario, RE:Reutilizado, FI:Financiado &nbsp;&nbsp; ESTADO DEL MATERIAL RETIRADO=EA:Entregado al usuario, BC:Bodega Contratista, BE:Bodega, EMSA:PR</td>
-              </tr>
-              <tr>
-                  <th colspan="7" class="field-label" style="border: 1px solid #34495e;">MEDIDOR INSTALADO</th>
-                  <th colspan="5" class="field-label" style="border: 1px solid #34495e;">DISPOSICIÓN DE LOS SELLOS</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">COLOR</th>
-              </tr>
-              <tr>
-                  <th class="field-label" style="border: 1px solid #34495e;">NÚMERO</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">MARCA</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">FASES</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">DÍGITOS</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">LECTURA</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">VOLTIOS</th>
-                  <th class="field-label" style="border: 1px solid #34495e;">AMPERIOS</th>
-                  <th>TP</th>
-                  <th>${data.sello_tp_1 || ''}</th>
-                  <th>${data.sello_tp_2 || ''}</th>
-                  <th>${data.sello_tp_3 || ''}</th>
-                  <th>${data.sello_tp_4 || ''}</th>
-                  <th>${data.sello_color_1 || ''}</th>
-              </tr>
-              <tr>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_numero || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_marca || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_fases || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_digitos || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_lectura || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_voltios || ''}</td>
-                  <td rowspan="2" style="border: 1px solid #34495e;">${data.medidor_amperios || ''}</td>
-                  <td>TB</td>
-                  <th>${data.sello_tb_1 || ''}</th>
-                  <th>${data.sello_tb_2 || ''}</th>
-                  <th>${data.sello_tb_3 || ''}</th>
-                  <th>${data.sello_tb_4 || ''}</th>
-                  <th>${data.sello_color_2 || ''}</th>
-          
-              </tr>
-              <tr>
-                  <td>EST</td>
-                  <th>${data.sello_est_1 || ''}</th>
-                  <th>${data.sello_est_2 || ''}</th>
-                  <th>${data.sello_est_3 || ''}</th>
-                  <th>${data.sello_est_4 || ''}</th>
-                  <th>${data.sello_color_3 || ''}</th>
-              </tr>
-          </table>
-
-          <!-- ATENCIÓN Y AUTORIZACIÓN -->
-          <div class="text-justify" style="border: 1px solid #34495e; font-size: 12px; padding: 8px; line-height: 1.4; margin-bottom: 10px;">
-              <span class="field-label" style="font-weight: bold;">ATENDIÓ LA VISITA EL (LOS) REPRESENTANTE (S) LEGAL (S) DEL INMUEBLE, EL (LOS) SEÑOR (S):</span>
-              <strong>${data.usuarioVisita || '________________________________________________________________________________________________'}</strong>
-              <br />
-              QUIEN AUTORIZA EL COBRO DE LOS ANTERIORES MATERIALES, DE CONTADO ( <strong>${data.tipoPago === 'contado' ? 'X' : ' '}</strong> ) , FINANCIADO ( <strong>${data.tipoPago === 'financiado' ? 'X' : ' '}</strong> ) .
-          </div>
-
-          <!-- OBSERVACIONES -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-              <tr>
-                  <td class="field-label" style="border: 1px solid #34495e;">OBSERVACIONES:</td>
-              </tr>
-              <tr>
-                  <td class="field-value" style="border: 1px solid #34495e; height: 60px; vertical-align: top;">${data.observaciones || ''}</td>
-              </tr>
-          </table>
-
-          <!-- FIRMAS -->
-          <table class="firma-table" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-              <tr>
-                  <th class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef; border: 1px solid #34495e;" scope="col">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</th>
-                  <th class="firma-header" style="width: 33.33%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef; border: 1px solid #34495e;" scope="col">SUSCRIPTOR O USUARIO</th>
-                  <th class="firma-header" style="width: 33.34%; text-align: left; font-weight: bold; padding: 8px; background-color: #e9ecef; border: 1px solid #34495e;" scope="col">SUPERVISOR Y/O INTERVENTOR</th>
-              </tr>
-              <tr>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">NOMBRE:</span>
-                          <div class="firma-value">${userData.name || 'No especificado'}</div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">NOMBRE:</span>
-                          <div class="firma-value">${data.usuarioVisita || 'No especificado'}</div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">NOMBRE:</span>
-                          <div class="firma-value">${data.otroRepresentante || 'No especificado'}</div>
-                      </div>
-                  </td>
-              </tr>
-              <tr>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">FIRMA:</span>
-                          <div class="firma-value">
-                              ${signatures.firmaFuncionario
-                                  ? `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario"></div>`
-                                  : '<span class="firma-faltante">No disponible</span>'
-                              }
-                          </div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">FIRMA:</span>
-                          <div class="firma-value">
-                              ${signatures.firmaSuscriptor
-                                  ? `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor"></div>`
-                                  : '<span class="firma-faltante">No disponible</span>'
-                              }
-                          </div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">FIRMA:</span>
-                          <div class="firma-value">
-                              ${signatures.firmaSupervisor
-                                  ? `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor"></div>`
-                                  : '<span class="firma-faltante">No disponible</span>'
-                              }
-                          </div>
-                      </div>
-                  </td>
-              </tr>
-              <tr>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                          <div class="firma-value">${userData.cc || 'No especificado'}</div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                          <div class="firma-value">${data.documentoVisitante || 'No especificado'}</div>
-                      </div>
-                  </td>
-                  <td style="border: 1px solid #34495e; padding: 5px;">
-                      <div class="firma-row">
-                          <span class="firma-text">C.C/TP/MP/CODIGO:</span>
-                          <div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div>
-                      </div>
-                  </td>
-              </tr>
-          </table>
-
-          <!-- COPIAS -->
-          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-              <tr>
-                  <td class="center field-label" style="width: 50%; border: 1px solid #34495e;">ORIGINAL: EMPRESA</td>
-                  <td class="center field-label" style="width: 50%; border: 1px solid #34495e;">COPIA VERDE: USUARIO</td>
-              </tr>
-          </table>
-
-          <!-- FOOTER -->
-          <div class="legal-text" style="margin-top: 10px;">
-              NO PAGAR NI REALIZAR NEGOCIACIONES CON EL OPERARIO POR NINGÚN CONCEPTO. DENUNCIE CUALQUIER IRREGULARIDAD AL TELÉFONO 608-6614000 EXT.150
-          </div>
-      </div>
+      <div id="pdf-page-3" class="page"><div class="page-inner">
+      <div class="hdr"><table class="hdr-t"><colgroup><col style="width:68%"><col style="width:32%"></colgroup><tr><td class="nb c"><img class="logo" src="${base64Logo}" alt="Logo"></td><td class="nb"><table class="code"><colgroup><col style="width:38%"><col style="width:62%"></colgroup><tr><td class="lb">Código:</td><td>FO-GD-CP-04</td></tr><tr><td class="lb">Fecha:</td><td>${new Date().toLocaleDateString('es-ES')}</td></tr><tr><td class="lb">Versión:</td><td>4</td></tr><tr><td class="lb">Página:</td><td>3 DE 3</td></tr></table></td></tr></table></div>
+      <div class="title">ACTA DE MATERIALES ELÉCTRICOS</div>
+      <table><colgroup><col style="width:18%"><col style="width:13%"><col style="width:8%"><col style="width:12%"><col style="width:16%"><col style="width:11%"><col style="width:14%"><col style="width:8%"></colgroup><tr><td class="st" colspan="4">ACTA DE MATERIALES ELÉCTRICOS</td><td class="st" colspan="4">CONTROL DE PÉRDIDAS</td></tr><tr><td class="lb">Acta De Materiales Eléctricos No.</td><td class="acta-number">N° <span>${data.numero_acta || ''}</span></td><td class="lb">Código</td><td class="c">${data.codigo || ''}</td><td class="lb">Revisión ó Solicitud No.</td><td class="c">${data.solicitudNo || ''}</td><td class="lb">ACTA REFERENCIA No.</td><td class="c">${data.numero_acta || ''}</td></tr></table>
+      <table><colgroup><col style="width:100%"></colgroup><tr><td class="intro">A los <strong>${new Date().getDate()}</strong> días del mes de <strong>${new Date().toLocaleString('es-ES', { month: 'long' })}</strong> del <strong>${new Date().getFullYear()}</strong> se hicieron presentes los señores <strong>${userData.name || '________________________________'}</strong> y <strong>${data.otroRepresentante || '________________________________________'}</strong> en representación de la EMSA ESP, en el inmueble ubicado en la <strong>${data.direccion || '________________________________________________'}</strong> del Municipio de <strong>${data.ciudad || '_____________________'}</strong> con el fin de instalar material eléctrico, el cual tiene las siguientes características</td></tr></table>
+      <table class="mat"><colgroup><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:4%"><col style="width:8%"><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:4%"><col style="width:8%"><col style="width:6%"></colgroup><thead><tr><th class="st" colspan="4">DESCRIPCIÓN</th><th class="st" colspan="3">MATERIAL INCLUIDO</th><th class="st" colspan="4">DESCRIPCIÓN</th><th class="st" colspan="3">MATERIAL INCLUIDO</th></tr><tr><th colspan="4">Medidor (${data.materiales?.medidor?.fasico || '___'})fasico, (${data.materiales?.medidor?.fases || '___'})F - (${data.materiales?.medidor?.hilos || '___'})H</th><th>UNI</th><th>ESTADO</th><th>CANT.</th><th colspan="4">PROTECCIONES Y HERRAJES</th><th>UNI</th><th>ESTADO</th><th>CANT.</th></tr></thead><tbody><tr><td class="ds" colspan="4">ELECTROMECÁNICO, (${data.materiales?.medidorElectroMecanico?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectroMecanico?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectroMecanico?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectroMecanico?.especificaciones?.clase || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.medidorElectroMecanico?.estado || '___'}</td><td class="c">${data.materiales?.medidorElectroMecanico?.cantidad || 0}</td><td class="ds" colspan="4">CINTA BANDIT (${data.materiales?.cintaBandit?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.cintaBandit?.estado || '___'}</td><td class="c">${data.materiales?.cintaBandit?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">ELECTRÓNICO regis,ciclometrico (${data.materiales?.medidorElectronicoRegis?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectronicoRegis?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectronicoRegis?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectronicoRegis?.especificaciones?.clase || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.medidorElectronicoRegis?.estado || '___'}</td><td class="c">${data.materiales?.medidorElectronicoRegis?.cantidad || 0}</td><td class="ds" colspan="4">GRAPA "HEBILLA" PARA CINTA (${data.materiales?.grapaHebilla?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.grapaHebilla?.estado || '___'}</td><td class="c">${data.materiales?.grapaHebilla?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">ELECTRÓNICO con display (${data.materiales?.medidorElectronicoDisplay?.especificaciones?.tipo || '___'}) - (${data.materiales?.medidorElectronicoDisplay?.especificaciones?.amperios || '___'}) A.,(${data.materiales?.medidorElectronicoDisplay?.especificaciones?.voltios || '___'}) V.,Clase(${data.materiales?.medidorElectronicoDisplay?.especificaciones?.clase || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.medidorElectronicoDisplay?.estado || '___'}</td><td class="c">${data.materiales?.medidorElectronicoDisplay?.cantidad || 0}</td><td class="ds" colspan="4">CAPACETE DE (${data.materiales?.capacete?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.capacete?.estado || '___'}</td><td class="c">${data.materiales?.capacete?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="ds" colspan="4">CONECTOR CURVO (${data.materiales?.conectorCurvo?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.conectorCurvo?.estado || '___'}</td><td class="c">${data.materiales?.conectorCurvo?.cantidad || 0}</td></tr><tr><td class="lb2" colspan="4">Medidores para Medida Semi</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ds" colspan="4">CONDULETAS DE (${data.materiales?.conduletas?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.conduletas?.estado || '___'}</td><td class="c">${data.materiales?.conduletas?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">ELECTROMECÁNICO (${data.materiales?.medidorSemiElectro?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSemiElectro?.especificaciones?.hilos || '___'})H, Clase (${data.materiales?.medidorSemiElectro?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSemiElectro?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSemiElectro?.especificaciones?.voltios || '___'})V.</td><td class="c">Un</td><td class="c">${data.materiales?.medidorSemiElectro?.estado || '___'}</td><td class="c">${data.materiales?.medidorSemiElectro?.cantidad || 0}</td><td class="ds" colspan="4">CONDULETA EN (${data.materiales?.conduletaTapa?.tipo || '___'}) DE (${data.materiales?.conduletaTapa?.medida || '___'})" CON TAPA</td><td class="c">Un</td><td class="c">${data.materiales?.conduletaTapa?.estado || '___'}</td><td class="c">${data.materiales?.conduletaTapa?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">ELECTRÓNICO regis,ciclometrico (${data.materiales?.medidorSemiElectronico?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSemiElectronico?.especificaciones?.hilos || '___'})H, Clase (${data.materiales?.medidorSemiElectronico?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSemiElectronico?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSemiElectronico?.especificaciones?.voltios || '___'})V.</td><td class="c">Un</td><td class="c">${data.materiales?.medidorSemiElectronico?.estado || '___'}</td><td class="c">${data.materiales?.medidorSemiElectronico?.cantidad || 0}</td><td class="ds" colspan="4">TUBO GALVANIZADO (${data.materiales?.tuboGalvanizado?.medida || '___'})" x 3m</td><td class="c">Un</td><td class="c">${data.materiales?.tuboGalvanizado?.estado || '___'}</td><td class="c">${data.materiales?.tuboGalvanizado?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="ds" colspan="4">ANCLAJE ACOMETIDA (${data.materiales?.anclajeAcometida?.tipo || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.anclajeAcometida?.estado || '___'}</td><td class="c">${data.materiales?.anclajeAcometida?.cantidad || 0}</td></tr><tr><td class="lb2" colspan="4">Medidores para Medida Semi e indirecta Electrónicos</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ds" colspan="4">CONECTOR BIMETALICO TIPO CUÑA TIPO(${data.materiales?.conectorBimetalicoCuna?.tipo || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.conectorBimetalicoCuna?.estado || '___'}</td><td class="c">${data.materiales?.conectorBimetalicoCuna?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">SIN PERFIL (${data.materiales?.medidorSinPerfil?.especificaciones?.fases || '___'})F - (${data.materiales?.medidorSinPerfil?.especificaciones?.hilos || '___'})H, Clase (${data.materiales?.medidorSinPerfil?.especificaciones?.clase || '___'}). (${data.materiales?.medidorSinPerfil?.especificaciones?.amperios || '___'})A.(${data.materiales?.medidorSinPerfil?.especificaciones?.voltios || '___'})V.</td><td class="c">Un</td><td class="c">${data.materiales?.medidorSinPerfil?.estado || '___'}</td><td class="c">${data.materiales?.medidorSinPerfil?.cantidad || 0}</td><td class="ds" colspan="4">ESTRIBO TIPO (${data.materiales?.estribo?.tipo || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.estribo?.estado || '___'}</td><td class="c">${data.materiales?.estribo?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">CON PERFIL DE CARGA Y (${data.materiales?.medidorConPerfil?.especificaciones?.comunicaciones || '___'}) COMUNICACIONES, clase(${data.materiales?.medidorConPerfil?.especificaciones?.clase || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.medidorConPerfil?.estado || '___'}</td><td class="c">${data.materiales?.medidorConPerfil?.cantidad || 0}</td><td class="ds" colspan="4">CONECTOR BIMETALICO (${data.materiales?.conectorBimetalicoPerno?.tipo || '___'}) PERNO</td><td class="c">Un</td><td class="c">${data.materiales?.conectorBimetalicoPerno?.estado || '___'}</td><td class="c">${data.materiales?.conectorBimetalicoPerno?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">CON PERFIL DE CARGA Y MODEM INTERNO, clase (${data.materiales?.medidorConPerfilModem?.especificaciones?.clase || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.medidorConPerfilModem?.estado || '___'}</td><td class="c">${data.materiales?.medidorConPerfilModem?.cantidad || 0}</td><td class="ds" colspan="4">TENSOR PARA ACOMETIDA CABLE CONCENTRICO</td><td class="c">Un</td><td class="c">${data.materiales?.tensorAcometida?.estado || '___'}</td><td class="c">${data.materiales?.tensorAcometida?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="ds" colspan="4">OJO DE ALUMINIO</td><td class="c">Un</td><td class="c">${data.materiales?.ojoAluminio?.estado || '___'}</td><td class="c">${data.materiales?.ojoAluminio?.cantidad || 0}</td></tr><tr><td class="lb2" colspan="4">Router y Varios</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ds" colspan="4">BREAKERS DE (${data.materiales?.breakers?.amperios || '___'}x${data.materiales?.breakers?.amperios || '___'})Amp.</td><td class="c">Un</td><td class="c">${data.materiales?.breakers?.estado || '___'}</td><td class="c">${data.materiales?.breakers?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">GPRS (${data.materiales?.routerGPRS?.simCard || '___'}) SIM CARD</td><td class="c">Un</td><td class="c">${data.materiales?.routerGPRS?.estado || '___'}</td><td class="c">${data.materiales?.routerGPRS?.cantidad || 0}</td><td class="ds" colspan="4">CONECTOR PARA VARILLA</td><td class="c">Un</td><td class="c">${data.materiales?.conectorVarilla?.estado || '___'}</td><td class="c">${data.materiales?.conectorVarilla?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">CONVERSORES</td><td class="c">Un</td><td class="c">${data.materiales?.conversores?.estado || '___'}</td><td class="c">${data.materiales?.conversores?.cantidad || 0}</td><td class="ds" colspan="4">TENSOR PARA ACOMETIDA CABLE CONCENTRICO cambio</td><td class="c">Un</td><td class="c">${data.materiales?.tensorCambio?.estado || '___'}</td><td class="c">${data.materiales?.tensorCambio?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">BLOQUE DE PRUEBA</td><td class="c">Un</td><td class="c">${data.materiales?.bloquePrueba?.estado || '___'}</td><td class="c">${data.materiales?.bloquePrueba?.cantidad || 0}</td><td class="ds" colspan="4">ALAMBRE DE COBRE No. (${data.materiales?.alambreCobre?.calibre || '___'}) AWG</td><td class="c">Un</td><td class="c">${data.materiales?.alambreCobre?.estado || '___'}</td><td class="c">${data.materiales?.alambreCobre?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="ds" colspan="4">VARILLA PUESTA A TIERRA(${data.materiales?.varillaPuestaTierra?.metros || '___'}) Mts.</td><td class="c">Un</td><td class="c">${data.materiales?.varillaPuestaTierra?.estado || '___'}</td><td class="c">${data.materiales?.varillaPuestaTierra?.cantidad || 0}</td></tr><tr><td class="lb2" colspan="4">TRANSFORMADORES DE CORRIENTE</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ds" colspan="4">TERMINAL MT(${data.materiales?.terminalMT?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.terminalMT?.estado || '___'}</td><td class="c">${data.materiales?.terminalMT?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO EXTERIOR (${data.materiales?.tcUsoExterior600?.amperios || '___'}/${data.materiales?.tcUsoExterior600?.amperios2 || '___'}) Amp, clase (${data.materiales?.tcUsoExterior600?.clase || '___'}) de ventada 600Vol.</td><td class="c">Un</td><td class="c">${data.materiales?.tcUsoExterior600?.estado || '___'}</td><td class="c">${data.materiales?.tcUsoExterior600?.cantidad || 0}</td><td class="ds" colspan="4">CURVA MT(${data.materiales?.curvaMT?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.curvaMT?.estado || '___'}</td><td class="c">${data.materiales?.curvaMT?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO INTERIOR (${data.materiales?.tcUsoInterior600?.amperios || '___'}/${data.materiales?.tcUsoInterior600?.amperios2 || '___'}) Amp, clase (${data.materiales?.tcUsoInterior600?.clase || '___'}) de ventada 600Vol.</td><td class="c">Un</td><td class="c">${data.materiales?.tcUsoInterior600?.estado || '___'}</td><td class="c">${data.materiales?.tcUsoInterior600?.cantidad || 0}</td><td class="ds" colspan="4">FLEXI CONDUIT METALICO(${data.materiales?.flexiConduit?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.flexiConduit?.estado || '___'}</td><td class="c">${data.materiales?.flexiConduit?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO EXTERIOR (${data.materiales?.tcUsoExteriorAlta?.kv || '___'}) Kv de (${data.materiales?.tcUsoExteriorAlta?.primario || '___'}) / (${data.materiales?.tcUsoExteriorAlta?.secundario || '___'}) Amp. clase (${data.materiales?.tcUsoExteriorAlta?.clase || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.tcUsoExteriorAlta?.estado || '___'}</td><td class="c">${data.materiales?.tcUsoExteriorAlta?.cantidad || 0}</td><td class="ds" colspan="4">TERMINAL FLEXI(${data.materiales?.terminalFlexi?.medida || '___'})"</td><td class="c">Un</td><td class="c">${data.materiales?.terminalFlexi?.estado || '___'}</td><td class="c">${data.materiales?.terminalFlexi?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO INTERIOR (${data.materiales?.tcUsoInteriorAlta?.kv || '___'}/${data.materiales?.tcUsoInteriorAlta?.kv2 || '___'}) Kv de (${data.materiales?.tcUsoInteriorAlta?.primario || '___'}) / (${data.materiales?.tcUsoInteriorAlta?.secundario || '___'}) Amp. clase (${data.materiales?.tcUsoInteriorAlta?.clase || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.tcUsoInteriorAlta?.estado || '___'}</td><td class="c">${data.materiales?.tcUsoInteriorAlta?.cantidad || 0}</td><td class="lb2" colspan="4">SELLOS</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td></tr><tr><td class="lb2" colspan="4">TRANSFORMADORES DE POTENCIAL</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ds" colspan="4">ROTOSEAL DE COLOR (${data.materiales?.rotoseal?.color || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.rotoseal?.estado || '___'}</td><td class="c">${data.materiales?.rotoseal?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO EXTERIOR (${data.materiales?.tpUsoExterior?.primario || '___'}) / (${data.materiales?.tpUsoExterior?.secundario || '___'}) Vol. clase (${data.materiales?.tpUsoExterior?.clase || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.tpUsoExterior?.estado || '___'}</td><td class="c">${data.materiales?.tpUsoExterior?.cantidad || 0}</td><td class="ds" colspan="4">ESTAMPILLA</td><td class="c">Un</td><td class="c">${data.materiales?.estampilla?.estado || '___'}</td><td class="c">${data.materiales?.estampilla?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">USO INTERIOR (${data.materiales?.tpUsoInterior?.primario || '___'}) / (${data.materiales?.tpUsoInterior?.secundario || '___'}) Vol. clase (${data.materiales?.tpUsoInterior?.clase || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.tpUsoInterior?.estado || '___'}</td><td class="c">${data.materiales?.tpUsoInterior?.cantidad || 0}</td><td class="lb2" colspan="7">MATERIAL RETIRADO</td></tr><tr><td class="lb2" colspan="4">CABLES Y ALAMBRE</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td><td class="ret" colspan="7" rowspan="7"><strong>Descripción del material retirado:</strong><br>${data.materiales?.materialRetirado?.descripcion || '_______________________________'}</td></tr><tr><td class="ds" colspan="4">CABLE CONCENTRICO PARA ACOMETIDA (${data.materiales?.cableConcentrico?.calibre || '___'} X ${data.materiales?.cableConcentrico?.conductores || '___'}) + (${data.materiales?.cableConcentrico?.neutro || '___'})</td><td class="c">Un</td><td class="c">${data.materiales?.cableConcentrico?.estado || '___'}</td><td class="c">${data.materiales?.cableConcentrico?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">CABLE DE CONTROL (${data.materiales?.cableControl?.conductores || '___'}) X (${data.materiales?.cableControl?.calibre || '___'}) AWG</td><td class="c">Un</td><td class="c">${data.materiales?.cableControl?.estado || '___'}</td><td class="c">${data.materiales?.cableControl?.cantidad || 0}</td></tr><tr><td class="lb2" colspan="4">CAJA Hermetica</td><td class="lb2">UNI</td><td class="lb2">ESTADO</td><td class="lb2">CANT.</td></tr><tr><td class="ds" colspan="4">SOBREPONER PARA MEDIDOR (${data.materiales?.cajaSobreponer?.fasico || '___'}) FASICO TIPO (${data.materiales?.cajaSobreponer?.tipo || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.cajaSobreponer?.estado || '___'}</td><td class="c">${data.materiales?.cajaSobreponer?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">INCRUSTAR MEDIDOR (${data.materiales?.cajaIncrustar?.fasico || '___'}) FASICO TIPO (${data.materiales?.cajaIncrustar?.tipo || '___'}).</td><td class="c">Un</td><td class="c">${data.materiales?.cajaIncrustar?.estado || '___'}</td><td class="c">${data.materiales?.cajaIncrustar?.cantidad || 0}</td></tr><tr><td class="ds" colspan="4">TIPO GABINETE PARA MEDIDORES.</td><td class="c">Un</td><td class="c">${data.materiales?.cajaGabinete?.estado || '___'}</td><td class="c">${data.materiales?.cajaGabinete?.cantidad || 0}</td></tr></tbody></table>
+      <table class="inst"><colgroup><col style="width:9%"><col style="width:9%"><col style="width:6%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:6%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:12%"></colgroup><tr><td class="st" colspan="13">ESTADO DEL MATERIAL INSTALADO=PR:Provisional, VE:Venta, TE:Usuario, RE:Reutilizado, FI:Financiado &nbsp;&nbsp; ESTADO DEL MATERIAL RETIRADO=EA:Entregado al usuario, BC:Bodega Contratista, BE:Bodega, EMSA:PR</td></tr><tr><th colspan="7">MEDIDOR INSTALADO</th><th colspan="5">DISPOSICIÓN DE LOS SELLOS</th><th>COLOR</th></tr><tr><th>NÚMERO</th><th>MARCA</th><th>FASES</th><th>DÍGITOS</th><th>LECTURA</th><th>VOLTIOS</th><th>AMPERIOS</th><th class="lb2">TP</th><th>${data.sello_tp_1 || ''}</th><th>${data.sello_tp_2 || ''}</th><th>${data.sello_tp_3 || ''}</th><th>${data.sello_tp_4 || ''}</th><th>${data.sello_color_1 || ''}</th></tr><tr><td class="c" rowspan="2">${data.medidor_numero || ''}</td><td class="c" rowspan="2">${data.medidor_marca || ''}</td><td class="c" rowspan="2">${data.medidor_fases || ''}</td><td class="c" rowspan="2">${data.medidor_digitos || ''}</td><td class="c" rowspan="2">${data.medidor_lectura || ''}</td><td class="c" rowspan="2">${data.medidor_voltios || ''}</td><td class="c" rowspan="2">${data.medidor_amperios || ''}</td><td class="lb2">TB</td><th>${data.sello_tb_1 || ''}</th><th>${data.sello_tb_2 || ''}</th><th>${data.sello_tb_3 || ''}</th><th>${data.sello_tb_4 || ''}</th><th>${data.sello_color_2 || ''}</th></tr><tr><td class="lb2">EST</td><th>${data.sello_est_1 || ''}</th><th>${data.sello_est_2 || ''}</th><th>${data.sello_est_3 || ''}</th><th>${data.sello_est_4 || ''}</th><th>${data.sello_color_3 || ''}</th></tr></table>
+      <div class="atend"><strong>ATENDIÓ LA VISITA EL (LOS) REPRESENTANTE (S) LEGAL (S) DEL INMUEBLE, EL (LOS) SEÑOR (S):</strong> <strong>${data.usuarioVisita || '________________________________________________________________'}</strong><br>QUIEN AUTORIZA EL COBRO DE LOS ANTERIORES MATERIALES, DE CONTADO ( <strong>${data.tipoPago === 'contado' ? 'X' : ' '}</strong> ) , FINANCIADO ( <strong>${data.tipoPago === 'financiado' ? 'X' : ' '}</strong> ) .</div>
+      <table><colgroup><col style="width:100%"></colgroup><tr><td class="lb">OBSERVACIONES:</td></tr><tr><td class="obs-box">${typeof data.observaciones === 'string' ? data.observaciones : (data.observacionesMateriales || '')}</td></tr></table>
+      <div class="bottom"><div class="legal"><p><strong>AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES</strong></p><p>El usuario y/o suscriptor autoriza de manera previa, expresa e informada a emsa E.S.P., como responsable del tratamiento, para tratar los datos personales suministrados en el marco de las actividades de revisión, control y gestión propias de la prestación del servicio público domiciliario de energía eléctrica, con las siguientes finalidades: (i) registrar la revisión realizada; (ii) identificar a los intervinientes y validar los hechos y/o resultados de la visita; (iii) ejercer las actuaciones derivadas de la visita realizada; y (iv) cumplir obligaciones legales y regulatorias aplicables al servicio público de energía eléctrica. De conformidad con lo dispuesto en el literal a) del artículo 10 de la Ley 1581 de 2012, emsa informa que el tratamiento de los datos personales se realiza en ejercicio de sus funciones legales y constitucionales, como prestador de servicios públicos domiciliarios. El tratamiento se realizará conforme a la Política de Tratamiento de la Información Personal disponible en los canales oficiales de emsa. El titular podrá ejercer sus derechos a conocer, actualizar, rectificar y suprimir sus datos, así como revocar la autorización, a través de dichos canales o del correo: pqr@emsa-esp.com.co. Cuando intervenga un testigo, este autoriza el tratamiento de sus datos únicamente para dejar constancia de su participación en la presente acta.</p></div>
+      <table class="firma-table"><colgroup><col style="width:33.33%"><col style="width:33.33%"><col style="width:33.34%"></colgroup><tr><th class="firma-header">FUNCIONARIO RESPONSABLE DE LA REVISIÓN</th><th class="firma-header">SUSCRIPTOR O USUARIO</th><th class="firma-header">SUPERVISOR Y/O INTERVENTOR</th></tr><tr><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${userData.name || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.usuarioVisita || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">NOMBRE:</span><div class="firma-value">${data.otroRepresentante || 'No especificado'}</div></div></td></tr><tr class="sig-row"><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaFuncionario ? `<div class="firma-imagen"><img src="${signatures.firmaFuncionario}" alt="Firma Funcionario"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSuscriptor ? `<div class="firma-imagen"><img src="${signatures.firmaSuscriptor}" alt="Firma Suscriptor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td><td><div class="firma-row"><span class="firma-text">FIRMA:</span><div class="firma-value">${signatures.firmaSupervisor ? `<div class="firma-imagen"><img src="${signatures.firmaSupervisor}" alt="Firma Supervisor"></div>` : '<span class="firma-faltante">No disponible</span>'}</div></div></td></tr><tr><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${userData.cc || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.documentoVisitante || 'No especificado'}</div></div></td><td><div class="firma-row"><span class="firma-text">C.C/TP/MP/CODIGO:</span><div class="firma-value">${data.ccOtroRepresentante || 'No especificado'}</div></div></td></tr></table>
+      <table><colgroup><col style="width:50%"><col style="width:50%"></colgroup><tr><td class="lb c">ORIGINAL: EMPRESA</td><td class="lb c">COPIA VERDE: USUARIO</td></tr></table>
+      <div class="legal c">NO PAGAR NI REALIZAR NEGOCIACIONES CON EL OPERARIO POR NINGÚN CONCEPTO. DENUNCIE CUALQUIER IRREGULARIDAD AL TELÉFONO 608-6614000 EXT.150</div></div></div></div>
       <!-- Fin Hoja 3 -->
-
-    </body>
-    </html>
+      <script>
+        (function () {
+          function fit() {
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+              var page = pages[i], inner = page.querySelector('.page-inner');
+              if (!inner) continue;
+              inner.style.transformOrigin = 'top left';
+              var z = 1;
+              while (z >= 0.55) {
+                inner.style.transform = 'scale(' + z + ')';
+                inner.style.width = (100 / z) + '%';
+                inner.style.height = (100 / z) + '%';
+                var last = inner.lastElementChild;
+                if (last.getBoundingClientRect().bottom <= page.getBoundingClientRect().bottom + 1) break;
+                z -= 0.01;
+              }
+            }
+          }
+          window.addEventListener('load', fit);
+          window.addEventListener('beforeprint', fit);
+        })();
+        </script>
+      </body>
+      </html>
       `;
+      };
+
+    const applyPreviewZoom = (z) => {
+      const clamped = Math.min(2.5, Math.max(0.4, z));
+      const body = previewRef.current?.contentDocument?.body;
+      if (body) body.style.zoom = clamped;
+      setPreviewZoom(clamped);
     };
 
-    // Función para abrir vista previa del PDF
+    // 758px = 7.9in, el ancho real de la hoja
+    const fitPreviewToWidth = () => {
+      const ifr = previewRef.current;
+      if (!ifr) return;
+      applyPreviewZoom((ifr.clientWidth - 40) / 758);
+    };
+
     const handlePreviewPDF = () => {
-      const html = generatePDFHtml();
+      const html = generatePDFHtml().replace(
+        '</head>',
+        `<style>
+          @media screen {
+            html { background: #e2e8f0; }
+            body { padding: 20px 0; }
+            .page { background: #fff; border: none !important; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,.05), 0 8px 25px rgba(0,0,0,.12); margin: 0 auto 24px !important; }
+          }
+        </style></head>`
+      );
       setPdfHtml(html);
       setShowPreview(true);
     };
 
+    const handleCloseModal = () => setShowPreview(false);
+
     // Función para descargar el PDF
-    const handleDownloadPDF = () => { 
-    const html = generatePDFHtml(); 
-    const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5], // Márgenes más pequeños
-      filename: `Acta_Revision_No_${data.numero_acta || '1001'}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 }, // Calidad máxima
-      html2canvas: { 
-        scale: 5, // ← AUMENTA ESTO (3-5 para mejor calidad)
-        useCORS: true,
-        logging: false,
-        letterRendering: true,
-        allowTaint: false,
-        dpi: 300, // ← AÑADE ESTO
-        windowWidth: 1200 // ← AÑADE ESTO
-      },
-      jsPDF: { 
-        unit: 'in', 
-        format: 'legal',
-        orientation: 'portrait',
-        compress: false,
-        precision: 16 // ← AÑADE ESTO
+    const handleDownloadPDF = async () => {
+      try {
+        toast.loading('Generando PDF...', { id: 'pdf' });
+        const pdf = await buildPdf();
+        pdf.save(`Acta_Revision_No_${data.numero_acta || '1001'}.pdf`);
+        toast.success('PDF descargado', { id: 'pdf' });
+      } catch (e) {
+        console.error(e);
+        toast.error('No se pudo generar el PDF', { id: 'pdf' });
       }
-    };
-      html2pdf().set(opt).from(html).save(); 
     };
 
     // Función para imprimir el PDF
     const handlePrintPDF = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${"ActaRevision No." + (data.numero_acta || '1001') + "_" + new Date().toISOString().slice(0,10)}</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 20px;
-              width: 100%;
-            }
-            @media print {
-            body {
-              zoom: 0.9;
-            }
-              @page {
-                size: legal;  /* Especificar tamaño legal */
-                margin: 0.5in;
-              }
-              body { 
-                margin: 0;
-                width: 100% !important;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          ${generatePDFHtml()}
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() {
-                window.close();
-              }, 100);
-            }
-          </script>
-        </body>
-      </html>
-      `);
-  printWindow.document.close();
-};
-
-const handleCloseModal = () => {
-  const modal = document.querySelector('.modal');
-  const overlay = document.querySelector('.modalOverlay');
-  
-  if (modal && overlay) {
-    modal.classList.add('closing');
-    overlay.style.opacity = '0';
-    
-    setTimeout(() => {
-      setShowPreview(false);
-    }, 200);
-  } else {
-    setShowPreview(false);
-  }
-};
+      const w = window.open('', '_blank');
+      if (!w) {
+        toast.error('Permite las ventanas emergentes para imprimir');
+        return;
+      }
+      const title = `ActaRevision No.${data.numero_acta || '1001'}_${new Date().toISOString().slice(0, 10)}`;
+      w.document.open();
+      w.document.write(generatePDFHtml().replace('</head>', `<title>${title}</title></head>`));
+      w.document.close();
+      setTimeout(() => { w.focus(); w.print(); }, 500);
+    };
 
 const handleOpenEmailModal = () => {
   setIncludeTxtFile(true); // Resetear a true cuando se abre el modal
@@ -4337,6 +1381,26 @@ const getEstadoClass = (estado) => {
 
   return (
     <div className={styles.container}>
+      <Toaster 
+              position="top-center"
+              toastOptions={{
+                duration: 3000,
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#4CAF50',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#e74c3c',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
       <div className={styles.header}>
         <h1 className={styles.title}>Resumen del Acta de Revisión</h1>
         <p className={styles.subtitle}>Revise toda la información antes de finalizar</p>
@@ -6208,49 +3272,47 @@ const getEstadoClass = (estado) => {
 
       {/* Modal de Vista Previa */}
       {showPreview && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div>
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.previewHeader}>
               <h2 className={styles.modalTitle}>Vista Previa del Acta</h2>
-              <button 
-                className={styles.closeButton}
-                onClick={handleCloseModal}
-              >
+
+              <div className={styles.zoomControls}>
+                <button type="button" className={styles.zoomButton}
+                  onClick={() => applyPreviewZoom(previewZoom - 0.1)}>−</button>
+                <span className={styles.zoomLabel}>{Math.round(previewZoom * 100)}%</span>
+                <button type="button" className={styles.zoomButton}
+                  onClick={() => applyPreviewZoom(previewZoom + 0.1)}>+</button>
+                <button type="button" className={styles.zoomButton}
+                  onClick={fitPreviewToWidth}>Ajustar</button>
+                <button type="button" className={styles.zoomButton}
+                  onClick={() => applyPreviewZoom(1.5)}>150%</button>
+              </div>
+
+              <button className={styles.closeButton} onClick={handleCloseModal}>
                 <FiX />
               </button>
             </div>
 
             <div className={styles.modalContent}>
               <iframe
+                ref={previewRef}
                 title="Vista previa del PDF"
                 srcDoc={pdfHtml}
+                onLoad={fitPreviewToWidth}
                 className={styles.previewIframe}
               />
               <div className={styles.modalButtons}>
-                <button 
-                  onClick={handlePrintPDF}
-                  className={styles.printButton}
-                >
+                <button onClick={handlePrintPDF} className={styles.printButton}>
                   <FiPrinter /> Imprimir
                 </button>
-                <button 
-                  onClick={handleDownloadPDF}
-                  className={styles.pdfButton}
-                >
+                <button onClick={handleDownloadPDF} className={styles.pdfButton}>
                   <FiDownload /> Descargar
                 </button>
-                {/*  BOTÓN DE GUARDAR DATOS EN TXT */}
-                <button 
-                  onClick={saveDataToTxt}
-                  className={styles.txtButton}
-                >
+                <button onClick={saveDataToTxt} className={styles.txtButton}>
                   <FiDownload /> Descargar (TXT)
                 </button>
-                {/* BOTÓN DE ENVIAR POR CORREO */}
-                <button 
-                  onClick={handleOpenEmailModal}
-                  className={styles.emailButton}
-                >
+                <button onClick={handleOpenEmailModal} className={styles.emailButton}>
                   <FiSend /> Enviar por Correo
                 </button>
               </div>

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import styles from "./SignaturePad.module.css";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function SignaturePadStep({ data, handleSignature, nextStep, prevStep }) {
   const [currentSigner, setCurrentSigner] = useState(0);
@@ -166,6 +166,26 @@ export default function SignaturePadStep({ data, handleSignature, nextStep, prev
 
   return (
     <div className={styles.container}>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4CAF50',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#e74c3c',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <div className={styles.header}>
         <h2>Firmas del Acta de Revisión</h2>
         <p className={styles.subtitle}>Por favor, proporcione las siguientes firmas</p>
