@@ -9,6 +9,47 @@ import tpImg from '../assets/overlays/tp.png';
 import unifilar1 from '../assets/images/unifilar/unifilar.png';
 import unifilar2 from '../assets/images/unifilar/unifilar2.png';
 import unifilar3 from '../assets/images/unifilar/unifilar3.png';
+import unifilar4 from '../assets/images/unifilar/unifilar4.png';
+import unifilar5 from '../assets/images/unifilar/unifilar5.png';
+import unifilar6 from '../assets/images/unifilar/unifilar6.png';
+import unifilar7 from '../assets/images/unifilar/unifilar7.png';
+import unifilar8 from '../assets/images/unifilar/unifilar8.png';
+import unifilar9 from '../assets/images/unifilar/unifilar9.png';
+import unifilar10 from '../assets/images/unifilar/unifilar10.png';
+import unifilar11 from '../assets/images/unifilar/unifilar11.png';
+import unifilar12 from '../assets/images/unifilar/unifilar12.png';
+import unifilar13 from '../assets/images/unifilar/unifilar13.png';
+import unifilar14 from '../assets/images/unifilar/unifilar14.png';
+import unifilar15 from '../assets/images/unifilar/unifilar15.png';
+import unifilar16 from '../assets/images/unifilar/unifilar16.png';
+import unifilar17 from '../assets/images/unifilar/unifilar17.png';
+import unifilar18 from '../assets/images/unifilar/unifilar18.png';
+import unifilar19 from '../assets/images/unifilar/unifilar19.png';
+import unifilar20 from '../assets/images/unifilar/unifilar20.png';
+import unifilar21 from '../assets/images/unifilar/unifilar21.png';
+import unifilar22 from '../assets/images/unifilar/unifilar22.png';
+import unifilar23 from '../assets/images/unifilar/unifilar23.png';
+import unifilar24 from '../assets/images/unifilar/unifilar24.png';
+import unifilar25 from '../assets/images/unifilar/unifilar25.png';
+import unifilar26 from '../assets/images/unifilar/unifilar26.png';
+import unifilar27 from '../assets/images/unifilar/unifilar27.png';
+import unifilar28 from '../assets/images/unifilar/unifilar28.png';
+import unifilar29 from '../assets/images/unifilar/unifilar29.png';
+import unifilar30 from '../assets/images/unifilar/unifilar30.png';
+import unifilar31 from '../assets/images/unifilar/unifilar31.png';
+import unifilar32 from '../assets/images/unifilar/unifilar32.png';
+import unifilar33 from '../assets/images/unifilar/unifilar33.png';
+import unifilar34 from '../assets/images/unifilar/unifilar34.png';
+import unifilar35 from '../assets/images/unifilar/unifilar35.png';
+import unifilar36 from '../assets/images/unifilar/unifilar36.png';
+import unifilar37 from '../assets/images/unifilar/unifilar37.png';
+import unifilar38 from '../assets/images/unifilar/unifilar38.png';
+import unifilar39 from '../assets/images/unifilar/unifilar39.png';
+import unifilar40 from '../assets/images/unifilar/unifilar40.png';
+import unifilar41 from '../assets/images/unifilar/unifilar41.png';
+import unifilar42 from '../assets/images/unifilar/unifilar42.png';
+import unifilar43 from '../assets/images/unifilar/unifilar43.png';
+import unifilar44 from '../assets/images/unifilar/unifilar44.png';
 //conexiones
 import conexiones1 from '../assets/images/conexiones/conexiones.png';
 import conexiones2 from '../assets/images/conexiones/conexiones2.png';
@@ -646,7 +687,49 @@ const DiagramSelectionStep = ({ data, updateData, nextStep, prevStep }) => {
     unifilar: [
       { id: 'unifilar1', name: 'Diagrama Unifilar 1', image: unifilar1 },
       { id: 'unifilar2', name: 'Diagrama Unifilar 2', image: unifilar2 },
-      { id: 'unifilar3', name: 'Diagrama Unifilar 3', image: unifilar3 }
+      { id: 'unifilar3', name: 'Diagrama Unifilar 3', image: unifilar3 },
+      { id: 'unifilar4', name: 'Diagrama Unifilar 4', image: unifilar4 },
+      { id: 'unifilar5', name: 'Diagrama Unifilar 5', image: unifilar5 },
+      { id: 'unifilar6', name: 'Diagrama Unifilar 6', image: unifilar6 },
+      { id: 'unifilar7', name: 'Diagrama Unifilar 7', image: unifilar7 },
+      { id: 'unifilar8', name: 'Diagrama Unifilar 8', image: unifilar8 },
+      { id: 'unifilar9', name: 'Diagrama Unifilar 9', image: unifilar9 },
+      { id: 'unifilar10', name: 'Diagrama Unifilar 10', image: unifilar10 },
+      { id: 'unifilar11', name: 'Diagrama Unifilar 11', image: unifilar11 },
+      { id: 'unifilar12', name: 'Diagrama Unifilar 12', image: unifilar12 },
+      { id: 'unifilar13', name: 'Diagrama Unifilar 13', image: unifilar13 },
+      { id: 'unifilar14', name: 'Diagrama Unifilar 14', image: unifilar14 },
+      { id: 'unifilar15', name: 'Diagrama Unifilar 15', image: unifilar15 },
+      { id: 'unifilar16', name: 'Diagrama Unifilar 16', image: unifilar16 },
+      { id: 'unifilar17', name: 'Diagrama Unifilar 17', image: unifilar17 },
+      { id: 'unifilar18', name: 'Diagrama Unifilar 18', image: unifilar18 },
+      { id: 'unifilar19', name: 'Diagrama Unifilar 19', image: unifilar19 },
+      { id: 'unifilar20', name: 'Diagrama Unifilar 20', image: unifilar20 },
+      { id: 'unifilar21', name: 'Diagrama Unifilar 21', image: unifilar21 },
+      { id: 'unifilar22', name: 'Diagrama Unifilar 22', image: unifilar22 },
+      { id: 'unifilar23', name: 'Diagrama Unifilar 23', image: unifilar23 },
+      { id: 'unifilar24', name: 'Diagrama Unifilar 24', image: unifilar24 },
+      { id: 'unifilar25', name: 'Diagrama Unifilar 25', image: unifilar25 },
+      { id: 'unifilar26', name: 'Diagrama Unifilar 26', image: unifilar26 },
+      { id: 'unifilar27', name: 'Diagrama Unifilar 27', image: unifilar27 },
+      { id: 'unifilar28', name: 'Diagrama Unifilar 28', image: unifilar28 },
+      { id: 'unifilar29', name: 'Diagrama Unifilar 29', image: unifilar29 },
+      { id: 'unifilar30', name: 'Diagrama Unifilar 30', image: unifilar30 },
+      { id: 'unifilar31', name: 'Diagrama Unifilar 31', image: unifilar31 },
+      { id: 'unifilar32', name: 'Diagrama Unifilar 32', image: unifilar32 },
+      { id: 'unifilar33', name: 'Diagrama Unifilar 33', image: unifilar33 },
+      { id: 'unifilar34', name: 'Diagrama Unifilar 34', image: unifilar34 },
+      { id: 'unifilar35', name: 'Diagrama Unifilar 35', image: unifilar35 },
+      { id: 'unifilar36', name: 'Diagrama Unifilar 36', image: unifilar36 },
+      { id: 'unifilar37', name: 'Diagrama Unifilar 37', image: unifilar37 },
+      { id: 'unifilar38', name: 'Diagrama Unifilar 38', image: unifilar38 },
+      { id: 'unifilar39', name: 'Diagrama Unifilar 39', image: unifilar39 },
+      { id: 'unifilar40', name: 'Diagrama Unifilar 40', image: unifilar40 },
+      { id: 'unifilar41', name: 'Diagrama Unifilar 41', image: unifilar41 },
+      { id: 'unifilar42', name: 'Diagrama Unifilar 42', image: unifilar42 },
+      { id: 'unifilar43', name: 'Diagrama Unifilar 43', image: unifilar43 },
+      { id: 'unifilar44', name: 'Diagrama Unifilar 44', image: unifilar44 },
+
     ],
     conexiones: [
       { id: 'conexiones1', name: 'Diagrama Conexiones 1', image: conexiones1 },

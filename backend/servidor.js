@@ -63,7 +63,7 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: "apoyo.cgm@emsa-esp.com.co",
-    pass: "hwkhxykcylprmqzj"
+    pass: "ywslmbdfbcrrxrns"
   },
   tls: {
     ciphers: "SSLv3",
